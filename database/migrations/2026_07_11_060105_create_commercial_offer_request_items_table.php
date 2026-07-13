@@ -13,7 +13,10 @@ return new class extends Migration
     {
         Schema::create('commercial_offer_request_items', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('commercial_offer_request_id')->constrained()->cascadeOnDelete();
+            // Explicit short constraint name: the default
+            // `commercial_offer_request_items_commercial_offer_request_id_foreign`
+            // is 66 chars, over MySQL's 64-char identifier limit.
+            $table->foreignId('commercial_offer_request_id')->constrained(indexName: 'coi_commercial_offer_request_id_foreign')->cascadeOnDelete();
             $table->foreignUlid('product_id')->constrained()->cascadeOnDelete();
             // Denormalized alongside product_id rather than joined through
             // it: staff need to see/group the per-seller split directly

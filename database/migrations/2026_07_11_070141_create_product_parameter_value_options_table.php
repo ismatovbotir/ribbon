@@ -13,8 +13,12 @@ return new class extends Migration
     {
         Schema::create('product_parameter_value_options', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('product_parameter_value_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('category_parameter_option_id')->constrained()->cascadeOnDelete();
+            // Both given explicit short constraint names: the defaults
+            // (`product_parameter_value_options_product_parameter_value_id_foreign`,
+            // `..._category_parameter_option_id_foreign`) are 66/68 chars,
+            // over MySQL's 64-char identifier limit.
+            $table->foreignId('product_parameter_value_id')->constrained(indexName: 'ppvo_product_parameter_value_id_foreign')->cascadeOnDelete();
+            $table->foreignId('category_parameter_option_id')->constrained(indexName: 'ppvo_category_parameter_option_id_foreign')->cascadeOnDelete();
             $table->timestamps();
 
             // select_single parameters will only ever have one row per
