@@ -42,6 +42,10 @@ return [
     'home.products_heading' => 'Недавно добавленные',
     'home.no_categories_title' => 'Каталог скоро появится',
     'home.no_categories_body' => 'Категории появятся здесь сразу после публикации.',
+    'home.hero_carousel_label' => 'Рекламные баннеры',
+    'home.hero_carousel_prev' => 'Предыдущий баннер',
+    'home.hero_carousel_next' => 'Следующий баннер',
+    'home.hero_carousel_goto' => 'Перейти к баннеру :n',
 
     // ---- Category / catalog page ----
     'catalog.intro_with_count' => ':category: сейчас доступно :count товарных предложений от проверенных продавцов Ribbon, у каждого указаны характеристики и цена.',

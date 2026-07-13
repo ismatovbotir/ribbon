@@ -47,6 +47,10 @@ return [
     'home.products_heading' => 'Recently added',
     'home.no_categories_title' => 'Catalog coming soon',
     'home.no_categories_body' => 'Categories will appear here as soon as they are published.',
+    'home.hero_carousel_label' => 'Featured banners',
+    'home.hero_carousel_prev' => 'Previous banner',
+    'home.hero_carousel_next' => 'Next banner',
+    'home.hero_carousel_goto' => 'Go to banner :n',
 
     // ---- Category / catalog page ----
     'catalog.intro_with_count' => ':category: :count product listing(s) currently available from verified Ribbon sellers, each published with specifications and pricing.',

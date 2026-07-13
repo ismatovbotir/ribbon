@@ -38,10 +38,14 @@ return [
     'home.h1' => 'Ribbon — termotransfer lentalar, printerlar va avto-ID uskunalari uchun B2B marketpleys',
     'home.intro' => "Ribbon — avto-ID sanoati uchun B2B marketpleys: termotransfer lentalar (vaks, vaks-rezin, rezin), termotransfer printerlar, shtrix-kod skanerlari, PDA va tegishli aksessuarlar. Sotuvchilar o'z mahsulotlarini texnik xususiyatlari va narxi bilan joylashtiradi; xaridorlar ro'yxatdan o'tmasdan butun katalogni ko'rib chiqadi va har bir mahsulot narxi hamda sotuvchisini to'g'ridan-to'g'ri e'londa ko'radi.",
     'home.categories_heading' => 'Kategoriyalar bo\'yicha ko\'rish',
-    'home.categories_count' => "Hozirda :count ta kategoriya joylangan.",
+    'home.categories_count' => 'Hozirda :count ta kategoriya joylangan.',
     'home.products_heading' => 'Yaqinda qo\'shilgan',
     'home.no_categories_title' => 'Katalog tez orada',
     'home.no_categories_body' => "Kategoriyalar e'lon qilinishi bilanoq shu yerda ko'rinadi.",
+    'home.hero_carousel_label' => 'Tanlangan bannerlar',
+    'home.hero_carousel_prev' => 'Oldingi banner',
+    'home.hero_carousel_next' => 'Keyingi banner',
+    'home.hero_carousel_goto' => ':n-banner\'ga o\'tish',
 
     // ---- Category / catalog page ----
     'catalog.intro_with_count' => ":category: tasdiqlangan Ribbon sotuvchilarining hozirda :count ta mahsulot e'loni, har biri texnik xususiyatlari va narxi bilan joylangan.",
@@ -64,12 +68,12 @@ return [
     'catalog.empty_title' => "Bu yerda hali mahsulot yo'q",
     'catalog.empty_body' => "Birozdan so'ng qayta tekshiring yoki boshqa kategoriyalarni ko'ring.",
     'catalog.empty_cta' => "Katalogni ko'rish",
-    'catalog.filtered_empty_title' => "Ushbu filtrlarga mos mahsulot topilmadi",
+    'catalog.filtered_empty_title' => 'Ushbu filtrlarga mos mahsulot topilmadi',
     'catalog.filtered_empty_body' => "Bir nechta filtrni olib tashlab ko'ring.",
     'catalog.no_image' => 'Rasm yoʻq',
     'catalog.error_title' => 'Xatolik yuz berdi',
     'catalog.error_body' => "Mahsulotlarni yuklab bo'lmadi. Qaytadan urinib ko'ring.",
-    'catalog.error_retry' => "Qayta urinish",
+    'catalog.error_retry' => 'Qayta urinish',
 
     // ---- Product card ----
     'product_card.add_button' => '+ Qo\'shish',

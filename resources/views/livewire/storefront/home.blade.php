@@ -22,36 +22,14 @@
         </p>
     </section>
 
-    {{-- Hero banners (home_hero placement, isCurrentlyLive() only, sort_order) --}}
+    {{-- Hero banners (home_hero placement, isCurrentlyLive() only,
+         sort_order) — a single banner renders statically; 2+ becomes an
+         auto-advancing carousel (dots + arrows, pauses on hover/focus/
+         touch, respects prefers-reduced-motion). See
+         x-storefront.hero-carousel. --}}
     @if ($heroBanners->isNotEmpty())
-        <section class="flex flex-col gap-4" aria-label="{{ __('storefront.home.categories_heading') }}">
-            @foreach ($heroBanners as $banner)
-                @php $bannerTitle = $banner->title[$locale] ?? ($banner->title[$defaultLocale] ?? ''); @endphp
-                {{--
-                    A plain <div> (not an <a href="#">) when there's no
-                    link_url — an anchor with a dummy href is a focusable
-                    no-op tab stop for keyboard/screen-reader users, not
-                    just a styling nicety.
-                --}}
-                <x-storefront.banner-frame :href="$banner->link_url" class="group relative block overflow-hidden rounded-2xl bg-surface-subtle">
-                    <picture>
-                        @if ($banner->mobile_image_path)
-                            <source media="(max-width: 767px)" srcset="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($banner->mobile_image_path) }}">
-                        @endif
-                        <img
-                            src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($banner->image_path) }}"
-                            alt="{{ $bannerTitle }}"
-                            class="aspect-[21/9] w-full object-cover md:aspect-[3/1]"
-                            loading="{{ $loop->first ? 'eager' : 'lazy' }}"
-                        >
-                    </picture>
-                    @if ($bannerTitle !== '')
-                        <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-900/70 to-transparent p-4 md:p-6">
-                            <p class="text-lg font-semibold text-white md:text-2xl">{{ $bannerTitle }}</p>
-                        </div>
-                    @endif
-                </x-storefront.banner-frame>
-            @endforeach
+        <section aria-label="{{ __('storefront.home.categories_heading') }}">
+            <x-storefront.hero-carousel :banners="$heroBanners" :locale="$locale" :default-locale="$defaultLocale" />
         </section>
     @endif
 
