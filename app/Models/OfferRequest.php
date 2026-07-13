@@ -7,14 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable(['phone', 'company_name', 'email', 'status'])]
-class CommercialOfferRequest extends Model
+class OfferRequest extends Model
 {
     /**
      * The per-seller/per-product line items making up this request.
      */
     public function items(): HasMany
     {
-        return $this->hasMany(CommercialOfferRequestItem::class);
+        return $this->hasMany(OfferRequestItem::class);
     }
 
     /**

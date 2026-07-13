@@ -5,11 +5,11 @@ use App\Livewire\Admin\Banners\Index as AdminBannersIndex;
 use App\Livewire\Admin\Brands\Index as AdminBrandsIndex;
 use App\Livewire\Admin\Categories\Index as CategoriesIndex;
 use App\Livewire\Admin\Categories\Show as CategoriesShow;
-use App\Livewire\Admin\CommercialOffers\Index as AdminCommercialOffersIndex;
-use App\Livewire\Admin\CommercialOffers\Show as AdminCommercialOffersShow;
 use App\Livewire\Admin\Geography\Cities\Index as AdminGeographyCitiesIndex;
 use App\Livewire\Admin\Geography\Countries\Index as AdminGeographyCountriesIndex;
 use App\Livewire\Admin\Geography\Regions\Index as AdminGeographyRegionsIndex;
+use App\Livewire\Admin\Offers\Index as AdminOffersIndex;
+use App\Livewire\Admin\Offers\Show as AdminOffersShow;
 use App\Livewire\Admin\Products\Index as AdminProductsIndex;
 use App\Livewire\Admin\Products\Show as AdminProductsShow;
 use App\Livewire\Admin\Sellers\Index as AdminSellersIndex;
@@ -181,9 +181,9 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
     // Buyers' raw contact details (phone/company/email) live here — Super
     // Admin only, not any admin role, even though today Super Admin is the
     // only admin role that exists. See EnsureUserIsSuperAdmin.
-    Route::prefix('commercial-offers')->name('commercial-offers.')->middleware('super_admin')->group(function () {
-        Route::get('/', AdminCommercialOffersIndex::class)->name('index');
-        Route::get('/{commercialOfferRequest}', AdminCommercialOffersShow::class)->name('show');
+    Route::prefix('offers')->name('offers.')->middleware('super_admin')->group(function () {
+        Route::get('/', AdminOffersIndex::class)->name('index');
+        Route::get('/{offerRequest}', AdminOffersShow::class)->name('show');
     });
 
     Route::prefix('banners')->name('banners.')->group(function () {

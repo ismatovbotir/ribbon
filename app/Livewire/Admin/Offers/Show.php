@@ -1,16 +1,16 @@
 <?php
 
-namespace App\Livewire\Admin\CommercialOffers;
+namespace App\Livewire\Admin\Offers;
 
-use App\Models\CommercialOfferRequest;
+use App\Models\OfferRequest;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
 /**
- * State machine for `commercial_offer_requests.status` (no spec exists for
- * this beyond the 4-value enum, so this is the chosen shape — see
- * CommercialOfferRequest::markContacted()/markFulfilled()/cancel() for why
- * there's no actor/reason to capture, unlike Seller/Product moderation):
+ * State machine for `offer_requests.status` (no spec exists for this
+ * beyond the 4-value enum, so this is the chosen shape — see
+ * OfferRequest::markContacted()/markFulfilled()/cancel() for why there's
+ * no actor/reason to capture, unlike Seller/Product moderation):
  *
  *   pending ──► contacted ──► fulfilled
  *      │            │
@@ -32,11 +32,11 @@ use Livewire\Component;
  */
 class Show extends Component
 {
-    public CommercialOfferRequest $commercialOfferRequest;
+    public OfferRequest $offerRequest;
 
-    public function mount(CommercialOfferRequest $commercialOfferRequest): void
+    public function mount(OfferRequest $offerRequest): void
     {
-        $this->commercialOfferRequest = $commercialOfferRequest;
+        $this->offerRequest = $offerRequest;
     }
 
     /**
@@ -47,15 +47,15 @@ class Show extends Component
     #[Computed]
     public function items()
     {
-        return $this->commercialOfferRequest->items()
+        return $this->offerRequest->items()
             ->with(['seller', 'product'])
             ->get();
     }
 
     /**
      * Line items grouped by seller — a request can span multiple sellers
-     * (see CommercialOfferRequestItem::seller()), so staff need the
-     * per-seller split visible, not one flat list.
+     * (see OfferRequestItem::seller()), so staff need the per-seller split
+     * visible, not one flat list.
      */
     #[Computed]
     public function itemsBySeller()
@@ -71,48 +71,48 @@ class Show extends Component
 
     public function markContacted(): void
     {
-        if ($this->commercialOfferRequest->status !== 'pending') {
+        if ($this->offerRequest->status !== 'pending') {
             return;
         }
 
-        $this->commercialOfferRequest->markContacted();
+        $this->offerRequest->markContacted();
 
         session()->flash('status', 'Request marked as contacted.');
     }
 
     public function markFulfilled(): void
     {
-        if (! in_array($this->commercialOfferRequest->status, ['pending', 'contacted'], true)) {
+        if (! in_array($this->offerRequest->status, ['pending', 'contacted'], true)) {
             return;
         }
 
-        $this->commercialOfferRequest->markFulfilled();
+        $this->offerRequest->markFulfilled();
 
         session()->flash('status', 'Request marked as fulfilled.');
     }
 
     public function cancel(): void
     {
-        if (! in_array($this->commercialOfferRequest->status, ['pending', 'contacted'], true)) {
+        if (! in_array($this->offerRequest->status, ['pending', 'contacted'], true)) {
             return;
         }
 
-        $this->commercialOfferRequest->cancel();
+        $this->offerRequest->cancel();
 
         session()->flash('status', 'Request cancelled.');
     }
 
     public function render()
     {
-        return view('livewire.admin.commercial-offers.show', [
+        return view('livewire.admin.offers.show', [
             'items' => $this->items,
             'itemsBySeller' => $this->itemsBySeller,
             'grandTotal' => $this->grandTotal,
         ])->layout('layouts.admin', [
-            'title' => 'Commercial Offer #'.$this->commercialOfferRequest->id,
+            'title' => 'Commercial Offer #'.$this->offerRequest->id,
             'breadcrumb' => [
-                ['label' => 'Commercial Offers', 'url' => route('admin.commercial-offers.index')],
-                ['label' => '#'.$this->commercialOfferRequest->id],
+                ['label' => 'Commercial Offers', 'url' => route('admin.offers.index')],
+                ['label' => '#'.$this->offerRequest->id],
             ],
         ]);
     }

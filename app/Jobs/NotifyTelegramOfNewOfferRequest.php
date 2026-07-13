@@ -2,7 +2,7 @@
 
 namespace App\Jobs;
 
-use App\Models\CommercialOfferRequest;
+use App\Models\OfferRequest;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -16,11 +16,10 @@ use Throwable;
  * Mirrors NotifyTelegramOfNewSeller exactly (same bot/chat config, same
  * fire-and-forget-with-logging error handling) — this is the Super-Admin-
  * only counterpart for buyers' Commercial Offer requests, which is why
- * admin/commercial-offers is itself gated behind EnsureUserIsSuperAdmin:
- * whoever gets this Telegram message is the only staff role that can act
- * on it.
+ * admin/offers is itself gated behind EnsureUserIsSuperAdmin: whoever gets
+ * this Telegram message is the only staff role that can act on it.
  */
-class NotifyTelegramOfNewCommercialOfferRequest implements ShouldQueue
+class NotifyTelegramOfNewOfferRequest implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -34,7 +33,7 @@ class NotifyTelegramOfNewCommercialOfferRequest implements ShouldQueue
      * Create a new job instance.
      */
     public function __construct(
-        public CommercialOfferRequest $commercialOfferRequest,
+        public OfferRequest $offerRequest,
     ) {}
 
     /**
@@ -51,32 +50,32 @@ class NotifyTelegramOfNewCommercialOfferRequest implements ShouldQueue
             return;
         }
 
-        $this->commercialOfferRequest->loadMissing('items.seller');
+        $this->offerRequest->loadMissing('items.seller');
 
-        $itemCount = $this->commercialOfferRequest->items->count();
-        $sellerNames = $this->commercialOfferRequest->items
+        $itemCount = $this->offerRequest->items->count();
+        $sellerNames = $this->offerRequest->items
             ->pluck('seller.name')
             ->filter()
             ->unique()
             ->values();
-        $grandTotal = $this->commercialOfferRequest->items->sum(fn ($item) => $item->lineTotal());
+        $grandTotal = $this->offerRequest->items->sum(fn ($item) => $item->lineTotal());
 
         $lines = [
             '<b>New commercial offer request</b>',
-            "Phone: {$this->commercialOfferRequest->phone}",
+            "Phone: {$this->offerRequest->phone}",
         ];
 
-        if ($this->commercialOfferRequest->company_name) {
-            $lines[] = "Company: {$this->commercialOfferRequest->company_name}";
+        if ($this->offerRequest->company_name) {
+            $lines[] = "Company: {$this->offerRequest->company_name}";
         }
 
-        if ($this->commercialOfferRequest->email) {
-            $lines[] = "Email: {$this->commercialOfferRequest->email}";
+        if ($this->offerRequest->email) {
+            $lines[] = "Email: {$this->offerRequest->email}";
         }
 
         $lines[] = "Items: {$itemCount} across {$sellerNames->count()} seller(s) (".$sellerNames->implode(', ').')';
         $lines[] = 'Total: '.number_format($grandTotal).' UZS';
-        $lines[] = route('admin.commercial-offers.show', $this->commercialOfferRequest);
+        $lines[] = route('admin.offers.show', $this->offerRequest);
 
         $text = implode("\n", $lines);
 
@@ -89,14 +88,14 @@ class NotifyTelegramOfNewCommercialOfferRequest implements ShouldQueue
 
             if ($response->failed()) {
                 Log::warning('Telegram notification for new commercial offer request failed.', [
-                    'commercial_offer_request_id' => $this->commercialOfferRequest->id,
+                    'offer_request_id' => $this->offerRequest->id,
                     'status' => $response->status(),
                     'body' => $response->body(),
                 ]);
             }
         } catch (Throwable $e) {
             Log::warning('Telegram notification for new commercial offer request threw an exception.', [
-                'commercial_offer_request_id' => $this->commercialOfferRequest->id,
+                'offer_request_id' => $this->offerRequest->id,
                 'message' => $e->getMessage(),
             ]);
         }

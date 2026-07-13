@@ -52,7 +52,7 @@
                     @forelse ($requests as $request)
                         <tr wire:key="request-{{ $request->id }}" class="h-row-comfortable text-sm text-text-primary hover:bg-surface-hover">
                             <td class="px-4 py-2 font-mono text-xs font-medium">
-                                <a href="{{ route('admin.commercial-offers.show', $request) }}" wire:navigate class="hover:text-accent-700 hover:underline">
+                                <a href="{{ route('admin.offers.show', $request) }}" wire:navigate class="hover:text-accent-700 hover:underline">
                                     {{ $request->phone }}
                                 </a>
                             </td>
@@ -73,7 +73,7 @@
                             </td>
                             <td class="px-4 py-2 text-right text-xs text-text-secondary">{{ $request->created_at->format('M j, Y') }}</td>
                             <td class="px-4 py-2 text-right">
-                                <x-button tag="a" href="{{ route('admin.commercial-offers.show', $request) }}" wire:navigate variant="secondary" size="sm">
+                                <x-button tag="a" href="{{ route('admin.offers.show', $request) }}" wire:navigate variant="secondary" size="sm">
                                     View
                                 </x-button>
                             </td>

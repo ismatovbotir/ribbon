@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Livewire\Admin\CommercialOffers;
+namespace App\Livewire\Admin\Offers;
 
-use App\Models\CommercialOfferRequest;
+use App\Models\OfferRequest;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -44,7 +44,7 @@ class Index extends Component
 
     public function render()
     {
-        $requests = CommercialOfferRequest::query()
+        $requests = OfferRequest::query()
             ->withCount('items')
             ->when($this->search !== '', function ($query) {
                 $query->where(function ($query) {
@@ -56,12 +56,12 @@ class Index extends Component
             ->orderByDesc('created_at')
             ->paginate(25);
 
-        $statusCounts = CommercialOfferRequest::query()
+        $statusCounts = OfferRequest::query()
             ->selectRaw('status, count(*) as aggregate')
             ->groupBy('status')
             ->pluck('aggregate', 'status');
 
-        return view('livewire.admin.commercial-offers.index', [
+        return view('livewire.admin.offers.index', [
             'requests' => $requests,
             'statusCounts' => $statusCounts,
             'statuses' => self::STATUSES,

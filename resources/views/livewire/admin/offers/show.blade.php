@@ -1,18 +1,18 @@
 <div class="max-w-4xl">
-    <x-page-header title="Commercial Offer #{{ $commercialOfferRequest->id }}" subtitle="Multi-seller price-quote request submitted by a buyer.">
+    <x-page-header title="Commercial Offer #{{ $offerRequest->id }}" subtitle="Multi-seller price-quote request submitted by a buyer.">
         <x-slot:actions>
-            <x-button tag="a" href="{{ route('admin.commercial-offers.index') }}" wire:navigate variant="ghost">
+            <x-button tag="a" href="{{ route('admin.offers.index') }}" wire:navigate variant="ghost">
                 ← All requests
             </x-button>
             {{-- State machine: pending -> contacted -> fulfilled, with
                  cancel available from pending or contacted only. See
                  Show.php's class docblock for the full rationale. --}}
-            @if ($commercialOfferRequest->status === 'pending')
+            @if ($offerRequest->status === 'pending')
                 <x-button variant="secondary" wire:click="markContacted" wire:loading.attr="disabled" wire:target="markContacted">
                     Mark contacted
                 </x-button>
             @endif
-            @if (in_array($commercialOfferRequest->status, ['pending', 'contacted']))
+            @if (in_array($offerRequest->status, ['pending', 'contacted']))
                 <x-button variant="primary" wire:click="markFulfilled" wire:loading.attr="disabled" wire:target="markFulfilled">
                     Mark fulfilled
                 </x-button>
@@ -35,14 +35,14 @@
             <p class="text-xs font-medium tracking-wide text-text-muted uppercase">Status</p>
             <div class="mt-1.5">
                 @php
-                    $variant = match ($commercialOfferRequest->status) {
+                    $variant = match ($offerRequest->status) {
                         'fulfilled' => 'success',
                         'pending' => 'warning',
                         'contacted' => 'info',
                         'cancelled' => 'muted',
                         default => 'muted',
                     };
-                    $label = $commercialOfferRequest->status === 'pending' ? 'New' : ucfirst($commercialOfferRequest->status);
+                    $label = $offerRequest->status === 'pending' ? 'New' : ucfirst($offerRequest->status);
                 @endphp
                 <x-badge :variant="$variant" dot>{{ $label }}</x-badge>
             </div>
@@ -50,7 +50,7 @@
 
         <div>
             <p class="text-xs font-medium tracking-wide text-text-muted uppercase">Submitted</p>
-            <p class="mt-1.5 text-sm text-text-primary">{{ $commercialOfferRequest->created_at->format('M j, Y \a\t H:i') }}</p>
+            <p class="mt-1.5 text-sm text-text-primary">{{ $offerRequest->created_at->format('M j, Y \a\t H:i') }}</p>
         </div>
 
         <div>
@@ -72,15 +72,15 @@
         <dl class="divide-y divide-border px-5">
             <div class="flex items-start justify-between gap-4 py-3">
                 <dt class="shrink-0 text-sm text-text-secondary">Phone</dt>
-                <dd class="text-right font-mono text-sm font-medium text-text-primary">{{ $commercialOfferRequest->phone }}</dd>
+                <dd class="text-right font-mono text-sm font-medium text-text-primary">{{ $offerRequest->phone }}</dd>
             </div>
             <div class="flex items-start justify-between gap-4 py-3">
                 <dt class="shrink-0 text-sm text-text-secondary">Company</dt>
-                <dd class="text-right text-sm font-medium text-text-primary">{{ $commercialOfferRequest->company_name ?: '—' }}</dd>
+                <dd class="text-right text-sm font-medium text-text-primary">{{ $offerRequest->company_name ?: '—' }}</dd>
             </div>
             <div class="flex items-start justify-between gap-4 py-3">
                 <dt class="shrink-0 text-sm text-text-secondary">Email</dt>
-                <dd class="text-right text-sm font-medium text-text-primary">{{ $commercialOfferRequest->email ?: '—' }}</dd>
+                <dd class="text-right text-sm font-medium text-text-primary">{{ $offerRequest->email ?: '—' }}</dd>
             </div>
         </dl>
     </div>

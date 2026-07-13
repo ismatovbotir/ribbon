@@ -2,9 +2,9 @@
 
 namespace App\Livewire\Storefront\OfferRequest;
 
-use App\Jobs\NotifyTelegramOfNewCommercialOfferRequest;
-use App\Models\CommercialOfferRequest;
-use App\Models\CommercialOfferRequestItem;
+use App\Jobs\NotifyTelegramOfNewOfferRequest;
+use App\Models\OfferRequest;
+use App\Models\OfferRequestItem;
 use App\Services\OfferSelectionService;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
@@ -14,7 +14,7 @@ use Livewire\Component;
  * selection (see OfferSelectionService) — the "Selection" header badge's
  * destination. Buyer-facing, unauthenticated (buyers never register, see
  * CLAUDE.md): only a phone number is required to submit; company/email are
- * optional, matching the CommercialOfferRequest schema exactly.
+ * optional, matching the OfferRequest schema exactly.
  *
  * Confirmation is a same-page state flip ($submitted), not a redirect —
  * mirrors Sellers\Register's step-3 static confirmation pattern.
@@ -84,13 +84,12 @@ class Show extends Component
     }
 
     /**
-     * Creates one CommercialOfferRequest header plus one
-     * CommercialOfferRequestItem per line item across every seller in the
-     * selection (a single request spans multiple sellers, per CLAUDE.md).
-     * price_at_request is the live price resolved by groupedForDisplay()
-     * at submit time, not whatever was true when the buyer first added the
-     * line — matches the item's own docblock ("a snapshot ... not the
-     * product's current price").
+     * Creates one OfferRequest header plus one OfferRequestItem per line
+     * item across every seller in the selection (a single request spans
+     * multiple sellers, per CLAUDE.md). price_at_request is the live price
+     * resolved by groupedForDisplay() at submit time, not whatever was
+     * true when the buyer first added the line — matches the item's own
+     * docblock ("a snapshot ... not the product's current price").
      */
     public function submit(): void
     {
@@ -104,8 +103,8 @@ class Show extends Component
             return;
         }
 
-        $commercialOfferRequest = DB::transaction(function () use ($groups) {
-            $request = CommercialOfferRequest::create([
+        $offerRequest = DB::transaction(function () use ($groups) {
+            $request = OfferRequest::create([
                 'phone' => $this->phone,
                 'company_name' => $this->companyName !== '' ? $this->companyName : null,
                 'email' => $this->email !== '' ? $this->email : null,
@@ -114,8 +113,8 @@ class Show extends Component
 
             foreach ($groups as $group) {
                 foreach ($group['lines'] as $line) {
-                    CommercialOfferRequestItem::create([
-                        'commercial_offer_request_id' => $request->id,
+                    OfferRequestItem::create([
+                        'offer_request_id' => $request->id,
                         'product_id' => $line['product']->id,
                         'seller_id' => $group['seller']->id,
                         'unit' => $line['unit'],
@@ -132,9 +131,9 @@ class Show extends Component
 
         // Dispatched after the transaction commits (not from inside the
         // closure) so the job — and whoever reads its Telegram message and
-        // clicks straight through to /admin/commercial-offers — never race
-        // a not-yet-committed row.
-        NotifyTelegramOfNewCommercialOfferRequest::dispatch($commercialOfferRequest);
+        // clicks straight through to /admin/offers — never race a
+        // not-yet-committed row.
+        NotifyTelegramOfNewOfferRequest::dispatch($offerRequest);
 
         $this->submitted = true;
     }

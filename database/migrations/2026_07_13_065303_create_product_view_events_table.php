@@ -14,7 +14,7 @@ return new class extends Migration
         // Append-only event log for seller-facing product analytics (see
         // App\Services\ProductAnalyticsService) — no updated_at, rows are
         // never mutated after insert. `seller_id` is denormalized alongside
-        // product_id, same reasoning as commercial_offer_request_items: the
+        // product_id, same reasoning as offer_request_items: the
         // seller-scoped dashboard queries by seller_id directly without a
         // join through products, and a product's seller never changes.
         Schema::create('product_view_events', function (Blueprint $table) {

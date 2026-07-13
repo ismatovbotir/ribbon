@@ -99,10 +99,10 @@
                          than shown-then-403'd for any lesser admin role. --}}
                     @if (Auth::user()->isSuperAdmin())
                         <a
-                            href="{{ route('admin.commercial-offers.index') }}"
+                            href="{{ route('admin.offers.index') }}"
                             wire:navigate
                             title="Commercial Offers"
-                            class="flex h-row-comfortable items-center gap-2.5 rounded-sm border-l-2 px-3 text-sm transition-colors {{ request()->routeIs('admin.commercial-offers.*') ? 'border-accent-600 bg-accent-50 text-accent-700 font-medium' : 'border-transparent text-text-secondary hover:bg-surface-hover hover:text-text-primary' }}"
+                            class="flex h-row-comfortable items-center gap-2.5 rounded-sm border-l-2 px-3 text-sm transition-colors {{ request()->routeIs('admin.offers.*') ? 'border-accent-600 bg-accent-50 text-accent-700 font-medium' : 'border-transparent text-text-secondary hover:bg-surface-hover hover:text-text-primary' }}"
                         >
                             <svg class="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                                 <path d="M4 4.5h9l3 3V15a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5.5a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" />
@@ -186,9 +186,9 @@
                     </a>
                     @if (Auth::user()->isSuperAdmin())
                         <a
-                            href="{{ route('admin.commercial-offers.index') }}"
+                            href="{{ route('admin.offers.index') }}"
                             wire:navigate
-                            class="flex h-row-comfortable items-center gap-2.5 rounded-sm border-l-2 px-3 text-sm {{ request()->routeIs('admin.commercial-offers.*') ? 'border-accent-600 bg-accent-50 text-accent-700 font-medium' : 'border-transparent text-text-secondary' }}"
+                            class="flex h-row-comfortable items-center gap-2.5 rounded-sm border-l-2 px-3 text-sm {{ request()->routeIs('admin.offers.*') ? 'border-accent-600 bg-accent-50 text-accent-700 font-medium' : 'border-transparent text-text-secondary' }}"
                         >
                             Commercial Offers
                         </a>

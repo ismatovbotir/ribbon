@@ -23,7 +23,10 @@ return new class extends Migration
 
             // select_single parameters will only ever have one row per
             // product_parameter_value_id; select_multiple can have several.
-            $table->unique(['product_parameter_value_id', 'category_parameter_option_id']);
+            // Explicit short index name: the default
+            // `product_parameter_value_options_product_parameter_value_id_category_parameter_option_id_unique`
+            // is 96 chars, over MySQL's 64-char identifier limit.
+            $table->unique(['product_parameter_value_id', 'category_parameter_option_id'], 'ppvo_value_option_unique');
         });
     }
 

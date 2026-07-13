@@ -6,8 +6,8 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['commercial_offer_request_id', 'product_id', 'seller_id', 'unit', 'quantity', 'price_at_request'])]
-class CommercialOfferRequestItem extends Model
+#[Fillable(['offer_request_id', 'product_id', 'seller_id', 'unit', 'quantity', 'price_at_request'])]
+class OfferRequestItem extends Model
 {
     /**
      * Get the attributes that should be cast.
@@ -25,9 +25,9 @@ class CommercialOfferRequestItem extends Model
     /**
      * The request header this line item belongs to.
      */
-    public function commercialOfferRequest(): BelongsTo
+    public function offerRequest(): BelongsTo
     {
-        return $this->belongsTo(CommercialOfferRequest::class);
+        return $this->belongsTo(OfferRequest::class);
     }
 
     /**
