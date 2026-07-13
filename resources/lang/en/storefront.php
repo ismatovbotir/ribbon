@@ -1,0 +1,141 @@
+<?php
+
+return [
+
+    // ---- Header / shell ----
+    'nav.brand' => 'Ribbon',
+    'nav.catalog_trigger' => 'Catalog',
+    'nav.catalog_menu_label' => 'All categories',
+    'nav.search_placeholder' => 'Search products, brands…',
+    'nav.search_submit' => 'Search',
+    'nav.selection_label' => 'Selection',
+    'nav.selection_aria' => 'Your selection, :count items',
+    'nav.become_seller' => 'Become a seller',
+    'nav.seller_login' => 'Seller login',
+    'nav.open_menu' => 'Open menu',
+    'nav.close_menu' => 'Close menu',
+    'nav.language' => 'Language',
+    'nav.no_categories' => 'No categories yet.',
+
+    // ---- Footer ----
+    'footer.tagline' => 'The B2B marketplace for auto-ID printing rolls, printers, scanners and accessories.',
+    'footer.catalog_heading' => 'Catalog',
+    'footer.sellers_heading' => 'For sellers',
+    'footer.copyright' => '© :year Ribbon. All rights reserved.',
+
+    // ---- SEO (meta title/description — distinct from the visible
+    // home.h1/home.intro/catalog.intro_* copy above, which is for
+    // on-page/AI-answer-engine extraction; these are for the <title> tag
+    // and SERP snippet specifically, so they stay short and keyword-led.
+    // Titles/descriptions surface exact specs — width, core size, material,
+    // compatible printer models — since that's how B2B auto-ID buyers
+    // actually search, not generic marketing copy) ----
+    'seo.home_title' => 'Thermal Transfer Ribbons, TT Printers & Barcode Scanners — Wholesale B2B Marketplace',
+    'seo.home_description' => 'Ribbon connects B2B buyers with verified sellers of thermal transfer ribbons (wax, wax-resin, resin), label printers, barcode scanners and PDAs. Compare wholesale storefront pricing and request a commercial offer by phone — no buyer account required.',
+    'seo.catalog_title' => ':category — Wholesale Supply',
+    'seo.catalog_description_with_specs' => 'Browse :category wholesale on Ribbon. Filter by :specs and compare storefront pricing from verified sellers — request a commercial offer by phone, no account needed.',
+    'seo.catalog_description' => 'Browse :category wholesale on Ribbon and compare storefront pricing from verified sellers — request a commercial offer by phone, no account needed.',
+    'seo.product_description_with_specs' => ':name — :specs. Sold by :seller. Compare wholesale pricing and request a commercial offer by phone, no account needed.',
+    'seo.product_description' => ':name. Sold by :seller. Compare wholesale pricing and request a commercial offer by phone, no account needed.',
+    'seo.product_title' => ':name — :category',
+
+    // ---- Home page ----
+    'home.h1' => 'Ribbon — B2B marketplace for thermal transfer ribbons, printers & auto-ID equipment',
+    'home.intro' => 'Ribbon is a business-to-business marketplace for the auto-ID industry: thermal transfer ribbons (wax, wax-resin, and resin), thermal transfer printers, barcode scanners, PDAs, and related accessories. Sellers list their own products with specifications and pricing; buyers browse the full catalog without creating an account, and see each product\'s price and seller directly on the listing.',
+    'home.categories_heading' => 'Browse by category',
+    'home.categories_count' => ':count categories currently listed.',
+    'home.products_heading' => 'Recently added',
+    'home.no_categories_title' => 'Catalog coming soon',
+    'home.no_categories_body' => 'Categories will appear here as soon as they are published.',
+
+    // ---- Category / catalog page ----
+    'catalog.intro_with_count' => ':category: :count product listing(s) currently available from verified Ribbon sellers, each published with specifications and pricing.',
+    'catalog.intro_no_count' => ':category products on Ribbon, listed by verified sellers with specifications and pricing.',
+    'catalog.intro_specs' => 'Products in this category can be filtered by: :specs.',
+    'catalog.breadcrumb_home' => 'Home',
+    'catalog.results_count' => ':count results',
+    'catalog.sort_label' => 'Sort',
+    'catalog.sort_newest' => 'Newest',
+    'catalog.sort_price_asc' => 'Price: Low to High',
+    'catalog.sort_price_desc' => 'Price: High to Low',
+    'catalog.filters_heading' => 'Filters',
+    'catalog.filters_button' => 'Filters',
+    'catalog.filters_clear' => 'Clear filters',
+    'catalog.filters_clear_all' => 'Clear all',
+    'catalog.filters_apply' => 'Show :count results',
+    'catalog.filters_min' => 'Min',
+    'catalog.filters_max' => 'Max',
+    'catalog.filters_none' => 'This category has no filters yet.',
+    'catalog.empty_title' => 'No products here yet',
+    'catalog.empty_body' => 'Check back soon, or browse other categories.',
+    'catalog.empty_cta' => 'Browse catalog',
+    'catalog.filtered_empty_title' => 'No products match these filters',
+    'catalog.filtered_empty_body' => 'Try removing a filter or two.',
+    'catalog.no_image' => 'No image',
+    'catalog.error_title' => 'Something went wrong',
+    'catalog.error_body' => 'We couldn\'t load these products. Please try again.',
+    'catalog.error_retry' => 'Retry',
+
+    // ---- Product card ----
+    'product_card.add_button' => '+ Add',
+    'product_card.add_coming_soon' => 'Coming soon',
+    'product_card.sold_by' => 'Sold by :seller',
+    'product_card.no_products_label' => 'No products',
+
+    // ---- Units (mirrors sellers.products.unit.* for buyer-facing copy) ----
+    'unit.pcs' => 'pc',
+    'unit.pack' => 'pack',
+    'unit.box' => 'box',
+
+    // ---- Product detail page ----
+    'product_detail.gallery_no_image' => 'No image provided by seller',
+    'product_detail.gallery_prev' => 'Previous image',
+    'product_detail.gallery_next' => 'Next image',
+    'product_detail.gallery_thumbnail' => 'Image :n',
+    'product_detail.in_category_prefix' => 'In:',
+    'product_detail.default_unit_tag' => 'Default',
+    'product_detail.unit_selector_label' => 'Select unit',
+    'product_detail.qty_label' => 'Quantity',
+    'product_detail.qty_decrease' => 'Decrease quantity',
+    'product_detail.qty_increase' => 'Increase quantity',
+    'product_detail.add_to_request' => 'Add to request',
+    'product_detail.added' => 'Added ✓',
+    'product_detail.ships_from' => 'Ships from: :location',
+    'product_detail.specifications_heading' => 'Specifications',
+    'product_detail.no_specifications' => 'No specifications listed yet',
+    'product_detail.price_table_caption' => 'Price by unit',
+    'product_detail.price_col_unit' => 'Unit',
+    'product_detail.price_col_qty' => 'Quantity',
+    'product_detail.price_col_price' => 'Price',
+    'product_detail.price_col_per_unit' => 'Price per pc',
+    'product_detail.seller_label' => 'Sold by',
+    'product_detail.call_seller_label' => 'Or call the seller directly:',
+    'product_detail.request_note' => 'Adds this item to a commercial offer request, sent directly to :seller. Ribbon has no online checkout or payment — only a phone number is required to submit the request, or call the seller directly below.',
+
+    // ---- Offer request review + submission page ----
+    'offer_request.title' => 'Your request',
+    'offer_request.subtitle' => 'Review the items below, then submit your contact details — sellers will reach out to you directly with an offer.',
+    'offer_request.empty_title' => 'Your request is empty',
+    'offer_request.empty_body' => 'Browse the catalog and add items to your request.',
+    'offer_request.browse_cta' => 'Browse catalog',
+    'offer_request.remove_button' => 'Remove',
+    'offer_request.qty_decrease' => 'Decrease quantity',
+    'offer_request.qty_increase' => 'Increase quantity',
+    'offer_request.subtotal_label' => 'Subtotal',
+    'offer_request.grand_total_label' => 'Total',
+    'offer_request.contact_heading' => 'Your contact details',
+    'offer_request.contact_subtitle' => 'Only a phone number is required — sellers will call or message you back.',
+    'offer_request.phone_label' => 'Phone',
+    'offer_request.phone_placeholder' => '+998 90 123 45 67',
+    'offer_request.company_label' => 'Company (optional)',
+    'offer_request.company_placeholder' => 'Your company name',
+    'offer_request.email_label' => 'Email (optional)',
+    'offer_request.email_placeholder' => 'you@company.com',
+    'offer_request.submit_button' => 'Submit request',
+    'offer_request.empty_error' => 'Your request is empty — add at least one item before submitting.',
+    'offer_request.validation.phone_required' => 'Phone number is required.',
+    'offer_request.validation.email_invalid' => 'Please enter a valid email address.',
+    'offer_request.confirmation_title' => 'Request sent',
+    'offer_request.confirmation_body' => 'Thanks — the seller(s) will contact you shortly with an offer.',
+    'offer_request.continue_shopping' => 'Continue browsing',
+];

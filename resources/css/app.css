@@ -1,0 +1,309 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+
+/**
+ * ============================================================================
+ * RIBBON DESIGN SYSTEM — design tokens
+ * ============================================================================
+ * Single source of truth for all three UIs (buyer storefront, seller
+ * dashboard, admin/CMS). Tailwind 4 CSS-first theming: everything below is a
+ * real CSS custom property, and anything under a namespace Tailwind
+ * recognizes (--color-*, --text-*, --font-*, --radius-*, --shadow-*,
+ * --spacing-*, --z-*, ...) also generates matching utility classes.
+ *
+ * Full rationale, usage guidance and per-screen specs live in
+ * docs/design/. This file is the implementation of that spec, not a
+ * substitute for reading it.
+ *
+ * KEY ARCHITECTURAL DECISION — contextual accent theming:
+ * Components must NEVER hardcode `admin-*` or `seller-*` color classes.
+ * Author every shared component (buttons, links, focus rings, active nav
+ * state, checked checkboxes, badges that need an accent) against the
+ * neutral `accent-*` scale. Each panel's root layout element wraps its
+ * content in a scope class (`.panel-admin` or `.panel-seller`, defined
+ * below the @theme block) that rebinds `--color-accent-*` to that panel's
+ * hue. The result: one component library, two panels that are
+ * unmistakably different at a glance, zero per-component branching.
+ * ============================================================================
+ */
+
+@theme {
+    /* ------------------------------------------------------------------ */
+    /* Typography                                                          */
+    /* ------------------------------------------------------------------ */
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+
+    /*
+     * Admin/seller UIs are information-dense working tools, not marketing
+     * pages: the base body size is 13px, not 16px. This scale intentionally
+     * overrides Tailwind's default --text-* sizes so every `text-sm`,
+     * `text-base` etc. utility used anywhere in the admin/seller apps
+     * inherits this denser rhythm automatically. The buyer storefront runs
+     * a roomier, ~16px-base version of this same scale instead — see the
+     * `.storefront` scope below, which re-overrides these same --text-*
+     * variables for anything rendered inside it (same mechanism `.panel-*`
+     * uses for --color-accent-*, applied to typography too). The values
+     * set directly here are the admin/seller (and inherited fallback)
+     * values only.
+     */
+    --text-xs: 0.6875rem; /* 11px — table meta, timestamps, helper/error text */
+    --text-xs--line-height: 1rem;
+    --text-sm: 0.8125rem; /* 13px — default UI text: table cells, nav, labels */
+    --text-sm--line-height: 1.25rem;
+    --text-base: 0.875rem; /* 14px — form input text, emphasized body copy */
+    --text-base--line-height: 1.5rem;
+    --text-lg: 1rem; /* 16px — card/section titles, modal headings */
+    --text-lg--line-height: 1.5rem;
+    --text-xl: 1.25rem; /* 20px — page titles (h1 in a panel shell) */
+    --text-xl--line-height: 1.75rem;
+    --text-2xl: 1.5rem; /* 24px — KPI numbers on dashboard summary cards */
+    --text-2xl--line-height: 2rem;
+
+    /* ------------------------------------------------------------------ */
+    /* Semantic color roles — the shared structural base both panels sit on */
+    /* ------------------------------------------------------------------ */
+    --color-surface: var(--color-white); /* page background */
+    --color-surface-subtle: var(--color-slate-50); /* sidebar, table header row, filter bar */
+    --color-surface-raised: var(--color-white); /* cards, panels, table body */
+    --color-surface-sunken: var(--color-slate-100); /* code/ID chips, disabled inputs, well */
+    --color-surface-overlay: var(--color-white); /* modals, dropdowns, popovers */
+    --color-surface-hover: var(--color-slate-50); /* row/item hover */
+    --color-surface-selected: var(--color-slate-100); /* selected table rows (checkbox-selected, not active-nav) */
+
+    --color-border: var(--color-slate-200); /* default 1px dividers, input borders */
+    --color-border-strong: var(--color-slate-300); /* emphasized dividers, table outer border */
+
+    --color-text-primary: var(--color-slate-900);
+    --color-text-secondary: var(--color-slate-600);
+    --color-text-muted: var(--color-slate-400);
+    --color-text-inverse: var(--color-white);
+    --color-text-disabled: var(--color-slate-300);
+
+    /* ------------------------------------------------------------------ */
+    /* Panel accent hues — the two concrete palettes                      */
+    /* ------------------------------------------------------------------ */
+    /* Super Admin / CMS — indigo. Reads as "authority / control-room". */
+    --color-admin-50: var(--color-indigo-50);
+    --color-admin-100: var(--color-indigo-100);
+    --color-admin-200: var(--color-indigo-200);
+    --color-admin-300: var(--color-indigo-300);
+    --color-admin-500: var(--color-indigo-500);
+    --color-admin-600: var(--color-indigo-600);
+    --color-admin-700: var(--color-indigo-700);
+    --color-admin-900: var(--color-indigo-900);
+
+    /* Seller dashboard — teal. Reads as "operational / business tool",
+       deliberately far from indigo on the hue wheel so the two are never
+       confused even by colorblind staff switching contexts quickly (they
+       differ in hue AND lightness/chroma curve, not just hue angle). */
+    --color-seller-50: var(--color-teal-50);
+    --color-seller-100: var(--color-teal-100);
+    --color-seller-200: var(--color-teal-200);
+    --color-seller-300: var(--color-teal-300);
+    --color-seller-500: var(--color-teal-500);
+    --color-seller-600: var(--color-teal-600);
+    --color-seller-700: var(--color-teal-700);
+    --color-seller-900: var(--color-teal-900);
+
+    /* Buyer storefront — orange. This is the one actual sales-facing
+       surface real customers browse (admin/seller are internal tools) —
+       warm and conversion-oriented on purpose, as far from both indigo
+       (cool/authority) and teal (cool/operational) as the other two are
+       from each other, so all three panels remain distinguishable at a
+       glance and under colorblind simulation. See
+       docs/design/08-storefront-design-tokens.md for the full rationale. */
+    --color-storefront-50: var(--color-orange-50);
+    --color-storefront-100: var(--color-orange-100);
+    --color-storefront-200: var(--color-orange-200);
+    --color-storefront-300: var(--color-orange-300);
+    --color-storefront-500: var(--color-orange-500);
+    --color-storefront-600: var(--color-orange-600);
+    --color-storefront-700: var(--color-orange-700);
+    --color-storefront-900: var(--color-orange-900);
+
+    /*
+     * Neutral placeholder for `accent-*` when no `.panel-admin` /
+     * `.panel-seller` / `.storefront` scope is present (e.g. isolated
+     * component previews). Real pages always render inside one of the
+     * three scopes below, which override every one of these at the shell
+     * root.
+     */
+    --color-accent-50: var(--color-admin-50);
+    --color-accent-100: var(--color-admin-100);
+    --color-accent-200: var(--color-admin-200);
+    --color-accent-300: var(--color-admin-300);
+    --color-accent-500: var(--color-admin-500);
+    --color-accent-600: var(--color-admin-600);
+    --color-accent-700: var(--color-admin-700);
+    --color-accent-900: var(--color-admin-900);
+
+    /* ------------------------------------------------------------------ */
+    /* Status semantics — shared vocabulary across both panels             */
+    /* Usage pattern per badge: bg-{x}-50 text-{x}-700 border border-{x}-200 */
+    /* ------------------------------------------------------------------ */
+    --color-success-50: var(--color-emerald-50);
+    --color-success-200: var(--color-emerald-200);
+    --color-success-600: var(--color-emerald-600);
+    --color-success-700: var(--color-emerald-700);
+
+    --color-warning-50: var(--color-amber-50);
+    --color-warning-200: var(--color-amber-200);
+    --color-warning-600: var(--color-amber-600);
+    --color-warning-700: var(--color-amber-700);
+
+    --color-danger-50: var(--color-red-50);
+    --color-danger-200: var(--color-red-200);
+    --color-danger-600: var(--color-red-600);
+    --color-danger-700: var(--color-red-700);
+
+    /* "suspended" and other neutral/inactive states — deliberately named
+       `muted-*` rather than reusing bare `slate-*` so it reads as a status
+       token alongside success/warning/danger/info in component code. */
+    --color-muted-50: var(--color-slate-100);
+    --color-muted-200: var(--color-slate-300);
+    --color-muted-600: var(--color-slate-600);
+    --color-muted-700: var(--color-slate-700);
+
+    /* Informational, non-blocking indicators — the is_vitrin badge, draft
+       hints, "new" labels. Sky rather than either panel accent so it never
+       gets misread as an admin/seller-branded action affordance. */
+    --color-info-50: var(--color-sky-50);
+    --color-info-200: var(--color-sky-200);
+    --color-info-600: var(--color-sky-600);
+    --color-info-700: var(--color-sky-700);
+
+    /* ------------------------------------------------------------------ */
+    /* Radii — small and businesslike for admin/seller; xs–lg are the only  */
+    /* sizes those two panels ever use. xl/2xl exist for the storefront    */
+    /* only (product cards, hero panels, primary CTAs) — see               */
+    /* docs/design/08-storefront-design-tokens.md. Admin/seller should     */
+    /* never reach for xl/2xl; storefront should rarely reach for xs/sm.   */
+    /* ------------------------------------------------------------------ */
+    --radius-xs: 0.1875rem; /* 3px — checkboxes, tiny chips */
+    --radius-sm: 0.25rem; /* 4px — inputs, buttons, table cells, badges (non-pill) */
+    --radius-md: 0.375rem; /* 6px — cards, panel sections */
+    --radius-lg: 0.5rem; /* 8px — modals, popovers, dropdown menus */
+    --radius-xl: 0.75rem; /* 12px — storefront product cards, image frames */
+    --radius-2xl: 1rem; /* 16px — storefront hero panels, large promo cards */
+
+    /* ------------------------------------------------------------------ */
+    /* Elevation — flat-first. Borders do most of the separation work;     */
+    /* shadow is reserved for things that visually float above content.   */
+    /* Overrides Tailwind's default shadow-xs/sm/md/lg values.            */
+    /* ------------------------------------------------------------------ */
+    --shadow-xs: 0 1px 2px 0 rgb(15 23 42 / 0.04);
+    --shadow-sm: 0 1px 3px 0 rgb(15 23 42 / 0.08), 0 1px 2px -1px rgb(15 23 42 / 0.06);
+    --shadow-md: 0 4px 8px -2px rgb(15 23 42 / 0.1), 0 2px 4px -2px rgb(15 23 42 / 0.06);
+    --shadow-lg: 0 12px 24px -6px rgb(15 23 42 / 0.14), 0 4px 8px -4px rgb(15 23 42 / 0.08);
+
+    /* ------------------------------------------------------------------ */
+    /* Layout dimension tokens — named on the --spacing-* namespace so     */
+    /* they generate plain utilities (w-sidebar, h-topbar, h-row-compact…) */
+    /* ------------------------------------------------------------------ */
+    --spacing-sidebar: 15.5rem; /* 248px — expanded sidebar, both panels */
+    --spacing-sidebar-collapsed: 3.5rem; /* 56px — icon-only rail */
+    --spacing-topbar: 3.5rem; /* 56px */
+    --spacing-row-compact: 2rem; /* 32px — dense table density */
+    --spacing-row-comfortable: 2.75rem; /* 44px — default table density */
+    --spacing-row-spacious: 3.5rem; /* 56px — spacious density */
+
+    /* Storefront header — taller than the admin/seller topbar on purpose:
+       it carries a logo, search, category nav trigger, locale switcher AND
+       the selection indicator, and it's the first thing a real customer
+       sees, so it gets more breathing room than an internal tool's topbar.
+       Mobile collapses to the same 56px as spacing-topbar (reused directly,
+       not redefined) since there's less to fit once nav collapses behind a
+       hamburger. See docs/design/09-storefront-layout-shell.md. */
+    --spacing-storefront-header: 4.5rem; /* 72px — desktop/tablet header height */
+
+    /* ------------------------------------------------------------------ */
+    /* Z-index scale                                                       */
+    /* ------------------------------------------------------------------ */
+    --z-dropdown: 30;
+    --z-sticky: 40; /* sticky table header, sticky bulk-action bar */
+    --z-modal-backdrop: 50;
+    --z-modal: 51;
+    --z-toast: 60;
+    --z-tooltip: 70;
+}
+
+/**
+ * Panel accent scopes. Wrap each panel's root layout element in one of
+ * these classes (e.g. <body class="panel-admin"> in the admin layout,
+ * <body class="panel-seller"> in the seller layout). Every component
+ * authored against `accent-*` utilities re-themes automatically — no
+ * component-level branching required. See docs/design/01-design-tokens.md.
+ */
+.panel-admin {
+    --color-accent-50: var(--color-admin-50);
+    --color-accent-100: var(--color-admin-100);
+    --color-accent-200: var(--color-admin-200);
+    --color-accent-300: var(--color-admin-300);
+    --color-accent-500: var(--color-admin-500);
+    --color-accent-600: var(--color-admin-600);
+    --color-accent-700: var(--color-admin-700);
+    --color-accent-900: var(--color-admin-900);
+}
+
+.panel-seller {
+    --color-accent-50: var(--color-seller-50);
+    --color-accent-100: var(--color-seller-100);
+    --color-accent-200: var(--color-seller-200);
+    --color-accent-300: var(--color-seller-300);
+    --color-accent-500: var(--color-seller-500);
+    --color-accent-600: var(--color-seller-600);
+    --color-accent-700: var(--color-seller-700);
+    --color-accent-900: var(--color-seller-900);
+}
+
+/*
+ * Buyer storefront scope. Same accent-rebinding mechanism as the two panels
+ * above, PLUS a second override the panels don't need: the --text-* scale.
+ * Admin/seller intentionally run a dense 13px-base scale (see the
+ * typography section of @theme above); the storefront is a conversion
+ * surface that needs a roomier, ~16px-base scale instead. Overriding
+ * --text-xs…--text-2xl here (rather than defining a parallel
+ * --text-storefront-* namespace) means every component still just writes
+ * `text-sm`/`text-base`/etc — the same class resolves to a different actual
+ * size depending on which of the three scopes it renders inside, exactly
+ * like `accent-*` already does for color. text-3xl and up are intentionally
+ * NOT touched here: Tailwind's built-in defaults for those tiers (30px+)
+ * are untouched by @theme above and are already large enough for storefront
+ * hero headlines — admin/seller never reach for text-3xl+ (their ceiling is
+ * text-2xl, reserved for dashboard KPI numbers), so there's no collision.
+ * See docs/design/08-storefront-design-tokens.md for the full rationale.
+ */
+.storefront {
+    --color-accent-50: var(--color-storefront-50);
+    --color-accent-100: var(--color-storefront-100);
+    --color-accent-200: var(--color-storefront-200);
+    --color-accent-300: var(--color-storefront-300);
+    --color-accent-500: var(--color-storefront-500);
+    --color-accent-600: var(--color-storefront-600);
+    --color-accent-700: var(--color-storefront-700);
+    --color-accent-900: var(--color-storefront-900);
+
+    --text-xs: 0.75rem; /* 12px — image captions, fine print, meta */
+    --text-xs--line-height: 1rem;
+    --text-sm: 0.875rem; /* 14px — secondary/meta text, labels, badges */
+    --text-sm--line-height: 1.25rem;
+    --text-base: 1rem; /* 16px — default body text, spec values, form inputs */
+    --text-base--line-height: 1.5rem;
+    --text-lg: 1.125rem; /* 18px — product card titles */
+    --text-lg--line-height: 1.75rem;
+    --text-xl: 1.5rem; /* 24px — section headings */
+    --text-xl--line-height: 2rem;
+    --text-2xl: 2rem; /* 32px — page-level headings (category H1, product H1) */
+    --text-2xl--line-height: 2.5rem;
+}
+
+/* Standard Alpine.js flash-of-unstyled-content guard: Alpine removes the
+   `x-cloak` attribute once it initializes an element, but the initial
+   hiding has to come from CSS since it must apply before Alpine's JS runs. */
+[x-cloak] {
+    display: none !important;
+}
