@@ -32,8 +32,8 @@ class DatabaseSeeder extends Seeder
         // Guarded by environment (not just "not called by default") so it
         // can never fire from a production `db:seed`/`migrate:fresh --seed`
         // even by accident. See DemoCatalogSeeder's own docblock.
-        if (app()->environment('local')) {
-            $this->call(DemoCatalogSeeder::class);
-        }
+        //if (app()->environment('local')) {
+        $this->call(DemoCatalogSeeder::class);
+        //}
     }
 }
