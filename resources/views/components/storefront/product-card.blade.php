@@ -56,15 +56,15 @@
         ->take(3);
 @endphp
 
-<div class="group relative flex flex-col overflow-hidden rounded-xl border border-border bg-surface-raised shadow-xs transition-shadow hover:shadow-sm">
+<div class="group relative flex flex-col overflow-hidden rounded-xl bg-surface-raised transition-all duration-200 hover:bg-surface-hover hover:shadow-lg">
     <a href="{{ $productUrl }}" class="contents">
         {{-- Image region --}}
-        <div class="aspect-square overflow-hidden rounded-t-xl bg-surface-subtle p-3">
+        <div class="aspect-square overflow-hidden rounded-xl bg-surface-subtle p-3">
             @if ($coverImage)
                 <img
                     src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($coverImage->path) }}"
                     alt="{{ $name }}"
-                    class="h-full w-full object-contain"
+                    class="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
                     loading="lazy"
                 >
             @else
@@ -87,12 +87,12 @@
 
             <h3 class="line-clamp-2 text-lg font-semibold text-text-primary">{{ $name !== '' ? $name : $product->name }}</h3>
 
-            @if ($product->brand && $product->brand->id !== 1)
-                <p class="text-xs text-text-secondary">{{ $product->brand->name }}</p>
-            @endif
-
-            @if ($product->seller)
-                <p class="text-xs text-text-secondary">{{ __('storefront.product_card.sold_by', ['seller' => $product->seller->name]) }}</p>
+            @if (($product->brand && $product->brand->id !== 1) || $product->seller)
+                <p class="text-xs text-text-secondary">
+                    @if ($product->brand && $product->brand->id !== 1){{ $product->brand->name }}@endif
+                    @if ($product->brand && $product->brand->id !== 1 && $product->seller) &middot; @endif
+                    @if ($product->seller){{ __('storefront.product_card.sold_by', ['seller' => $product->seller->name]) }}@endif
+                </p>
             @endif
 
             @if ($specEntries->isNotEmpty())
@@ -108,40 +108,23 @@
 
             <div class="flex-1"></div>
 
-            <div class="mt-3 flex items-end justify-between gap-2">
+            <div class="mt-4 flex items-end justify-between gap-2">
                 @if ($vitrinPrice)
-                    <p>
-                        <span class="text-xl font-bold tabular-nums text-text-primary">{{ number_format((float) $vitrinPrice->price) }} UZS</span>
-                        <span class="text-sm text-text-secondary">/ {{ __('storefront.unit.'.$vitrinPrice->unit) }}</span>
-                    </p>
+                    <div>
+                        <p class="text-2xl leading-none font-bold tracking-tight tabular-nums text-text-primary">
+                            {{ number_format((float) $vitrinPrice->price) }}
+                        </p>
+                        <p class="mt-1 text-xs font-medium tracking-wide text-text-muted uppercase">
+                            {{ __('storefront.unit.'.$vitrinPrice->unit) }} · UZS
+                        </p>
+                    </div>
                 @else
                     <span></span>
                 @endif
             </div>
         </div>
 
-        {{-- Stretched link overlay — the whole card is clickable, but the
-             "+ Add" button below lives outside this <a>'s DOM subtree (a
-             sibling), so it stays independently clickable rather than
-             triggering navigation. See doc 10's markup gotcha note. --}}
+        {{-- Stretched link overlay — the whole card is clickable. --}}
         <span class="absolute inset-0" aria-hidden="true"></span>
     </a>
-
-    {{--
-        Quick-add ("+ Add") — visually implemented per doc 10, but not
-        wired to real add-to-selection logic yet: the selection/offer-
-        request flow (session shape, increment-on-duplicate, etc.) is a
-        separate task (#19). Disabled rather than silently doing nothing on
-        click, so it doesn't read as broken.
-    --}}
-    <div class="pointer-events-none absolute right-4 bottom-4 z-10">
-        <button
-            type="button"
-            disabled
-            title="{{ __('storefront.product_card.add_coming_soon') }}"
-            class="pointer-events-auto flex h-9 items-center rounded-sm border border-border bg-surface px-3 text-sm font-medium text-text-secondary opacity-90 disabled:cursor-not-allowed"
-        >
-            {{ __('storefront.product_card.add_button') }}
-        </button>
-    </div>
 </div>

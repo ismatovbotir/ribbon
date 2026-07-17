@@ -1,5 +1,7 @@
 <?php
 
+use App\Livewire\Admin\Articles\Form as AdminArticlesForm;
+use App\Livewire\Admin\Articles\Index as AdminArticlesIndex;
 use App\Livewire\Admin\Banners\Form as AdminBannersForm;
 use App\Livewire\Admin\Banners\Index as AdminBannersIndex;
 use App\Livewire\Admin\Brands\Index as AdminBrandsIndex;
@@ -23,6 +25,8 @@ use App\Livewire\Sellers\Products\Edit as SellerProductsEdit;
 use App\Livewire\Sellers\Products\Index as SellerProductsIndex;
 use App\Livewire\Sellers\Profile\Index as SellerProfileIndex;
 use App\Livewire\Sellers\Register as SellerRegister;
+use App\Livewire\Storefront\Articles\Index as StorefrontArticlesIndex;
+use App\Livewire\Storefront\Articles\Show as StorefrontArticlesShow;
 use App\Livewire\Storefront\Catalog\Show as StorefrontCatalogShow;
 use App\Livewire\Storefront\Home as StorefrontHome;
 use App\Livewire\Storefront\OfferRequest\Show as StorefrontOfferRequestShow;
@@ -57,6 +61,15 @@ Route::prefix('catalog')->name('storefront.catalog.')->group(function () {
 // example doc 10 (product card) and doc 12 (this page) both use.
 Route::prefix('products')->name('storefront.products.')->group(function () {
     Route::get('/{productSlug}', StorefrontProductsShow::class)->name('show');
+});
+
+// Educational content (history, ribbon types, use cases, technical
+// explainers) — admin-authored via Admin\Articles, public/unauthenticated
+// like the rest of the storefront. /create-style ordering isn't a concern
+// here (no {articleSlug} could ever literally be the word "articles").
+Route::prefix('articles')->name('storefront.articles.')->group(function () {
+    Route::get('/', StorefrontArticlesIndex::class)->name('index');
+    Route::get('/{articleSlug}', StorefrontArticlesShow::class)->name('show');
 });
 
 // Global cross-category search — `q` matches the header search form's
@@ -192,5 +205,13 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
         // isn't swallowed by the {banner} route-model-binding parameter.
         Route::get('/create', AdminBannersForm::class)->name('create');
         Route::get('/{banner}/edit', AdminBannersForm::class)->name('edit');
+    });
+
+    Route::prefix('articles')->name('articles.')->group(function () {
+        Route::get('/', AdminArticlesIndex::class)->name('index');
+        // /create must be registered before /{article}/edit, same reasoning
+        // as admin/banners above.
+        Route::get('/create', AdminArticlesForm::class)->name('create');
+        Route::get('/{article}/edit', AdminArticlesForm::class)->name('edit');
     });
 });

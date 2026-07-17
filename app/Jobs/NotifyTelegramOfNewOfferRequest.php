@@ -3,31 +3,23 @@
 namespace App\Jobs;
 
 use App\Models\OfferRequest;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
  * Mirrors NotifyTelegramOfNewSeller exactly (same bot/chat config, same
- * fire-and-forget-with-logging error handling) — this is the Super-Admin-
- * only counterpart for buyers' Commercial Offer requests, which is why
- * admin/offers is itself gated behind EnsureUserIsSuperAdmin: whoever gets
- * this Telegram message is the only staff role that can act on it.
+ * fire-and-forget-with-logging error handling, and deliberately NOT
+ * ShouldQueue for the same reason — see that class's docblock) — this is
+ * the Super-Admin-only counterpart for buyers' Commercial Offer requests,
+ * which is why admin/offers is itself gated behind EnsureUserIsSuperAdmin:
+ * whoever gets this Telegram message is the only staff role that can act
+ * on it.
  */
-class NotifyTelegramOfNewOfferRequest implements ShouldQueue
+class NotifyTelegramOfNewOfferRequest
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
-
-    /**
-     * A bad token or a Telegram API hiccup is handled inline (logged and
-     * swallowed), not by retrying — one attempt is enough.
-     */
-    public int $tries = 1;
+    use Dispatchable;
 
     /**
      * Create a new job instance.

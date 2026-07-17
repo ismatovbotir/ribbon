@@ -125,10 +125,19 @@
                         </svg>
                         <span>Banners</span>
                     </a>
+                    <a
+                        href="{{ route('admin.articles.index') }}"
+                        wire:navigate
+                        title="Articles"
+                        class="flex h-row-comfortable items-center gap-2.5 rounded-sm border-l-2 px-3 text-sm transition-colors {{ request()->routeIs('admin.articles.*') ? 'border-accent-600 bg-accent-50 text-accent-700 font-medium' : 'border-transparent text-text-secondary hover:bg-surface-hover hover:text-text-primary' }}"
+                    >
+                        <svg class="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <path d="M5 3.5h10v13l-2.5-1.5-2.5 1.5-2.5-1.5-2.5 1.5v-13Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" />
+                            <path d="M7.5 7h5M7.5 9.5h5M7.5 12h3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
+                        </svg>
+                        <span>Articles</span>
+                    </a>
                 </nav>
-                <div class="border-t border-border px-3 py-3 text-xs text-text-muted">
-                    No admin auth yet — this panel is unprotected.
-                </div>
             </aside>
 
             {{-- Sidebar (mobile off-canvas) --}}
@@ -199,6 +208,13 @@
                         class="flex h-row-comfortable items-center gap-2.5 rounded-sm border-l-2 px-3 text-sm {{ request()->routeIs('admin.banners.*') ? 'border-accent-600 bg-accent-50 text-accent-700 font-medium' : 'border-transparent text-text-secondary' }}"
                     >
                         Banners
+                    </a>
+                    <a
+                        href="{{ route('admin.articles.index') }}"
+                        wire:navigate
+                        class="flex h-row-comfortable items-center gap-2.5 rounded-sm border-l-2 px-3 text-sm {{ request()->routeIs('admin.articles.*') ? 'border-accent-600 bg-accent-50 text-accent-700 font-medium' : 'border-transparent text-text-secondary' }}"
+                    >
+                        Articles
                     </a>
                 </nav>
             </aside>

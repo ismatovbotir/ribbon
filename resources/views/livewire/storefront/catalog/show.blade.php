@@ -36,23 +36,29 @@
         today (see Category model) — this is generated entirely from
         already-true, already-queried page data rather than static/stale
         marketing copy.
+
+        Rendered inside a tinted band only when there's no admin-authored
+        category_top banner (see below) — when a banner exists, it already
+        supplies the visual anchor, so the intro stays plain directly under
+        the H1 as before (docs/design/13 §5).
     --}}
-    <div class="mt-2 max-w-3xl space-y-1 text-sm text-text-secondary">
-        <p>
-            @if (! $hasActiveFilters)
-                {{ __('storefront.catalog.intro_with_count', ['category' => $categoryName, 'count' => $products->total()]) }}
-            @else
-                {{ __('storefront.catalog.intro_no_count', ['category' => $categoryName]) }}
-            @endif
-        </p>
-        @if ($specNames !== '')
-            <p>{{ __('storefront.catalog.intro_specs', ['specs' => $specNames]) }}</p>
-        @endif
-    </div>
 
     {{-- category_top banner: targeted to this category, or a generic
          fallback (banners.category_id null) — see Show::render(). --}}
     @if ($categoryTopBanner)
+        <div class="mt-2 max-w-3xl space-y-1 text-sm text-text-secondary">
+            <p>
+                @if (! $hasActiveFilters)
+                    {{ __('storefront.catalog.intro_with_count', ['category' => $categoryName, 'count' => $products->total()]) }}
+                @else
+                    {{ __('storefront.catalog.intro_no_count', ['category' => $categoryName]) }}
+                @endif
+            </p>
+            @if ($specNames !== '')
+                <p>{{ __('storefront.catalog.intro_specs', ['specs' => $specNames]) }}</p>
+            @endif
+        </div>
+
         @php $bannerTitle = $categoryTopBanner->title[$locale] ?? ($categoryTopBanner->title[$defaultLocale] ?? ''); @endphp
         <x-storefront.banner-frame :href="$categoryTopBanner->link_url" class="relative mt-6 block overflow-hidden rounded-2xl bg-surface-subtle">
             <img
@@ -67,6 +73,21 @@
                 </div>
             @endif
         </x-storefront.banner-frame>
+    @else
+        <div class="mt-6 rounded-2xl bg-accent-50 p-6 md:p-8">
+            <div class="max-w-3xl space-y-1 text-sm text-text-secondary">
+                <p>
+                    @if (! $hasActiveFilters)
+                        {{ __('storefront.catalog.intro_with_count', ['category' => $categoryName, 'count' => $products->total()]) }}
+                    @else
+                        {{ __('storefront.catalog.intro_no_count', ['category' => $categoryName]) }}
+                    @endif
+                </p>
+                @if ($specNames !== '')
+                    <p>{{ __('storefront.catalog.intro_specs', ['specs' => $specNames]) }}</p>
+                @endif
+            </div>
+        </div>
     @endif
 
     <div class="mt-6 lg:grid lg:grid-cols-[18rem_1fr] lg:items-start lg:gap-8">
@@ -95,7 +116,7 @@
                 <button
                     type="button"
                     wire:click="$set('showMobileFilters', true)"
-                    class="flex h-9 items-center gap-2 rounded-sm border border-border px-3 text-sm font-medium text-text-primary"
+                    class="flex h-9 items-center gap-2 rounded-lg border border-border px-3 text-sm font-medium text-text-primary"
                 >
                     <svg class="h-4 w-4" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                         <path d="M3 5h14M6 10h8M8.5 15h3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
@@ -115,7 +136,7 @@
 
                 <label class="flex items-center gap-2 text-sm">
                     <span class="text-text-secondary">{{ __('storefront.catalog.sort_label') }}</span>
-                    <select wire:model.live="sort" class="h-9 rounded-sm border border-border bg-surface px-2 text-sm text-text-primary focus:border-accent-500 focus:ring-2 focus:ring-accent-100 focus:outline-none">
+                    <select wire:model.live="sort" class="h-9 rounded-lg border border-border bg-surface px-2 text-sm text-text-primary focus:border-accent-500 focus:ring-2 focus:ring-accent-100 focus:outline-none">
                         <option value="newest">{{ __('storefront.catalog.sort_newest') }}</option>
                         <option value="price_asc">{{ __('storefront.catalog.sort_price_asc') }}</option>
                         <option value="price_desc">{{ __('storefront.catalog.sort_price_desc') }}</option>
@@ -162,7 +183,7 @@
 
             {{-- Grid / states --}}
             <div class="mt-4">
-                <div wire:loading.grid wire:target="selected,numMin,numMax,sort,removeOptionFilter,removeNumberFilter,clearFilters,closeMobileFilters" class="hidden grid-cols-2 gap-4 md:grid-cols-3 md:gap-6 lg:grid-cols-4">
+                <div wire:loading.grid wire:target="selected,numMin,numMax,sort,removeOptionFilter,removeNumberFilter,clearFilters,closeMobileFilters" class="hidden grid-cols-2 gap-4 md:grid-cols-3 md:gap-6 lg:grid-cols-4 lg:gap-8">
                     @for ($i = 0; $i < 8; $i++)
                         <x-storefront.product-card-skeleton />
                     @endfor
@@ -184,7 +205,7 @@
                             </div>
                         @endif
                     @else
-                        <div class="grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-6 lg:grid-cols-4">
+                        <div class="grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-6 lg:grid-cols-4 lg:gap-8">
                             @foreach ($products as $product)
                                 <x-storefront.product-card :product="$product" :show-category="false" wire:key="catalog-product-{{ $product->id }}" />
                             @endforeach
@@ -198,6 +219,21 @@
             </div>
         </div>
     </div>
+
+    {{-- Related articles — educational content tagged to this category
+         (Article::category()), a lightweight cross-link back to /articles.
+         Hidden entirely when nothing's tagged, same "no empty state" rule
+         as the home page teaser. --}}
+    @if ($relatedArticles->isNotEmpty())
+        <section aria-labelledby="related-articles-heading" class="mt-12">
+            <h2 id="related-articles-heading" class="text-xl font-bold tracking-tight text-text-primary">{{ __('storefront.catalog.related_articles_heading') }}</h2>
+            <div class="mt-4 grid grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-3">
+                @foreach ($relatedArticles as $article)
+                    <x-storefront.article-card :article="$article" />
+                @endforeach
+            </div>
+        </section>
+    @endif
 
     {{-- Mobile filters off-canvas sheet --}}
     <div
@@ -230,7 +266,7 @@
             <button
                 type="button"
                 wire:click="closeMobileFilters"
-                class="flex h-11 w-full items-center justify-center rounded-sm bg-accent-600 text-sm font-semibold text-white hover:bg-accent-700"
+                class="flex h-11 w-full items-center justify-center rounded-lg bg-accent-600 text-sm font-semibold text-white hover:bg-accent-700"
             >
                 {{ __('storefront.catalog.filters_apply', ['count' => $products->total()]) }}
             </button>

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Storefront;
 
+use App\Models\Article;
 use App\Models\Banner;
 use App\Models\Category;
 use App\Models\Product;
@@ -13,10 +14,7 @@ class Home extends Component
 {
     public function render()
     {
-        $navCategories = Category::query()
-            ->where('is_active', true)
-            ->orderBy('sort_order')
-            ->get();
+        $navCategories = Category::navList();
 
         $heroBanners = Banner::query()
             ->where('placement', 'home_hero')
@@ -66,6 +64,18 @@ class Home extends Component
         if (! request()->hasHeader('X-Livewire')) {
             ProductAnalyticsService::recordSearchAppearances($recentProducts);
         }
+
+        // "From Ribbon" teaser — the content-marketing section a normal
+        // e-commerce home page has (guides/history/use-cases), linking out
+        // to the full /articles list. Empty collection when nothing's
+        // published yet; the view hides the whole section in that case
+        // rather than showing an empty-state block on the home page.
+        $recentArticles = Article::query()
+            ->whereNotNull('published_at')
+            ->where('published_at', '<=', now())
+            ->orderByDesc('published_at')
+            ->limit(3)
+            ->get();
 
         // --- SEO (seo-engineer) ---
         //
@@ -136,6 +146,7 @@ class Home extends Component
             'secondaryBanners' => $secondaryBanners,
             'categories' => $navCategories,
             'recentProducts' => $recentProducts,
+            'recentArticles' => $recentArticles,
         ])->layout('layouts.storefront', [
             'title' => __('storefront.seo.home_title'),
             'metaDescription' => __('storefront.seo.home_description'),

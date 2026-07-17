@@ -1,4 +1,6 @@
 @import 'tailwindcss';
+@plugin '@tailwindcss/typography';
+@import 'trix/dist/trix.css';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
@@ -266,15 +268,22 @@
  * Admin/seller intentionally run a dense 13px-base scale (see the
  * typography section of @theme above); the storefront is a conversion
  * surface that needs a roomier, ~16px-base scale instead. Overriding
- * --text-xs…--text-2xl here (rather than defining a parallel
+ * --text-xs…--text-4xl here (rather than defining a parallel
  * --text-storefront-* namespace) means every component still just writes
  * `text-sm`/`text-base`/etc — the same class resolves to a different actual
  * size depending on which of the three scopes it renders inside, exactly
- * like `accent-*` already does for color. text-3xl and up are intentionally
- * NOT touched here: Tailwind's built-in defaults for those tiers (30px+)
- * are untouched by @theme above and are already large enough for storefront
- * hero headlines — admin/seller never reach for text-3xl+ (their ceiling is
- * text-2xl, reserved for dashboard KPI numbers), so there's no collision.
+ * like `accent-*` already does for color.
+ *
+ * --text-3xl/--text-4xl ARE overridden here (unlike the rest of this file's
+ * history implied) because Tailwind's built-in defaults for those tiers
+ * (1.875rem/30px and 2.25rem/36px) are actually SMALLER than this scope's
+ * own --text-2xl override (2rem/32px) — left alone, a `text-2xl md:text-3xl`
+ * heading (e.g. the home page H1) would visually SHRINK from mobile to
+ * desktop, which is exactly the bug docs/design/13-storefront-visual-polish.md
+ * identifies and fixes here at the token level (no view-file change needed).
+ * admin/seller still never reach for text-3xl+ (their ceiling is text-2xl,
+ * reserved for dashboard KPI numbers), so overriding these two tiers only
+ * affects the storefront scope — no collision.
  * See docs/design/08-storefront-design-tokens.md for the full rationale.
  */
 .storefront {
@@ -299,6 +308,10 @@
     --text-xl--line-height: 2rem;
     --text-2xl: 2rem; /* 32px — page-level headings (category H1, product H1) */
     --text-2xl--line-height: 2.5rem;
+    --text-3xl: 2.5rem; /* 40px — home H1 desktop tier, section-level hero headings */
+    --text-3xl--line-height: 3rem;
+    --text-4xl: 3rem; /* 48px — reserved: large hero banner overlay headline, if ever needed */
+    --text-4xl--line-height: 3.5rem;
 }
 
 /* Standard Alpine.js flash-of-unstyled-content guard: Alpine removes the
@@ -306,4 +319,179 @@
    hiding has to come from CSS since it must apply before Alpine's JS runs. */
 [x-cloak] {
     display: none !important;
+}
+
+/*
+ * Trix editor re-skin (Admin\Articles\Form's body field — see
+ * resources/views/components/rich-text-editor.blade.php). Trix ships its
+ * own default look (rounded blue buttons, its own spacing scale) that
+ * clashes with this app's design tokens; this re-themes it against the
+ * same accent, border, and surface tokens x-input and x-select already use, so
+ * it reads as a native form control, not an embedded third-party widget.
+ * Admin-only today (the field only appears under .panel-admin), but not
+ * scoped to that class — harmless if reused elsewhere later.
+ */
+trix-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    border: 1px solid var(--color-border-strong);
+    border-bottom: none;
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    background: var(--color-surface-subtle);
+    padding: 0.375rem;
+}
+
+trix-toolbar .trix-button-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+}
+
+trix-toolbar .trix-button-group {
+    display: flex;
+    gap: 1px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    margin: 0;
+}
+
+trix-toolbar .trix-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2rem;
+    height: 2rem;
+    border: none;
+    background: var(--color-surface);
+    color: var(--color-text-secondary);
+    font-size: 0.8125rem;
+    cursor: pointer;
+}
+
+trix-toolbar .trix-button:hover {
+    background: var(--color-surface-hover);
+    color: var(--color-text-primary);
+}
+
+trix-toolbar .trix-button.trix-active {
+    background: var(--color-accent-50);
+    color: var(--color-accent-700);
+}
+
+trix-toolbar .trix-button--icon::before {
+    filter: none;
+}
+
+trix-toolbar .trix-button-group--file-tools,
+trix-toolbar .trix-button-group--history-tools {
+    margin-left: auto;
+}
+
+trix-editor {
+    /* flow-root (not plain block) so a floated attachment image — see
+       x-rich-text-editor's align buttons — can't visually overflow past
+       the editor's own bottom border when it's the last thing typed. */
+    display: flow-root;
+    min-height: 16rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+    background: var(--color-surface);
+    padding: 0.75rem;
+    font-size: var(--text-base, 1rem);
+    color: var(--color-text-primary);
+}
+
+trix-editor:focus {
+    outline: none;
+    border-color: var(--color-accent-500);
+    box-shadow: 0 0 0 2px var(--color-accent-100);
+}
+
+trix-editor h1 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0.75rem 0 0.5rem;
+}
+
+trix-editor blockquote {
+    border-left: 3px solid var(--color-border-strong);
+    padding-left: 0.75rem;
+    color: var(--color-text-secondary);
+    margin: 0.5rem 0;
+}
+
+trix-editor pre {
+    background: var(--color-surface-sunken);
+    border-radius: var(--radius-sm);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8125rem;
+    overflow-x: auto;
+}
+
+trix-editor ul,
+trix-editor ol {
+    padding-left: 1.5rem;
+    margin: 0.5rem 0;
+}
+
+trix-editor figure.attachment {
+    margin: 0.75rem 0;
+    max-width: 100%;
+}
+
+trix-editor figure.attachment img {
+    max-width: 100%;
+    border-radius: var(--radius-sm);
+}
+
+/*
+ * Resize controls overlay — a single floating element (see
+ * x-rich-text-editor) positioned via inline top/left over whichever
+ * attachment is currently hovered, deliberately NOT a child of Trix's own
+ * <figure> (that fought Trix's re-renders into an infinite loop — see the
+ * component's docblock). display:none/flex toggled inline by that
+ * component's JS, not CSS :hover, since the target being hovered can
+ * change without a real mouseenter/mouseleave pair firing on it.
+ */
+.trix-resize-controls {
+    position: absolute;
+    z-index: var(--z-dropdown);
+    display: none;
+    gap: 0.125rem;
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--color-surface-inverse, #0f172a) 75%, transparent);
+    padding: 0.125rem;
+}
+
+.trix-resize-controls button {
+    min-width: 1.75rem;
+    height: 1.5rem;
+    padding: 0 0.375rem;
+    border: none;
+    border-radius: calc(var(--radius-sm) - 2px);
+    background: transparent;
+    color: #fff;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.trix-resize-controls button:hover,
+.trix-resize-controls button.is-active {
+    background: color-mix(in srgb, #fff 25%, transparent);
+}
+
+.trix-resize-controls-divider {
+    width: 1px;
+    margin: 0.25rem 0.125rem;
+    background: color-mix(in srgb, #fff 25%, transparent);
+}
+
+trix-editor figcaption {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    text-align: center;
+    margin-top: 0.25rem;
 }

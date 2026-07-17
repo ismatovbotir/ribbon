@@ -33,6 +33,13 @@ return [
     'seo.product_description_with_specs' => ":name — :specs. Sotuvchi: :seller. Ulgurji narxlarni solishtiring va telefon orqali tijorat taklifini so'rang, ro'yxatdan o'tish shart emas.",
     'seo.product_description' => ":name. Sotuvchi: :seller. Ulgurji narxlarni solishtiring va telefon orqali tijorat taklifini so'rang, ro'yxatdan o'tish shart emas.",
     'seo.product_title' => ':name — :category',
+    'seo.search_title_with_query' => '":query" bo\'yicha qidiruv natijalari',
+    'seo.search_title_empty' => 'Qidiruv',
+    'seo.search_description_with_query' => 'Ribbon\'da ":query" bo\'yicha :count ta natija topildi — tasdiqlangan sotuvchilarning vitrina narxlarini solishtiring va telefon orqali tijorat taklifini so\'rang, ro\'yxatdan o\'tish shart emas.',
+    'seo.search_description_empty' => 'Ribbon marketpleysida termotransfer lentalar, TT printerlar, shtrix-kod skanerlari, PDA va boshqa avto-ID uskunalarini tasdiqlangan sotuvchilardan qidiring.',
+    'seo.articles_title' => 'Maqolalar — Ribbon',
+    'seo.articles_description' => "Termotransfer lentalar, printerlar, shtrix-kod skanerlari va avto-ID sanoati haqida — tarix, turlari, qo'llanilishi va texnik tushuntirishlar.",
+    'seo.article_title' => ':title — Ribbon Maqolalari',
 
     // ---- Home page ----
     'home.h1' => 'Ribbon — termotransfer lentalar, printerlar va avto-ID uskunalari uchun B2B marketpleys',
@@ -46,6 +53,8 @@ return [
     'home.hero_carousel_prev' => 'Oldingi banner',
     'home.hero_carousel_next' => 'Keyingi banner',
     'home.hero_carousel_goto' => ':n-banner\'ga o\'tish',
+    'home.articles_heading' => 'Ribbon\'dan',
+    'home.articles_view_all' => 'Barcha maqolalar',
 
     // ---- Category / catalog page ----
     'catalog.intro_with_count' => ":category: tasdiqlangan Ribbon sotuvchilarining hozirda :count ta mahsulot e'loni, har biri texnik xususiyatlari va narxi bilan joylangan.",
@@ -68,6 +77,7 @@ return [
     'catalog.empty_title' => "Bu yerda hali mahsulot yo'q",
     'catalog.empty_body' => "Birozdan so'ng qayta tekshiring yoki boshqa kategoriyalarni ko'ring.",
     'catalog.empty_cta' => "Katalogni ko'rish",
+    'catalog.related_articles_heading' => "O'qib chiqing",
     'catalog.filtered_empty_title' => 'Ushbu filtrlarga mos mahsulot topilmadi',
     'catalog.filtered_empty_body' => "Bir nechta filtrni olib tashlab ko'ring.",
     'catalog.no_image' => 'Rasm yoʻq',
@@ -75,9 +85,16 @@ return [
     'catalog.error_body' => "Mahsulotlarni yuklab bo'lmadi. Qaytadan urinib ko'ring.",
     'catalog.error_retry' => 'Qayta urinish',
 
+    // ---- Search page ----
+    'search.heading_with_query' => '":query" bo\'yicha qidiruv natijalari',
+    'search.heading_empty' => 'Qidiruv',
+    'search.no_query_title' => 'Katalogdan qidiring',
+    'search.no_query_body' => "Tasdiqlangan Ribbon sotuvchilarining e'lonlarini topish uchun yuqoridagi qidiruv maydoniga mahsulot, brend yoki kategoriya nomini kiriting.",
+    'search.empty_title' => '":query" bo\'yicha natija topilmadi',
+    'search.empty_body' => "Boshqa qidiruv so'zini sinab ko'ring yoki katalogni kategoriyalar bo'yicha ko'ring.",
+    'search.category_filter_clear' => 'Filtrni tozalash',
+
     // ---- Product card ----
-    'product_card.add_button' => '+ Qo\'shish',
-    'product_card.add_coming_soon' => 'Tez orada',
     'product_card.sold_by' => 'Sotuvchi: :seller',
     'product_card.no_products_label' => "Mahsulot yo'q",
 
@@ -137,4 +154,16 @@ return [
     'offer_request.confirmation_title' => 'So\'rov yuborildi',
     'offer_request.confirmation_body' => 'Rahmat — sotuvchi(lar) tez orada siz bilan taklif bilan bog\'lanadi.',
     'offer_request.continue_shopping' => 'Xarid qilishni davom ettirish',
+
+    // ---- Articles ----
+    'articles.title' => 'Maqolalar',
+    'articles.subtitle' => "Termotransfer bosib chiqarish va avto-ID sanoati haqida tarix, lenta turlari, qo'llanilishi va texnik tushuntirishlar.",
+    'articles.empty_title' => "Hali maqolalar yo'q",
+    'articles.empty_body' => 'Tez orada qaytib tekshiring.',
+    'articles.back_to_articles' => 'Barcha maqolalar',
+    'articles.type.all' => 'Barchasi',
+    'articles.type.article' => 'Maqolalar',
+    'articles.type.news' => 'Yangiliklar',
+    'articles.filtered_empty_title' => "Bu yerda hali hech narsa yo'q",
+    'articles.filtered_empty_body' => "Ushbu filtrga mos e'lon qilingan kontent hali yo'q.",
 ];

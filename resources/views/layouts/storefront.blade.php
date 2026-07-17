@@ -116,57 +116,29 @@
                     <span class="hidden text-xl font-semibold text-text-primary sm:inline">{{ __('storefront.nav.brand') }}</span>
                 </a>
 
-                {{-- Catalog trigger + mega-menu (desktop/tablet) --}}
-                <div class="relative hidden md:block" x-on:click.outside="catalogMenuOpen = false">
-                    <button
-                        type="button"
-                        x-on:click="catalogMenuOpen = !catalogMenuOpen"
-                        x-bind:aria-expanded="catalogMenuOpen"
-                        class="flex h-9 items-center gap-1.5 rounded-sm border border-border px-3 text-sm font-medium text-text-primary hover:bg-surface-hover"
-                    >
-                        <svg class="h-4 w-4 text-text-secondary" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                            <path d="M3 4.5h14M3 10h14M3 15.5h14" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
-                        </svg>
-                        {{ __('storefront.nav.catalog_trigger') }}
-                        <svg class="h-3.5 w-3.5 text-text-muted" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                            <path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
-                        </svg>
-                    </button>
-
-                    <div
-                        x-show="catalogMenuOpen"
-                        x-cloak
-                        x-transition
-                        x-on:keydown.escape.window="catalogMenuOpen = false"
-                        class="absolute left-0 z-dropdown mt-2 w-[36rem] max-w-[90vw] rounded-lg border border-border bg-surface-overlay p-4 shadow-sm"
-                    >
-                        @if (($navCategories ?? collect())->isEmpty())
-                            <p class="p-2 text-sm text-text-muted">{{ __('storefront.nav.no_categories') }}</p>
-                        @else
-                            <div class="grid grid-cols-2 gap-1 lg:grid-cols-3">
-                                @foreach ($navCategories as $navCategory)
-                                    <a
-                                        href="{{ route('storefront.catalog.show', ['categorySlug' => $navCategory->slug[app()->getLocale()] ?? '']) }}"
-                                        wire:navigate
-                                        x-on:click="catalogMenuOpen = false"
-                                        class="flex items-center gap-2.5 rounded-sm px-2.5 py-2 text-sm text-text-secondary hover:bg-surface-hover hover:text-text-primary"
-                                    >
-                                        @if ($navCategory->image_path)
-                                            <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($navCategory->image_path) }}" alt="" class="h-7 w-7 shrink-0 rounded-sm border border-border object-cover">
-                                        @else
-                                            <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-sm bg-surface-subtle text-text-muted">
-                                                <svg class="h-4 w-4" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                                                    <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="1.3" />
-                                                </svg>
-                                            </span>
-                                        @endif
-                                        <span class="truncate">{{ $navCategory->name[app()->getLocale()] ?? '' }}</span>
-                                    </a>
-                                @endforeach
-                            </div>
-                        @endif
-                    </div>
-                </div>
+                {{--
+                    Catalog trigger (desktop/tablet) — toggles the
+                    full-width mega-menu panel anchored to the header's
+                    bottom edge (see the panel markup just before
+                    </header> below; it lives outside this flex row so it
+                    can span the full viewport width).
+                --}}
+                <button
+                    type="button"
+                    data-catalog-trigger
+                    x-on:click="catalogMenuOpen = !catalogMenuOpen"
+                    x-bind:aria-expanded="catalogMenuOpen"
+                    aria-controls="storefront-catalog-menu"
+                    class="hidden h-9 shrink-0 items-center gap-1.5 rounded-lg border border-border px-3 text-sm font-medium text-text-primary hover:bg-surface-hover md:flex"
+                >
+                    <svg class="h-4 w-4 text-text-secondary" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M3 4.5h14M3 10h14M3 15.5h14" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
+                    </svg>
+                    {{ __('storefront.nav.catalog_trigger') }}
+                    <svg class="h-3.5 w-3.5 text-text-muted transition-transform" x-bind:class="catalogMenuOpen && 'rotate-180'" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </button>
 
                 {{-- Search (desktop/tablet inline, mobile icon-triggered overlay) --}}
                 <form action="/search" method="GET" class="hidden max-w-xl flex-1 md:flex">
@@ -181,7 +153,7 @@
                             type="search"
                             name="q"
                             placeholder="{{ __('storefront.nav.search_placeholder') }}"
-                            class="h-9 w-full rounded-sm border border-border bg-surface pr-3 pl-9 text-sm text-text-primary focus:border-accent-500 focus:ring-2 focus:ring-accent-100 focus:outline-none"
+                            class="h-9 w-full rounded-lg border border-border bg-surface pr-3 pl-9 text-sm text-text-primary focus:border-accent-500 focus:ring-2 focus:ring-accent-100 focus:outline-none"
                         >
                     </div>
                 </form>
@@ -238,6 +210,62 @@
                     @endif
                 </a>
             </div>
+
+            {{--
+                Catalog mega-menu (desktop/tablet) — full-width panel
+                anchored to the sticky header's bottom edge. Categories are
+                a deliberately flat list (no nesting, see CLAUDE.md), so
+                this is a single-level grid of category cards — icon, name,
+                approved-product count (see Category::navList()) — not a
+                two-level category→subcategory flyout. Capped to the
+                viewport space below the header and scrollable past that.
+
+                click.outside guard: the panel sits outside the trigger
+                button's subtree, so a plain `catalogMenuOpen = false`
+                would also fire on the trigger click itself and fight the
+                toggle — hence the [data-catalog-trigger] check.
+            --}}
+            <div
+                id="storefront-catalog-menu"
+                x-show="catalogMenuOpen"
+                x-cloak
+                x-transition.opacity.duration.150ms
+                x-on:keydown.escape.window="catalogMenuOpen = false"
+                x-on:click.outside="$event.target.closest('[data-catalog-trigger]') || (catalogMenuOpen = false)"
+                class="absolute inset-x-0 top-full z-dropdown hidden max-h-[calc(100vh-var(--spacing-storefront-header))] overflow-y-auto border-b border-border bg-surface-overlay shadow-sm md:block"
+            >
+                <div class="mx-auto max-w-7xl px-4 py-5 md:px-6">
+                    @if (($navCategories ?? collect())->isEmpty())
+                        <p class="text-sm text-text-muted">{{ __('storefront.nav.no_categories') }}</p>
+                    @else
+                        <p class="mb-3 text-xs font-medium tracking-wide text-text-muted uppercase">{{ __('storefront.nav.catalog_menu_label') }}</p>
+                        <div class="grid grid-cols-2 gap-x-4 gap-y-1 lg:grid-cols-3 xl:grid-cols-4">
+                            @foreach ($navCategories as $navCategory)
+                                <a
+                                    href="{{ route('storefront.catalog.show', ['categorySlug' => $navCategory->slug[app()->getLocale()] ?? '']) }}"
+                                    wire:navigate
+                                    x-on:click="catalogMenuOpen = false"
+                                    class="group flex items-center gap-3 rounded-lg px-2.5 py-2.5 hover:bg-surface-hover"
+                                >
+                                    @if ($navCategory->image_path)
+                                        <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($navCategory->image_path) }}" alt="" class="h-9 w-9 shrink-0 rounded-md border border-border object-cover">
+                                    @else
+                                        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-surface-subtle text-text-muted">
+                                            <svg class="h-4.5 w-4.5" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                                <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="1.3" />
+                                            </svg>
+                                        </span>
+                                    @endif
+                                    <span class="min-w-0 text-sm text-text-secondary group-hover:text-text-primary">
+                                        <span class="truncate font-medium">{{ $navCategory->name[app()->getLocale()] ?? '' }}</span>
+                                        <span class="ml-1 text-xs text-text-muted">({{ $navCategory->approved_products_count ?? 0 }})</span>
+                                    </span>
+                                </a>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+            </div>
         </header>
 
         {{-- Mobile off-canvas menu --}}
@@ -264,8 +292,8 @@
                         href="{{ route('storefront.catalog.show', ['categorySlug' => $navCategory->slug[app()->getLocale()] ?? '']) }}"
                         wire:navigate
                         x-on:click="mobileMenuOpen = false"
-                        class="block rounded-sm px-3 py-2.5 text-sm text-text-secondary hover:bg-surface-hover hover:text-text-primary"
-                    >{{ $navCategory->name[app()->getLocale()] ?? '' }}</a>
+                        class="block rounded-lg px-3 py-2.5 text-sm text-text-secondary hover:bg-surface-hover hover:text-text-primary"
+                    >{{ $navCategory->name[app()->getLocale()] ?? '' }} <span class="text-xs text-text-muted">({{ $navCategory->approved_products_count ?? 0 }})</span></a>
                 @empty
                     <p class="px-3 text-sm text-text-muted">{{ __('storefront.nav.no_categories') }}</p>
                 @endforelse
@@ -282,7 +310,7 @@
                 </div>
 
                 <div class="mt-4 border-t border-border pt-4">
-                    <a href="{{ route('sellers.register') }}" wire:navigate class="block rounded-sm px-3 py-2.5 text-sm font-medium text-accent-700 hover:bg-surface-hover">{{ __('storefront.nav.become_seller') }}</a>
+                    <a href="{{ route('sellers.register') }}" wire:navigate class="block rounded-lg px-3 py-2.5 text-sm font-medium text-accent-700 hover:bg-surface-hover">{{ __('storefront.nav.become_seller') }}</a>
                 </div>
             </nav>
         </aside>
@@ -305,7 +333,7 @@
                         name="q"
                         autofocus
                         placeholder="{{ __('storefront.nav.search_placeholder') }}"
-                        class="h-9 w-full rounded-sm border border-border bg-surface pr-3 pl-9 text-sm text-text-primary focus:border-accent-500 focus:ring-2 focus:ring-accent-100 focus:outline-none"
+                        class="h-9 w-full rounded-lg border border-border bg-surface pr-3 pl-9 text-sm text-text-primary focus:border-accent-500 focus:ring-2 focus:ring-accent-100 focus:outline-none"
                     >
                 </div>
                 <button type="button" x-on:click="mobileSearchOpen = false" class="shrink-0 text-sm text-text-secondary" aria-label="{{ __('storefront.nav.close_menu') }}">✕</button>
@@ -351,6 +379,7 @@
                             @empty
                                 <li class="text-sm text-text-muted">{{ __('storefront.nav.no_categories') }}</li>
                             @endforelse
+                            <li><a href="{{ route('storefront.articles.index') }}" wire:navigate class="text-sm text-text-secondary hover:text-accent-700">{{ __('storefront.articles.title') }}</a></li>
                         </ul>
                     </div>
 

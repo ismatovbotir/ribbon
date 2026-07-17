@@ -164,7 +164,7 @@ class Show extends Component
 
     public function render()
     {
-        $navCategories = Category::query()->where('is_active', true)->orderBy('sort_order')->get();
+        $navCategories = Category::navList();
         $locale = app()->getLocale();
         $defaultLocale = config('ribbon.locales')[0];
 

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Storefront\Catalog;
 
+use App\Models\Article;
 use App\Models\Banner;
 use App\Models\Category;
 use App\Models\CategoryParameter;
@@ -280,7 +281,7 @@ class Show extends Component
 
     public function render()
     {
-        $navCategories = Category::query()->where('is_active', true)->orderBy('sort_order')->get();
+        $navCategories = Category::navList();
 
         $filterableParameters = $this->category->parameters;
 
@@ -330,6 +331,22 @@ class Show extends Component
             ->exists();
 
         $hasActiveFilters = ! empty(array_filter($this->selected)) || ! empty($this->numMin) || ! empty($this->numMax);
+
+        // Educational content tagged to this category (Article::categories()
+        // — many-to-many, an article can also relate to other categories)
+        // — a lightweight cross-link, not part of the filtered product
+        // result set, so it ignores $this->selected/$numMin/$numMax
+        // entirely and is only worth querying on page 1 (a buyer paging
+        // through products doesn't need it repeated on every page).
+        $relatedArticles = $this->getPage() > 1
+            ? collect()
+            : Article::query()
+                ->whereHas('categories', fn ($query) => $query->where('categories.id', $this->category->id))
+                ->whereNotNull('published_at')
+                ->where('published_at', '<=', now())
+                ->orderByDesc('published_at')
+                ->limit(3)
+                ->get();
 
         // category_top banner: targeted to this category takes priority,
         // falling back to a generic (category_id null) one — see
@@ -502,6 +519,7 @@ class Show extends Component
             'categoryHasAnyProducts' => $categoryHasAnyProducts,
             'hasActiveFilters' => $hasActiveFilters,
             'categoryTopBanner' => $categoryTopBanner,
+            'relatedArticles' => $relatedArticles,
         ])->layout('layouts.storefront', [
             'title' => $categoryTitle,
             'metaDescription' => $metaDescription,

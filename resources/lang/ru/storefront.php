@@ -33,6 +33,13 @@ return [
     'seo.product_description_with_specs' => ':name — :specs. Продавец: :seller. Сравните оптовые цены и оставьте заявку на коммерческое предложение по телефону, без регистрации.',
     'seo.product_description' => ':name. Продавец: :seller. Сравните оптовые цены и оставьте заявку на коммерческое предложение по телефону, без регистрации.',
     'seo.product_title' => ':name — :category',
+    'seo.search_title_with_query' => 'Результаты поиска «:query»',
+    'seo.search_title_empty' => 'Поиск',
+    'seo.search_description_with_query' => 'Найдено :count результат(ов) по запросу «:query» на Ribbon — сравнивайте оптовые витринные цены проверенных продавцов и оставьте заявку на коммерческое предложение по телефону, без регистрации.',
+    'seo.search_description_empty' => 'Найдите на маркетплейсе Ribbon термотрансферные ленты, TT-принтеры, сканеры штрих-кода, ТСД и другое оборудование для авто-идентификации от проверенных продавцов.',
+    'seo.articles_title' => 'Статьи — Ribbon',
+    'seo.articles_description' => 'Материалы о термотрансферных лентах, принтерах, сканерах штрих-кода и отрасли авто-идентификации — история, виды, применение и технические разъяснения.',
+    'seo.article_title' => ':title — Статьи Ribbon',
 
     // ---- Home page ----
     'home.h1' => 'Ribbon — B2B маркетплейс термотрансферных лент, принтеров и оборудования авто-идентификации',
@@ -46,6 +53,8 @@ return [
     'home.hero_carousel_prev' => 'Предыдущий баннер',
     'home.hero_carousel_next' => 'Следующий баннер',
     'home.hero_carousel_goto' => 'Перейти к баннеру :n',
+    'home.articles_heading' => 'От Ribbon',
+    'home.articles_view_all' => 'Все статьи',
 
     // ---- Category / catalog page ----
     'catalog.intro_with_count' => ':category: сейчас доступно :count товарных предложений от проверенных продавцов Ribbon, у каждого указаны характеристики и цена.',
@@ -68,6 +77,7 @@ return [
     'catalog.empty_title' => 'Здесь пока нет товаров',
     'catalog.empty_body' => 'Загляните позже или посмотрите другие категории.',
     'catalog.empty_cta' => 'Перейти в каталог',
+    'catalog.related_articles_heading' => 'Читайте также',
     'catalog.filtered_empty_title' => 'Нет товаров, соответствующих фильтрам',
     'catalog.filtered_empty_body' => 'Попробуйте убрать один или два фильтра.',
     'catalog.no_image' => 'Нет фото',
@@ -75,9 +85,16 @@ return [
     'catalog.error_body' => 'Не удалось загрузить товары. Попробуйте ещё раз.',
     'catalog.error_retry' => 'Повторить',
 
+    // ---- Search page ----
+    'search.heading_with_query' => 'Результаты поиска «:query»',
+    'search.heading_empty' => 'Поиск',
+    'search.no_query_title' => 'Поиск по каталогу',
+    'search.no_query_body' => 'Введите название товара, бренда или категории в поле поиска выше, чтобы найти предложения проверенных продавцов Ribbon.',
+    'search.empty_title' => 'Нет результатов по запросу «:query»',
+    'search.empty_body' => 'Попробуйте другой запрос или посмотрите каталог по категориям.',
+    'search.category_filter_clear' => 'Сбросить фильтр',
+
     // ---- Product card ----
-    'product_card.add_button' => '+ Добавить',
-    'product_card.add_coming_soon' => 'Скоро',
     'product_card.sold_by' => 'Продавец: :seller',
     'product_card.no_products_label' => 'Нет товаров',
 
@@ -137,4 +154,16 @@ return [
     'offer_request.confirmation_title' => 'Заявка отправлена',
     'offer_request.confirmation_body' => 'Спасибо — продавец(ы) скоро свяжутся с вами с предложением.',
     'offer_request.continue_shopping' => 'Продолжить покупки',
+
+    // ---- Articles ----
+    'articles.title' => 'Статьи',
+    'articles.subtitle' => 'История, виды лент, применение и технические разъяснения о термотрансферной печати и отрасли авто-идентификации.',
+    'articles.empty_title' => 'Пока нет статей',
+    'articles.empty_body' => 'Загляните позже.',
+    'articles.back_to_articles' => 'Все статьи',
+    'articles.type.all' => 'Все',
+    'articles.type.article' => 'Статьи',
+    'articles.type.news' => 'Новости',
+    'articles.filtered_empty_title' => 'Здесь пока пусто',
+    'articles.filtered_empty_body' => 'Пока нет опубликованного контента по этому фильтру.',
 ];

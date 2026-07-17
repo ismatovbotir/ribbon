@@ -4,6 +4,8 @@ namespace App\Livewire\Sellers\Analytics;
 
 use App\Models\Seller;
 use App\Services\ProductAnalyticsService;
+use App\Support\LocalizedDate;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
@@ -64,7 +66,7 @@ class Show extends Component
                 'x' => $x($i),
                 'yViews' => $y($daily['views'][$i]),
                 'yAppearances' => $y($daily['appearances'][$i]),
-                'label' => \Illuminate\Support\Carbon::parse($dateKey)->translatedFormat('M j'),
+                'label' => LocalizedDate::monthDay(Carbon::parse($dateKey)),
                 'views' => $daily['views'][$i],
                 'appearances' => $daily['appearances'][$i],
             ];

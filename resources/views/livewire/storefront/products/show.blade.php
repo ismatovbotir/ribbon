@@ -107,12 +107,12 @@
 
         {{-- Info column (right) --}}
         <div class="mt-6 lg:mt-0">
-            <h1 class="text-2xl font-semibold text-text-primary">{{ $displayName }}</h1>
+            <h1 class="text-2xl font-bold tracking-tight text-text-primary">{{ $displayName }}</h1>
 
             @if ($product->brand && $product->brand->id !== 1)
                 <div class="mt-2 flex items-center gap-2">
                     @if ($product->brand->logo_path)
-                        <img src="{{ Storage::disk('public')->url($product->brand->logo_path) }}" alt="" class="h-6 w-6 rounded-sm border border-border object-contain">
+                        <img src="{{ Storage::disk('public')->url($product->brand->logo_path) }}" alt="" class="h-6 w-6 rounded-lg border border-border object-contain">
                     @endif
                     <span class="text-sm text-text-secondary">{{ $product->brand->name }}</span>
                 </div>
@@ -140,22 +140,22 @@
                 price restated, not blank/dashed) so nothing requires visual
                 inference to read correctly out of context.
             --}}
-            <div class="mt-5 overflow-hidden rounded-xl border border-border bg-surface-raised">
+            <div class="mt-8 overflow-hidden rounded-xl border border-border bg-surface-raised">
                 <div class="overflow-x-auto">
                     <table class="w-full min-w-[420px] text-sm">
                         <caption class="sr-only">{{ __('storefront.product_detail.price_table_caption') }}</caption>
                         <thead>
                             <tr class="border-b border-border bg-surface-subtle text-left text-xs font-medium text-text-secondary">
-                                <th scope="col" class="p-3">{{ __('storefront.product_detail.price_col_unit') }}</th>
-                                <th scope="col" class="p-3">{{ __('storefront.product_detail.price_col_qty') }}</th>
-                                <th scope="col" class="p-3 text-right">{{ __('storefront.product_detail.price_col_price') }}</th>
-                                <th scope="col" class="p-3 text-right">{{ __('storefront.product_detail.price_col_per_unit') }}</th>
+                                <th scope="col" class="p-4">{{ __('storefront.product_detail.price_col_unit') }}</th>
+                                <th scope="col" class="p-4">{{ __('storefront.product_detail.price_col_qty') }}</th>
+                                <th scope="col" class="p-4 text-right">{{ __('storefront.product_detail.price_col_price') }}</th>
+                                <th scope="col" class="p-4 text-right">{{ __('storefront.product_detail.price_col_per_unit') }}</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach ($orderedPrices as $price)
-                                <tr class="border-b border-border last:border-b-0">
-                                    <th scope="row" class="p-3 text-left font-medium text-text-primary">
+                                <tr class="border-b border-border last:border-b-0 {{ $price->is_vitrin ? 'bg-accent-50' : '' }}">
+                                    <th scope="row" class="p-4 text-left font-medium text-text-primary">
                                         <span class="inline-flex items-center gap-2">
                                             {{ __('storefront.unit.'.$price->unit) }}
                                             @if ($price->is_vitrin)
@@ -163,9 +163,9 @@
                                             @endif
                                         </span>
                                     </th>
-                                    <td class="p-3 whitespace-nowrap text-text-secondary">{{ number_format($price->qty_in_pcs) }} {{ __('storefront.unit.pcs') }}</td>
-                                    <td class="p-3 text-right font-semibold tabular-nums whitespace-nowrap text-text-primary">{{ number_format((float) $price->price) }} UZS</td>
-                                    <td class="p-3 text-right tabular-nums whitespace-nowrap text-text-secondary">{{ number_format((float) $price->price / max($price->qty_in_pcs, 1)) }} UZS/{{ __('storefront.unit.pcs') }}</td>
+                                    <td class="p-4 whitespace-nowrap text-text-secondary">{{ number_format($price->qty_in_pcs) }} {{ __('storefront.unit.pcs') }}</td>
+                                    <td class="p-4 text-right font-bold tabular-nums whitespace-nowrap text-text-primary {{ $price->is_vitrin ? 'text-xl' : 'text-base' }}">{{ number_format((float) $price->price) }} UZS</td>
+                                    <td class="p-4 text-right tabular-nums whitespace-nowrap text-text-secondary">{{ number_format((float) $price->price / max($price->qty_in_pcs, 1)) }} UZS/{{ __('storefront.unit.pcs') }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -174,7 +174,7 @@
             </div>
 
             {{-- Unit selector --}}
-            <div class="mt-5">
+            <div class="mt-6">
                 <p class="text-sm font-medium text-text-secondary">{{ __('storefront.product_detail.unit_selector_label') }}</p>
                 <div class="mt-2 inline-flex rounded-full border border-border p-1" role="radiogroup" aria-label="{{ __('storefront.product_detail.unit_selector_label') }}">
                     @foreach ($orderedPrices as $price)
@@ -192,9 +192,9 @@
             </div>
 
             {{-- Quantity stepper --}}
-            <div class="mt-4 flex items-center gap-3">
+            <div class="mt-5 flex items-center gap-3">
                 <label for="product-qty" class="text-sm font-medium text-text-secondary">{{ __('storefront.product_detail.qty_label') }}</label>
-                <div class="flex items-center rounded-sm border border-border">
+                <div class="flex items-center rounded-lg border border-border">
                     <button type="button" wire:click="decrementQty" aria-label="{{ __('storefront.product_detail.qty_decrease') }}" class="flex h-10 w-10 items-center justify-center text-lg text-text-secondary hover:text-text-primary">&minus;</button>
                     <input id="product-qty" type="number" min="1" step="1" wire:model.live="qty" class="h-10 w-16 border-x border-border bg-surface text-center text-sm tabular-nums text-text-primary focus:outline-none">
                     <button type="button" wire:click="incrementQty" aria-label="{{ __('storefront.product_detail.qty_increase') }}" class="flex h-10 w-10 items-center justify-center text-lg text-text-secondary hover:text-text-primary">&plus;</button>
@@ -212,7 +212,7 @@
                 sibling scope, which only works if it's attached to a shared
                 ancestor.
             --}}
-            <div class="mt-5" x-ref="addToRequestAnchor">
+            <div class="mt-6" x-ref="addToRequestAnchor">
                 <button
                     type="button"
                     wire:click="addToRequest"
@@ -239,7 +239,7 @@
             <p class="mt-2 text-sm text-text-secondary">{{ __('storefront.product_detail.request_note', ['seller' => $product->seller->name]) }}</p>
 
             {{-- Seller info block — the literal implementation of CLAUDE.md's "or call the seller directly" alternative path. --}}
-            <div class="mt-6 rounded-lg border border-border bg-surface-subtle p-4">
+            <div class="mt-8 rounded-lg border border-accent-100 bg-accent-50/50 p-4">
                 <div class="flex items-center gap-3">
                     @if ($product->seller->logo_path)
                         <img src="{{ Storage::disk('public')->url($product->seller->logo_path) }}" alt="" class="h-10 w-10 rounded-md border border-border object-contain">
@@ -287,7 +287,7 @@
         @else
             <dl class="mt-4 divide-y divide-border rounded-xl border border-border bg-surface-raised">
                 @foreach ($specRows as $row)
-                    <div class="flex flex-col gap-1 p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
+                    <div class="flex flex-col gap-1 p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4 {{ $loop->even ? 'bg-surface-subtle/60' : '' }}">
                         <dt class="text-sm text-text-secondary">{{ $row['label'] }}</dt>
                         <dd class="text-sm font-medium text-text-primary sm:text-right">{{ $row['value'] }}</dd>
                     </div>
@@ -313,7 +313,7 @@
         x-transition
         class="fixed inset-x-0 bottom-0 z-sticky flex items-center justify-between gap-3 border-t border-border bg-surface-raised p-3 shadow-md lg:hidden"
     >
-        <p class="text-base font-semibold tabular-nums text-text-primary">
+        <p class="text-lg font-bold tabular-nums text-text-primary">
             @if ($vitrinPrice)
                 {{ number_format((float) $vitrinPrice->price) }} UZS
             @endif

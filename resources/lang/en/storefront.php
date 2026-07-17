@@ -38,6 +38,13 @@ return [
     'seo.product_description_with_specs' => ':name — :specs. Sold by :seller. Compare wholesale pricing and request a commercial offer by phone, no account needed.',
     'seo.product_description' => ':name. Sold by :seller. Compare wholesale pricing and request a commercial offer by phone, no account needed.',
     'seo.product_title' => ':name — :category',
+    'seo.search_title_with_query' => 'Search results for ":query"',
+    'seo.search_title_empty' => 'Search',
+    'seo.search_description_with_query' => ':count result(s) for ":query" on Ribbon — compare wholesale storefront pricing from verified sellers and request a commercial offer by phone, no account needed.',
+    'seo.search_description_empty' => 'Search the Ribbon marketplace for thermal transfer ribbons, TT printers, barcode scanners, PDAs and other auto-ID equipment from verified sellers.',
+    'seo.articles_title' => 'Articles — Ribbon',
+    'seo.articles_description' => 'Guides and background on thermal transfer ribbons, printers, barcode scanners and the auto-ID industry — history, types, use cases, and technical explainers.',
+    'seo.article_title' => ':title — Ribbon Articles',
 
     // ---- Home page ----
     'home.h1' => 'Ribbon — B2B marketplace for thermal transfer ribbons, printers & auto-ID equipment',
@@ -51,6 +58,8 @@ return [
     'home.hero_carousel_prev' => 'Previous banner',
     'home.hero_carousel_next' => 'Next banner',
     'home.hero_carousel_goto' => 'Go to banner :n',
+    'home.articles_heading' => 'From Ribbon',
+    'home.articles_view_all' => 'View all articles',
 
     // ---- Category / catalog page ----
     'catalog.intro_with_count' => ':category: :count product listing(s) currently available from verified Ribbon sellers, each published with specifications and pricing.',
@@ -73,6 +82,7 @@ return [
     'catalog.empty_title' => 'No products here yet',
     'catalog.empty_body' => 'Check back soon, or browse other categories.',
     'catalog.empty_cta' => 'Browse catalog',
+    'catalog.related_articles_heading' => 'Related reading',
     'catalog.filtered_empty_title' => 'No products match these filters',
     'catalog.filtered_empty_body' => 'Try removing a filter or two.',
     'catalog.no_image' => 'No image',
@@ -80,9 +90,16 @@ return [
     'catalog.error_body' => 'We couldn\'t load these products. Please try again.',
     'catalog.error_retry' => 'Retry',
 
+    // ---- Search page ----
+    'search.heading_with_query' => 'Search results for ":query"',
+    'search.heading_empty' => 'Search',
+    'search.no_query_title' => 'Search the catalog',
+    'search.no_query_body' => 'Type a product, brand, or category name in the search box above to find listings from verified Ribbon sellers.',
+    'search.empty_title' => 'No results for ":query"',
+    'search.empty_body' => 'Try a different search term, or browse the catalog by category instead.',
+    'search.category_filter_clear' => 'Clear filter',
+
     // ---- Product card ----
-    'product_card.add_button' => '+ Add',
-    'product_card.add_coming_soon' => 'Coming soon',
     'product_card.sold_by' => 'Sold by :seller',
     'product_card.no_products_label' => 'No products',
 
@@ -142,4 +159,16 @@ return [
     'offer_request.confirmation_title' => 'Request sent',
     'offer_request.confirmation_body' => 'Thanks — the seller(s) will contact you shortly with an offer.',
     'offer_request.continue_shopping' => 'Continue browsing',
+
+    // ---- Articles ----
+    'articles.title' => 'Articles',
+    'articles.subtitle' => 'History, ribbon types, use cases, and technical explainers about thermal transfer printing and the auto-ID industry.',
+    'articles.empty_title' => 'No articles yet',
+    'articles.empty_body' => 'Check back soon.',
+    'articles.back_to_articles' => 'All articles',
+    'articles.type.all' => 'All',
+    'articles.type.article' => 'Articles',
+    'articles.type.news' => 'News',
+    'articles.filtered_empty_title' => 'Nothing here yet',
+    'articles.filtered_empty_body' => 'No published content matches this filter yet.',
 ];

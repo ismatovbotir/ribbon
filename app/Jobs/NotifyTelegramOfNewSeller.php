@@ -3,24 +3,23 @@
 namespace App\Jobs;
 
 use App\Models\Seller;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
-class NotifyTelegramOfNewSeller implements ShouldQueue
+/**
+ * Deliberately NOT ShouldQueue — runs synchronously in-request when
+ * dispatched. This app has no persistent queue worker guaranteed to be
+ * running in every environment (no Supervisor/systemd/Horizon setup), so
+ * queuing this silently stranded notifications in the `jobs` table with
+ * nothing ever consuming them. A Telegram API call adds a small bit of
+ * request latency, which is an acceptable tradeoff for a low-volume
+ * "new seller applied" notification actually arriving.
+ */
+class NotifyTelegramOfNewSeller
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
-
-    /**
-     * A bad token or a Telegram API hiccup is handled inline (logged and
-     * swallowed), not by retrying — one attempt is enough.
-     */
-    public int $tries = 1;
+    use Dispatchable;
 
     /**
      * Create a new job instance.
