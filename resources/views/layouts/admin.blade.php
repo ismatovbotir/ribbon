@@ -137,6 +137,25 @@
                         </svg>
                         <span>Articles</span>
                     </a>
+
+                    {{-- Sitewide config (analytics IDs, verification tokens,
+                         contact info, default SEO tags) — Super Admin only,
+                         same reasoning as Commercial Offers above. --}}
+                    @if (Auth::user()->isSuperAdmin())
+                        <p class="mt-4 mb-2 px-3 text-xs font-medium tracking-wide text-text-muted uppercase">Settings</p>
+                        <a
+                            href="{{ route('admin.settings.show') }}"
+                            wire:navigate
+                            title="Settings"
+                            class="flex h-row-comfortable items-center gap-2.5 rounded-sm border-l-2 px-3 text-sm transition-colors {{ request()->routeIs('admin.settings.*') ? 'border-accent-600 bg-accent-50 text-accent-700 font-medium' : 'border-transparent text-text-secondary hover:bg-surface-hover hover:text-text-primary' }}"
+                        >
+                            <svg class="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                <path d="M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" stroke="currentColor" stroke-width="1.4" />
+                                <path d="M16.2 12.3c.1-.3.2-.6.2-1s-.1-.7-.2-1l1.3-1.1-1-1.7-1.6.5c-.5-.4-1-.7-1.6-.9L13 5h-2l-.3 1.6c-.6.2-1.1.5-1.6.9l-1.6-.5-1 1.7 1.3 1.1c-.1.3-.2.6-.2 1s.1.7.2 1L6.5 13.4l1 1.7 1.6-.5c.5.4 1 .7 1.6.9L11 17h2l.3-1.6c.6-.2 1.1-.5 1.6-.9l1.6.5 1-1.7-1.3-1Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" />
+                            </svg>
+                            <span>Settings</span>
+                        </a>
+                    @endif
                 </nav>
             </aside>
 
@@ -216,6 +235,15 @@
                     >
                         Articles
                     </a>
+                    @if (Auth::user()->isSuperAdmin())
+                        <a
+                            href="{{ route('admin.settings.show') }}"
+                            wire:navigate
+                            class="flex h-row-comfortable items-center gap-2.5 rounded-sm border-l-2 px-3 text-sm {{ request()->routeIs('admin.settings.*') ? 'border-accent-600 bg-accent-50 text-accent-700 font-medium' : 'border-transparent text-text-secondary' }}"
+                        >
+                            Settings
+                        </a>
+                    @endif
                 </nav>
             </aside>
 

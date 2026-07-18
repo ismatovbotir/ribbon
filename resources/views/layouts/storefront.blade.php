@@ -16,10 +16,22 @@
             this block is presentation-only. See seo-engineer notes on
             Storefront\Home and Storefront\Catalog\Show for the query-string
             (filters/sort/pagination) canonicalization rules.
+
+            $effectiveMetaDescription/$effectiveOgImage fall back to the
+            sitewide Setting row (admin.settings.show) when a page doesn't
+            supply its own — $settings itself comes from AppServiceProvider's
+            layouts.storefront view composer, not any individual page.
         --}}
-        @isset($metaDescription)
-            <meta name="description" content="{{ $metaDescription }}">
-        @endisset
+        @php
+            $effectiveMetaDescription = $metaDescription ?? $settings->default_meta_description ?? null;
+            $effectiveOgImage = $ogImage ?? ($settings->default_og_image_path
+                ? \Illuminate\Support\Facades\Storage::disk('public')->url($settings->default_og_image_path)
+                : null);
+        @endphp
+
+        @if ($effectiveMetaDescription)
+            <meta name="description" content="{{ $effectiveMetaDescription }}">
+        @endif
 
         <meta name="robots" content="{{ $robots ?? 'index,follow' }}">
 
@@ -50,24 +62,24 @@
                 <meta property="og:locale:alternate" content="{{ $ogLocaleMap[$hreflang] ?? $hreflang }}">
             @endforeach
         @endisset
-        @isset($metaDescription)
-            <meta property="og:description" content="{{ $metaDescription }}">
-        @endisset
+        @if ($effectiveMetaDescription)
+            <meta property="og:description" content="{{ $effectiveMetaDescription }}">
+        @endif
         @isset($canonicalUrl)
             <meta property="og:url" content="{{ $canonicalUrl }}">
         @endisset
-        @isset($ogImage)
-            <meta property="og:image" content="{{ $ogImage }}">
-        @endisset
+        @if ($effectiveOgImage)
+            <meta property="og:image" content="{{ $effectiveOgImage }}">
+        @endif
 
-        <meta name="twitter:card" content="{{ isset($ogImage) ? 'summary_large_image' : 'summary' }}">
+        <meta name="twitter:card" content="{{ $effectiveOgImage ? 'summary_large_image' : 'summary' }}">
         <meta name="twitter:title" content="{{ $title ?? __('storefront.nav.brand') }}">
-        @isset($metaDescription)
-            <meta name="twitter:description" content="{{ $metaDescription }}">
-        @endisset
-        @isset($ogImage)
-            <meta name="twitter:image" content="{{ $ogImage }}">
-        @endisset
+        @if ($effectiveMetaDescription)
+            <meta name="twitter:description" content="{{ $effectiveMetaDescription }}">
+        @endif
+        @if ($effectiveOgImage)
+            <meta name="twitter:image" content="{{ $effectiveOgImage }}">
+        @endif
 
         @isset($structuredData)
             @foreach ($structuredData as $schema)
@@ -75,7 +87,49 @@
             @endforeach
         @endisset
 
+        {{--
+            Sitewide tracking/verification, sourced from the one Setting row
+            (admin.settings.show) rather than any per-page data — every
+            storefront page gets these whenever an admin has actually set
+            them, no per-page opt-in needed.
+        --}}
+        @if ($settings->google_site_verification)
+            <meta name="google-site-verification" content="{{ $settings->google_site_verification }}">
+        @endif
+        @if ($settings->yandex_site_verification)
+            <meta name="yandex-verification" content="{{ $settings->yandex_site_verification }}">
+        @endif
+
         @stack('meta')
+
+        @if ($settings->google_analytics_id)
+            <script async src="https://www.googletagmanager.com/gtag/js?id={{ $settings->google_analytics_id }}"></script>
+            <script>
+                window.dataLayer = window.dataLayer || [];
+                function gtag() { dataLayer.push(arguments); }
+                gtag('js', new Date());
+                gtag('config', @js($settings->google_analytics_id));
+            </script>
+        @endif
+
+        @if ($settings->yandex_metrica_id)
+            <script>
+                (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+                m[i].l=1*new Date();
+                for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+                k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+                (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
+
+                ym(@js($settings->yandex_metrica_id), "init", {
+                    clickmap: true,
+                    trackLinks: true,
+                    accurateTrackBounce: true,
+                });
+            </script>
+            <noscript>
+                <div><img src="https://mc.yandex.ru/watch/{{ $settings->yandex_metrica_id }}" style="position:absolute; left:-9999px;" alt=""></div>
+            </noscript>
+        @endif
 
         @fonts
 
@@ -348,7 +402,10 @@
         {{-- Footer — deliberately minimal, no account/order-history links (buyers never register). See doc 09. --}}
         <footer class="border-t border-border bg-surface-subtle">
             <div class="mx-auto max-w-7xl px-4 py-10 md:px-6">
-                <div class="grid grid-cols-1 gap-8 sm:grid-cols-3">
+                @php
+                    $hasContactInfo = $settings->admin_phone || $settings->admin_email;
+                @endphp
+                <div class="grid grid-cols-1 gap-8 {{ $hasContactInfo ? 'sm:grid-cols-4' : 'sm:grid-cols-3' }}">
                     <div>
                         <a href="{{ route('storefront.home') }}" wire:navigate class="flex items-center gap-2">
                             <span class="flex h-7 w-7 items-center justify-center rounded-md bg-accent-600 text-sm font-semibold text-white">R</span>
@@ -390,6 +447,20 @@
                             <li><a href="{{ route('login') }}" wire:navigate class="text-sm text-text-secondary hover:text-accent-700">{{ __('storefront.nav.seller_login') }}</a></li>
                         </ul>
                     </div>
+
+                    @if ($hasContactInfo)
+                        <div>
+                            <p class="text-sm font-semibold text-text-primary">{{ __('storefront.footer.contact_heading') }}</p>
+                            <ul class="mt-3 space-y-2">
+                                @if ($settings->admin_phone)
+                                    <li><a href="tel:{{ $settings->admin_phone }}" class="text-sm text-text-secondary hover:text-accent-700">{{ $settings->admin_phone }}</a></li>
+                                @endif
+                                @if ($settings->admin_email)
+                                    <li><a href="mailto:{{ $settings->admin_email }}" class="text-sm text-text-secondary hover:text-accent-700">{{ $settings->admin_email }}</a></li>
+                                @endif
+                            </ul>
+                        </div>
+                    @endif
                 </div>
 
                 <div class="mt-8 border-t border-border pt-6">

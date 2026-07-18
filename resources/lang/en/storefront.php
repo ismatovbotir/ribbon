@@ -21,6 +21,7 @@ return [
     'footer.tagline' => 'The B2B marketplace for auto-ID printing rolls, printers, scanners and accessories.',
     'footer.catalog_heading' => 'Catalog',
     'footer.sellers_heading' => 'For sellers',
+    'footer.contact_heading' => 'Contact',
     'footer.copyright' => '© :year Ribbon. All rights reserved.',
 
     // ---- SEO (meta title/description — distinct from the visible

@@ -16,6 +16,7 @@ use App\Livewire\Admin\Products\Index as AdminProductsIndex;
 use App\Livewire\Admin\Products\Show as AdminProductsShow;
 use App\Livewire\Admin\Sellers\Index as AdminSellersIndex;
 use App\Livewire\Admin\Sellers\Show as AdminSellersShow;
+use App\Livewire\Admin\Settings\Show as AdminSettingsShow;
 use App\Livewire\Auth\Login;
 use App\Livewire\Sellers\Analytics\Show as SellerAnalyticsShow;
 use App\Livewire\Sellers\Dashboard as SellerDashboard;
@@ -214,4 +215,8 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
         Route::get('/create', AdminArticlesForm::class)->name('create');
         Route::get('/{article}/edit', AdminArticlesForm::class)->name('edit');
     });
+
+    // Sitewide config (analytics IDs, verification tokens, contact info,
+    // default SEO tags) — Super Admin only, same reasoning as admin/offers.
+    Route::get('/settings', AdminSettingsShow::class)->name('settings.show')->middleware('super_admin');
 });

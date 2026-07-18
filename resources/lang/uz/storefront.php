@@ -21,6 +21,7 @@ return [
     'footer.tagline' => 'Avto-ID pechat lentalari, printerlari, skanerlari va aksessuarlari uchun B2B marketpleys.',
     'footer.catalog_heading' => 'Katalog',
     'footer.sellers_heading' => 'Sotuvchilar uchun',
+    'footer.contact_heading' => 'Aloqa',
     'footer.copyright' => '© :year Ribbon. Barcha huquqlar himoyalangan.',
 
     // ---- SEO (meta title/description — distinct from the visible

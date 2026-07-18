@@ -21,6 +21,7 @@ return [
     'footer.tagline' => 'B2B маркетплейс термотрансферных лент, принтеров, сканеров и аксессуаров для авто-идентификации.',
     'footer.catalog_heading' => 'Каталог',
     'footer.sellers_heading' => 'Продавцам',
+    'footer.contact_heading' => 'Контакты',
     'footer.copyright' => '© :year Ribbon. Все права защищены.',
 
     // ---- SEO (meta title/description — distinct from the visible
