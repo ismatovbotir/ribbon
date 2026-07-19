@@ -4,6 +4,7 @@ namespace App\Livewire\Storefront;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\SearchQueryEvent;
 use App\Services\ProductAnalyticsService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Storage;
@@ -180,6 +181,18 @@ class Search extends Component
         // docblock for why this is a deliberate v1 scope cut.
         if (! request()->hasHeader('X-Livewire')) {
             ProductAnalyticsService::recordSearchAppearances($products);
+
+            // Only the term itself matters for "what are buyers searching
+            // for" — an empty term is just someone landing on /search with
+            // no query yet (this page's own "start searching" prompt
+            // state, see matchingProductsQuery()), not a real search.
+            if ($hasQuery) {
+                SearchQueryEvent::create([
+                    'query' => $term,
+                    'results_count' => $products->total(),
+                    'occurred_at' => now(),
+                ]);
+            }
         }
 
         $hasActiveCategoryFilter = ! empty($this->categoryIds);

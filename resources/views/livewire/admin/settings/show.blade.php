@@ -62,6 +62,41 @@
             </div>
         </div>
 
+        {{-- Telegram bot --}}
+        <div class="rounded-md border border-border-strong bg-surface-raised">
+            <div class="border-b border-border bg-surface-subtle px-5 py-3">
+                <h2 class="text-lg font-semibold text-text-primary">Telegram bot</h2>
+            </div>
+            <div class="px-5 py-5">
+                @if ($setting->isTelegramBotConnected())
+                    <div class="flex items-center justify-between rounded-sm border border-success-200 bg-success-50 px-4 py-3">
+                        <div>
+                            <p class="text-sm font-medium text-success-700">Connected as @{{ $setting->telegram_bot_username }}</p>
+                            <p class="mt-0.5 text-xs text-success-700">Webhook registered — the <a href="{{ route('admin.telegram.show') }}" wire:navigate class="underline">Messages</a> inbox will receive anything sent to this bot.</p>
+                        </div>
+                        <x-button type="button" variant="ghost" wire:click="disconnectTelegramBot" wire:loading.attr="disabled" wire:target="disconnectTelegramBot" wire:confirm="Disconnect the Telegram bot? Notifications and the Messages inbox will stop working until reconnected.">
+                            Disconnect
+                        </x-button>
+                    </div>
+                @else
+                    <label class="mb-1 block text-sm font-medium text-text-primary">Bot token</label>
+                    <div class="flex max-w-lg items-start gap-2">
+                        <div class="flex-1">
+                            <x-input type="text" wire:model="telegramBotToken" :error="$errors->has('telegramBotToken')" placeholder="123456789:AAExampleTokenFromBotFather" />
+                            @error('telegramBotToken')
+                                <p class="mt-1 text-xs text-danger-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <x-button type="button" variant="primary" wire:click="connectTelegramBot" wire:loading.attr="disabled" wire:target="connectTelegramBot" class="shrink-0">
+                            <span wire:loading.remove wire:target="connectTelegramBot">Connect &amp; set webhook</span>
+                            <span wire:loading wire:target="connectTelegramBot">Connecting…</span>
+                        </x-button>
+                    </div>
+                    <p class="mt-1 text-xs text-text-muted">From @BotFather on Telegram. Verifies the token and registers this app's webhook in one step — nothing is saved until both succeed.</p>
+                @endif
+            </div>
+        </div>
+
         {{-- Contact --}}
         <div class="rounded-md border border-border-strong bg-surface-raised">
             <div class="border-b border-border bg-surface-subtle px-5 py-3">

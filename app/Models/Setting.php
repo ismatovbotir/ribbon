@@ -20,6 +20,9 @@ use Illuminate\Database\Eloquent\Model;
     'admin_email',
     'default_meta_description',
     'default_og_image_path',
+    'telegram_bot_token',
+    'telegram_bot_username',
+    'telegram_webhook_secret',
 ])]
 class Setting extends Model
 {
@@ -31,5 +34,22 @@ class Setting extends Model
     public static function current(): self
     {
         return static::query()->firstOrCreate(['id' => 1]);
+    }
+
+    /**
+     * The token that actually authenticates Telegram API calls —
+     * DB-editable value takes priority, falling back to the original
+     * .env-based TELEGRAM_BOT_TOKEN so existing deployments keep working
+     * until an admin saves one here. See the settings migration's
+     * docblock.
+     */
+    public function effectiveTelegramBotToken(): ?string
+    {
+        return $this->telegram_bot_token ?: config('services.telegram.bot_token');
+    }
+
+    public function isTelegramBotConnected(): bool
+    {
+        return filled($this->telegram_bot_username);
     }
 }

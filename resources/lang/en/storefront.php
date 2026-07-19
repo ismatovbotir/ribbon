@@ -22,6 +22,7 @@ return [
     'footer.catalog_heading' => 'Catalog',
     'footer.sellers_heading' => 'For sellers',
     'footer.contact_heading' => 'Contact',
+    'footer.chat_telegram' => 'Chat on Telegram',
     'footer.copyright' => '© :year Ribbon. All rights reserved.',
 
     // ---- SEO (meta title/description — distinct from the visible

@@ -3,6 +3,8 @@
 namespace App\Livewire\Admin\Settings;
 
 use App\Models\Setting;
+use App\Services\TelegramBotService;
+use Illuminate\Support\Str;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -35,6 +37,8 @@ class Show extends Component
 
     public ?string $existingOgImagePath = null;
 
+    public ?string $telegramBotToken = null;
+
     public function mount(): void
     {
         $this->setting = Setting::current();
@@ -52,12 +56,69 @@ class Show extends Component
         $this->defaultMetaDescription = $this->setting->default_meta_description;
         $this->ogImageUpload = null;
         $this->existingOgImagePath = $this->setting->default_og_image_path;
+        $this->telegramBotToken = $this->setting->telegram_bot_token;
     }
 
     public function removeOgImage(): void
     {
         $this->ogImageUpload = null;
         $this->existingOgImagePath = null;
+    }
+
+    /**
+     * Verifies the typed token against Telegram's own getMe endpoint (so a
+     * typo or revoked token is caught immediately, not discovered later
+     * when notifications silently stop working), then registers this
+     * app's webhook URL with a freshly generated secret. Only persists
+     * anything once both steps succeed — a bad token never gets saved as
+     * if it were good.
+     */
+    public function connectTelegramBot(TelegramBotService $telegram): void
+    {
+        $this->validate([
+            'telegramBotToken' => ['required', 'string', 'max:255'],
+        ]);
+
+        $me = $telegram->getMe($this->telegramBotToken);
+
+        if (! $me) {
+            $this->addError('telegramBotToken', 'Could not verify this token with Telegram — double-check it and try again.');
+
+            return;
+        }
+
+        $webhookSecret = Str::random(40);
+
+        if (! $telegram->setWebhook($this->telegramBotToken, route('telegram.webhook'), $webhookSecret)) {
+            $this->addError('telegramBotToken', 'The token is valid, but registering the webhook with Telegram failed. Try again.');
+
+            return;
+        }
+
+        $this->setting->update([
+            'telegram_bot_token' => $this->telegramBotToken,
+            'telegram_bot_username' => $me['username'],
+            'telegram_webhook_secret' => $webhookSecret,
+        ]);
+
+        session()->flash('status', "Connected as @{$me['username']} — webhook registered.");
+    }
+
+    public function disconnectTelegramBot(TelegramBotService $telegram): void
+    {
+        if ($token = $this->setting->telegram_bot_token) {
+            $telegram->deleteWebhook($token);
+        }
+
+        $this->setting->update([
+            'telegram_bot_token' => null,
+            'telegram_bot_username' => null,
+            'telegram_webhook_secret' => null,
+        ]);
+
+        $this->telegramBotToken = null;
+
+        session()->flash('status', 'Telegram bot disconnected.');
     }
 
     public function save(): void

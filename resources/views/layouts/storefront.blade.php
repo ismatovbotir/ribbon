@@ -403,7 +403,7 @@
         <footer class="border-t border-border bg-surface-subtle">
             <div class="mx-auto max-w-7xl px-4 py-10 md:px-6">
                 @php
-                    $hasContactInfo = $settings->admin_phone || $settings->admin_email;
+                    $hasContactInfo = $settings->admin_phone || $settings->admin_email || $settings->isTelegramBotConnected();
                 @endphp
                 <div class="grid grid-cols-1 gap-8 {{ $hasContactInfo ? 'sm:grid-cols-4' : 'sm:grid-cols-3' }}">
                     <div>
@@ -457,6 +457,21 @@
                                 @endif
                                 @if ($settings->admin_email)
                                     <li><a href="mailto:{{ $settings->admin_email }}" class="text-sm text-text-secondary hover:text-accent-700">{{ $settings->admin_email }}</a></li>
+                                @endif
+                                @if ($settings->isTelegramBotConnected())
+                                    <li>
+                                        <a
+                                            href="https://t.me/{{ $settings->telegram_bot_username }}"
+                                            target="_blank"
+                                            rel="noopener"
+                                            class="inline-flex items-center gap-1.5 text-sm text-text-secondary hover:text-accent-700"
+                                        >
+                                            <svg class="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                                <path d="M10 1.667a8.333 8.333 0 1 0 0 16.666 8.333 8.333 0 0 0 0-16.666Zm3.827 5.694-1.4 6.6c-.105.472-.38.588-.771.366l-2.13-1.57-1.028 0.99c-.114.114-.209.209-.428.209l.153-2.169 3.949-3.569c.172-.153-.038-.238-.267-.086l-4.881 3.074-2.103-.658c-.457-.143-.466-.457.096-.676l8.222-3.169c.381-.14.714.09.588.658Z" />
+                                            </svg>
+                                            {{ __('storefront.footer.chat_telegram') }}
+                                        </a>
+                                    </li>
                                 @endif
                             </ul>
                         </div>

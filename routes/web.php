@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\TelegramWebhookController;
+use App\Livewire\Admin\Analytics\Show as AdminAnalyticsShow;
 use App\Livewire\Admin\Articles\Form as AdminArticlesForm;
 use App\Livewire\Admin\Articles\Index as AdminArticlesIndex;
 use App\Livewire\Admin\Banners\Form as AdminBannersForm;
@@ -17,6 +19,7 @@ use App\Livewire\Admin\Products\Show as AdminProductsShow;
 use App\Livewire\Admin\Sellers\Index as AdminSellersIndex;
 use App\Livewire\Admin\Sellers\Show as AdminSellersShow;
 use App\Livewire\Admin\Settings\Show as AdminSettingsShow;
+use App\Livewire\Admin\Telegram\Show as AdminTelegramShow;
 use App\Livewire\Auth\Login;
 use App\Livewire\Sellers\Analytics\Show as SellerAnalyticsShow;
 use App\Livewire\Sellers\Dashboard as SellerDashboard;
@@ -35,6 +38,11 @@ use App\Livewire\Storefront\Products\Show as StorefrontProductsShow;
 use App\Livewire\Storefront\Search as StorefrontSearch;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+
+// Public, unauthenticated — Telegram itself is the only caller (verified
+// via secret header, not Laravel auth). See TelegramWebhookController and
+// its CSRF exemption in bootstrap/app.php.
+Route::post('/telegram/webhook', TelegramWebhookController::class)->name('telegram.webhook');
 
 // Buyer storefront — public, unauthenticated (buyers never register/log in,
 // see CLAUDE.md), no auth middleware. `{categorySlug}` is a plain string,
@@ -219,4 +227,15 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
     // Sitewide config (analytics IDs, verification tokens, contact info,
     // default SEO tags) — Super Admin only, same reasoning as admin/offers.
     Route::get('/settings', AdminSettingsShow::class)->name('settings.show')->middleware('super_admin');
+
+    // Telegram inbox — Super Admin only, same reasoning as admin/offers
+    // (whoever can see buyer/contact conversations should be the same
+    // staff role that can act on them).
+    Route::get('/messages', AdminTelegramShow::class)->name('telegram.show')->middleware('super_admin');
+
+    // Platform-wide analytics (traffic sources, top viewed products, top
+    // searches) — distinct from Sellers\Analytics\Show, which is each
+    // seller's own scoped-to-them dashboard. Super Admin only: this
+    // aggregates across every seller's data.
+    Route::get('/analytics', AdminAnalyticsShow::class)->name('analytics.show')->middleware('super_admin');
 });

@@ -26,6 +26,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin.auth' => EnsureAdminIsAuthenticated::class,
             'super_admin' => EnsureUserIsSuperAdmin::class,
         ]);
+
+        // Telegram POSTs webhook updates with no Laravel CSRF token —
+        // TelegramWebhookController verifies the request is genuinely from
+        // Telegram itself via the X-Telegram-Bot-Api-Secret-Token header
+        // instead (see Setting::telegram_webhook_secret).
+        $middleware->validateCsrfTokens(except: ['telegram/webhook']);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

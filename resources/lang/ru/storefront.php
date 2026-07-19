@@ -22,6 +22,7 @@ return [
     'footer.catalog_heading' => 'Каталог',
     'footer.sellers_heading' => 'Продавцам',
     'footer.contact_heading' => 'Контакты',
+    'footer.chat_telegram' => 'Написать в Telegram',
     'footer.copyright' => '© :year Ribbon. Все права защищены.',
 
     // ---- SEO (meta title/description — distinct from the visible

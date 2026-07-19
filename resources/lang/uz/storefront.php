@@ -22,6 +22,7 @@ return [
     'footer.catalog_heading' => 'Katalog',
     'footer.sellers_heading' => 'Sotuvchilar uchun',
     'footer.contact_heading' => 'Aloqa',
+    'footer.chat_telegram' => 'Telegram orqali yozish',
     'footer.copyright' => '© :year Ribbon. Barcha huquqlar himoyalangan.',
 
     // ---- SEO (meta title/description — distinct from the visible

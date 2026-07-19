@@ -34,6 +34,22 @@ return new class extends Migration
             // its own $metaDescription/$ogImage to the layout.
             $table->text('default_meta_description')->nullable();
             $table->string('default_og_image_path')->nullable();
+            // DB-editable Telegram bot config — supersedes the .env-based
+            // TELEGRAM_BOT_TOKEN the notification jobs originally read
+            // (see NotifyTelegramOfNewSeller/NotifyTelegramOfNewOfferRequest,
+            // both now fall back to that env var only if this is empty, so
+            // existing deployments keep working during the transition).
+            // Username is fetched from Telegram's own getMe response when
+            // the token is saved, not admin-entered — used to build the
+            // t.me/{username} deep-link button shown on the storefront.
+            $table->string('telegram_bot_token')->nullable();
+            $table->string('telegram_bot_username')->nullable();
+            // Random secret Telegram echoes back in the
+            // X-Telegram-Bot-Api-Secret-Token header on every webhook call
+            // — generated when the webhook is registered, verified on
+            // every incoming request so the public webhook route can't be
+            // spoofed by an arbitrary POST from anyone who finds the URL.
+            $table->string('telegram_webhook_secret')->nullable();
             $table->timestamps();
         });
     }

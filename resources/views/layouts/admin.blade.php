@@ -138,11 +138,36 @@
                         <span>Articles</span>
                     </a>
 
-                    {{-- Sitewide config (analytics IDs, verification tokens,
-                         contact info, default SEO tags) — Super Admin only,
-                         same reasoning as Commercial Offers above. --}}
+                    {{-- Super-Admin-only workflow tools + sitewide config —
+                         same reasoning as Commercial Offers above (whoever
+                         can act on this should be the same staff role that
+                         can see it). Ordered by how often you'd actually
+                         check each one: Messages/Analytics day-to-day,
+                         Settings rarely. --}}
                     @if (Auth::user()->isSuperAdmin())
-                        <p class="mt-4 mb-2 px-3 text-xs font-medium tracking-wide text-text-muted uppercase">Settings</p>
+                        <p class="mt-4 mb-2 px-3 text-xs font-medium tracking-wide text-text-muted uppercase">Admin</p>
+                        <a
+                            href="{{ route('admin.telegram.show') }}"
+                            wire:navigate
+                            title="Messages"
+                            class="flex h-row-comfortable items-center gap-2.5 rounded-sm border-l-2 px-3 text-sm transition-colors {{ request()->routeIs('admin.telegram.*') ? 'border-accent-600 bg-accent-50 text-accent-700 font-medium' : 'border-transparent text-text-secondary hover:bg-surface-hover hover:text-text-primary' }}"
+                        >
+                            <svg class="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                <path d="M3 5.5A1.5 1.5 0 0 1 4.5 4h11A1.5 1.5 0 0 1 17 5.5v6A1.5 1.5 0 0 1 15.5 13H9l-3.5 3v-3h-1A1.5 1.5 0 0 1 3 11.5v-6Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" />
+                            </svg>
+                            <span>Messages</span>
+                        </a>
+                        <a
+                            href="{{ route('admin.analytics.show') }}"
+                            wire:navigate
+                            title="Analytics"
+                            class="flex h-row-comfortable items-center gap-2.5 rounded-sm border-l-2 px-3 text-sm transition-colors {{ request()->routeIs('admin.analytics.*') ? 'border-accent-600 bg-accent-50 text-accent-700 font-medium' : 'border-transparent text-text-secondary hover:bg-surface-hover hover:text-text-primary' }}"
+                        >
+                            <svg class="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                <path d="M4 16V9M10 16V4M16 16v-6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
+                            </svg>
+                            <span>Analytics</span>
+                        </a>
                         <a
                             href="{{ route('admin.settings.show') }}"
                             wire:navigate
@@ -236,6 +261,20 @@
                         Articles
                     </a>
                     @if (Auth::user()->isSuperAdmin())
+                        <a
+                            href="{{ route('admin.telegram.show') }}"
+                            wire:navigate
+                            class="flex h-row-comfortable items-center gap-2.5 rounded-sm border-l-2 px-3 text-sm {{ request()->routeIs('admin.telegram.*') ? 'border-accent-600 bg-accent-50 text-accent-700 font-medium' : 'border-transparent text-text-secondary' }}"
+                        >
+                            Messages
+                        </a>
+                        <a
+                            href="{{ route('admin.analytics.show') }}"
+                            wire:navigate
+                            class="flex h-row-comfortable items-center gap-2.5 rounded-sm border-l-2 px-3 text-sm {{ request()->routeIs('admin.analytics.*') ? 'border-accent-600 bg-accent-50 text-accent-700 font-medium' : 'border-transparent text-text-secondary' }}"
+                        >
+                            Analytics
+                        </a>
                         <a
                             href="{{ route('admin.settings.show') }}"
                             wire:navigate

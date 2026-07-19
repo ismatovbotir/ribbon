@@ -3,10 +3,10 @@
 namespace App\Jobs;
 
 use App\Models\OfferRequest;
+use App\Models\Setting;
+use App\Services\TelegramBotService;
 use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Throwable;
 
 /**
  * Mirrors NotifyTelegramOfNewSeller exactly (same bot/chat config, same
@@ -31,13 +31,13 @@ class NotifyTelegramOfNewOfferRequest
     /**
      * Execute the job.
      */
-    public function handle(): void
+    public function handle(TelegramBotService $telegram): void
     {
-        $botToken = config('services.telegram.bot_token');
+        $botToken = Setting::current()->effectiveTelegramBotToken();
         $chatId = config('services.telegram.super_admin_chat_id');
 
         if (! $botToken || ! $chatId) {
-            Log::warning('TELEGRAM_BOT_TOKEN / TELEGRAM_SUPER_ADMIN_CHAT_ID are not set in .env — skipping new commercial offer request Telegram notification.');
+            Log::warning('No Telegram bot token (Settings or TELEGRAM_BOT_TOKEN) / TELEGRAM_SUPER_ADMIN_CHAT_ID is set — skipping new commercial offer request Telegram notification.');
 
             return;
         }
@@ -69,27 +69,6 @@ class NotifyTelegramOfNewOfferRequest
         $lines[] = 'Total: '.number_format($grandTotal).' UZS';
         $lines[] = route('admin.offers.show', $this->offerRequest);
 
-        $text = implode("\n", $lines);
-
-        try {
-            $response = Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
-                'chat_id' => $chatId,
-                'text' => $text,
-                'parse_mode' => 'HTML',
-            ]);
-
-            if ($response->failed()) {
-                Log::warning('Telegram notification for new commercial offer request failed.', [
-                    'offer_request_id' => $this->offerRequest->id,
-                    'status' => $response->status(),
-                    'body' => $response->body(),
-                ]);
-            }
-        } catch (Throwable $e) {
-            Log::warning('Telegram notification for new commercial offer request threw an exception.', [
-                'offer_request_id' => $this->offerRequest->id,
-                'message' => $e->getMessage(),
-            ]);
-        }
+        $telegram->sendMessage($botToken, $chatId, implode("\n", $lines), 'HTML');
     }
 }

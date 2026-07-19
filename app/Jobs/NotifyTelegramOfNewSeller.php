@@ -3,10 +3,10 @@
 namespace App\Jobs;
 
 use App\Models\Seller;
+use App\Models\Setting;
+use App\Services\TelegramBotService;
 use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Throwable;
 
 /**
  * Deliberately NOT ShouldQueue — runs synchronously in-request when
@@ -31,13 +31,13 @@ class NotifyTelegramOfNewSeller
     /**
      * Execute the job.
      */
-    public function handle(): void
+    public function handle(TelegramBotService $telegram): void
     {
-        $botToken = config('services.telegram.bot_token');
+        $botToken = Setting::current()->effectiveTelegramBotToken();
         $chatId = config('services.telegram.super_admin_chat_id');
 
         if (! $botToken || ! $chatId) {
-            Log::warning('TELEGRAM_BOT_TOKEN / TELEGRAM_SUPER_ADMIN_CHAT_ID are not set in .env — skipping new seller Telegram notification.');
+            Log::warning('No Telegram bot token (Settings or TELEGRAM_BOT_TOKEN) / TELEGRAM_SUPER_ADMIN_CHAT_ID is set — skipping new seller Telegram notification.');
 
             return;
         }
@@ -57,27 +57,6 @@ class NotifyTelegramOfNewSeller
 
         $lines[] = 'Status: pending review';
 
-        $text = implode("\n", $lines);
-
-        try {
-            $response = Http::post("https://api.telegram.org/bot{$botToken}/sendMessage", [
-                'chat_id' => $chatId,
-                'text' => $text,
-                'parse_mode' => 'HTML',
-            ]);
-
-            if ($response->failed()) {
-                Log::warning('Telegram notification for new seller failed.', [
-                    'seller_id' => $this->seller->id,
-                    'status' => $response->status(),
-                    'body' => $response->body(),
-                ]);
-            }
-        } catch (Throwable $e) {
-            Log::warning('Telegram notification for new seller threw an exception.', [
-                'seller_id' => $this->seller->id,
-                'message' => $e->getMessage(),
-            ]);
-        }
+        $telegram->sendMessage($botToken, $chatId, implode("\n", $lines), 'HTML');
     }
 }
