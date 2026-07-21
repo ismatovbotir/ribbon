@@ -37,12 +37,29 @@ use App\Livewire\Storefront\OfferRequest\Show as StorefrontOfferRequestShow;
 use App\Livewire\Storefront\Products\Show as StorefrontProductsShow;
 use App\Livewire\Storefront\Search as StorefrontSearch;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Route;
 
 // Public, unauthenticated — Telegram itself is the only caller (verified
 // via secret header, not Laravel auth). See TelegramWebhookController and
 // its CSRF exemption in bootstrap/app.php.
 Route::post('/telegram/webhook', TelegramWebhookController::class)->name('telegram.webhook');
+
+// Public, unauthenticated — search engines only. The file itself is a
+// plain public/sitemap.xml written by SitemapGeneratorService::
+// generateAndStore() (via `sitemap:generate` or the admin Settings button),
+// not rendered per-request, so this route just serves whatever was last
+// generated straight off disk. 404s with a helpful message rather than an
+// empty/broken sitemap if nothing has been generated yet.
+Route::get('/sitemap.xml', function () {
+    $path = public_path('sitemap.xml');
+
+    if (! File::exists($path)) {
+        abort(404, 'Sitemap has not been generated yet — run `php artisan sitemap:generate` or use the admin Settings page.');
+    }
+
+    return response(File::get($path), 200, ['Content-Type' => 'application/xml']);
+})->name('sitemap.xml');
 
 // Buyer storefront — public, unauthenticated (buyers never register/log in,
 // see CLAUDE.md), no auth middleware. `{categorySlug}` is a plain string,

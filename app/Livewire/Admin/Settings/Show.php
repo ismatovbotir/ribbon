@@ -3,7 +3,9 @@
 namespace App\Livewire\Admin\Settings;
 
 use App\Models\Setting;
+use App\Services\SitemapGeneratorService;
 use App\Services\TelegramBotService;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -39,6 +41,8 @@ class Show extends Component
 
     public ?string $telegramBotToken = null;
 
+    public ?Carbon $sitemapGeneratedAt = null;
+
     public function mount(): void
     {
         $this->setting = Setting::current();
@@ -57,6 +61,7 @@ class Show extends Component
         $this->ogImageUpload = null;
         $this->existingOgImagePath = $this->setting->default_og_image_path;
         $this->telegramBotToken = $this->setting->telegram_bot_token;
+        $this->sitemapGeneratedAt = $this->setting->sitemap_generated_at;
     }
 
     public function removeOgImage(): void
@@ -119,6 +124,15 @@ class Show extends Component
         $this->telegramBotToken = null;
 
         session()->flash('status', 'Telegram bot disconnected.');
+    }
+
+    public function regenerateSitemap(SitemapGeneratorService $sitemap): void
+    {
+        $urlCount = $sitemap->generateAndStore();
+
+        $this->sitemapGeneratedAt = $this->setting->fresh()->sitemap_generated_at;
+
+        session()->flash('status', "Sitemap regenerated — {$urlCount} URLs written.");
     }
 
     public function save(): void

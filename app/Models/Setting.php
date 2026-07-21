@@ -23,9 +23,22 @@ use Illuminate\Database\Eloquent\Model;
     'telegram_bot_token',
     'telegram_bot_username',
     'telegram_webhook_secret',
+    'sitemap_generated_at',
 ])]
 class Setting extends Model
 {
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'sitemap_generated_at' => 'datetime',
+        ];
+    }
+
     /**
      * The one settings row, creating it with all-null columns on first
      * access if it doesn't exist yet — avoids needing a seeder for what is

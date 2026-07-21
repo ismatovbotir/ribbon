@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -16,6 +17,15 @@ use Tests\TestCase;
 class AdminSettingsTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function tearDown(): void
+    {
+        // regenerateSitemap() writes a real public/sitemap.xml (see
+        // SitemapGeneratorTest) — clean up so runs don't leak a stale file.
+        File::delete(public_path('sitemap.xml'));
+
+        parent::tearDown();
+    }
 
     private function actingAsAdmin(): User
     {
@@ -61,6 +71,22 @@ class AdminSettingsTest extends TestCase
         $this->assertSame('hello@ribbon.uz', $setting->admin_email);
         $this->assertNotNull($setting->default_og_image_path);
         Storage::disk('public')->assertExists($setting->default_og_image_path);
+    }
+
+    public function test_super_admin_can_regenerate_sitemap(): void
+    {
+        $this->actingAsAdmin();
+
+        $this->assertNull(Setting::current()->sitemap_generated_at);
+
+        Livewire::test(Show::class)
+            ->call('regenerateSitemap')
+            ->assertHasNoErrors();
+
+        $setting = Setting::current();
+
+        $this->assertNotNull($setting->sitemap_generated_at);
+        $this->assertTrue(File::exists(public_path('sitemap.xml')));
     }
 
     public function test_non_super_admin_cannot_access_settings_page(): void

@@ -50,6 +50,11 @@ return new class extends Migration
             // every incoming request so the public webhook route can't be
             // spoofed by an arbitrary POST from anyone who finds the URL.
             $table->string('telegram_webhook_secret')->nullable();
+            // Set by SitemapGeneratorService::generateAndStore() every time
+            // public/sitemap.xml is (re)written — lets the admin Settings
+            // page show "last generated" next to the regenerate button.
+            // Null until the first generation.
+            $table->timestamp('sitemap_generated_at')->nullable();
             $table->timestamps();
         });
     }

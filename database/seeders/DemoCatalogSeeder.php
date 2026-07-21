@@ -40,8 +40,8 @@ class DemoCatalogSeeder extends Seeder
             return;
         }
 
-        $ribbons = $this->makeCategory('Termotransfer lentalar', 'Термотрансферные ленты', 'Thermal Transfer Ribbons', 1);
-        $this->makeSelectParameter($ribbons, 'Turi', 'Тип', 'Type', 1, ['Wax', 'Wax-Resin', 'Resin']);
+        $ribbons = $this->makeCategory('Termotransfer lentalar', 'Риббоны - термотрансферная Красяшая лента', 'Thermal Transfer Ribbons', 1);
+        $this->makeSelectParameter($ribbons, 'Turi', 'Тип', 'Type', 1, ['Wax', 'Wax-Resin', 'Resin', 'TTO']);
         $this->makeSelectParameter($ribbons, 'Rangi', 'Цвет', 'Color', 2, ['Qora / Чёрный / Black', 'Ko\'k / Синий / Blue', 'Qizil / Красный / Red']);
         $widthParam = $this->makeNumberParameter($ribbons, 'Kengligi', 'Ширина', 'Width', 3, 'mm');
 
@@ -86,7 +86,7 @@ class DemoCatalogSeeder extends Seeder
             ['name' => 'MC9300', 'price' => 12500000],
         ]);
 
-        $this->command?->info('Demo catalog seeded: 4 categories, 3 sellers, '.Product::count().' products.');
+        $this->command?->info('Demo catalog seeded: 4 categories, 3 sellers, ' . Product::count() . ' products.');
     }
 
     private function makeCategory(string $uz, string $ru, string $en, int $sortOrder): Category
@@ -186,15 +186,15 @@ class DemoCatalogSeeder extends Seeder
         $seller = Seller::register(
             [
                 'name' => $name,
-                'address' => $city->name['uz'].' shahri, asosiy ombor',
+                'address' => $city->name['uz'] . ' shahri, asosiy ombor',
                 'country_id' => $countryId,
                 'region_id' => $region->id,
                 'city_id' => $city->id,
                 'vat_number' => (string) random_int(100000000, 999999999),
-                'phone' => '+998'.random_int(90, 99).random_int(1000000, 9999999),
+                'phone' => '+998' . random_int(90, 99) . random_int(1000000, 9999999),
             ],
             [
-                'name' => $name.' Owner',
+                'name' => $name . ' Owner',
                 'email' => $ownerEmail,
                 'password' => Hash::make('password'),
                 'locale' => 'uz',
@@ -242,7 +242,7 @@ class DemoCatalogSeeder extends Seeder
             $slugs = [];
 
             foreach (config('ribbon.locales') as $locale) {
-                $label = trim(($category->name[$locale] ?? '').' '.$spec['name']);
+                $label = trim(($category->name[$locale] ?? '') . ' ' . $spec['name']);
                 $slugs[$locale] = Product::generateUniqueSlug($label, $locale);
             }
 

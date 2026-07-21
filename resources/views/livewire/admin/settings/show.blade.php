@@ -122,6 +122,31 @@
             <p class="px-5 pb-5 text-xs text-text-muted">Shown in the storefront footer when set.</p>
         </div>
 
+        {{-- Sitemap --}}
+        <div class="rounded-md border border-border-strong bg-surface-raised">
+            <div class="border-b border-border bg-surface-subtle px-5 py-3">
+                <h2 class="text-lg font-semibold text-text-primary">Sitemap</h2>
+            </div>
+            <div class="flex items-center justify-between px-5 py-5">
+                <div>
+                    <p class="text-sm text-text-primary">
+                        @if ($sitemapGeneratedAt)
+                            Last generated {{ $sitemapGeneratedAt->diffForHumans() }}.
+                        @else
+                            Never generated.
+                        @endif
+                    </p>
+                    @if ($sitemapGeneratedAt)
+                        <a href="{{ route('sitemap.xml') }}" target="_blank" rel="noopener" class="mt-1 inline-block text-xs text-accent-600 hover:underline">View live sitemap.xml</a>
+                    @endif
+                </div>
+                <x-button type="button" variant="primary" wire:click="regenerateSitemap" wire:loading.attr="disabled" wire:target="regenerateSitemap" class="shrink-0">
+                    <span wire:loading.remove wire:target="regenerateSitemap">Regenerate now</span>
+                    <span wire:loading wire:target="regenerateSitemap">Regenerating…</span>
+                </x-button>
+            </div>
+        </div>
+
         {{-- SEO defaults --}}
         <div class="rounded-md border border-border-strong bg-surface-raised">
             <div class="border-b border-border bg-surface-subtle px-5 py-3">
