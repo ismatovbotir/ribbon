@@ -7,6 +7,8 @@
         'danger' => 'bg-danger-50 text-danger-700 border-danger-200',
         'muted' => 'bg-muted-50 text-muted-700 border-muted-200',
         'info' => 'bg-info-50 text-info-700 border-info-200',
+        // Storefront brand-partner badge (spec 18 2.4)
+        'brand' => 'h-6 max-w-[11rem] border-(--color-brand-badge-border) bg-(--color-brand-badge-bg) px-2 text-(--color-brand-badge-text)',
     ];
 
     $dotColors = [
@@ -20,9 +22,9 @@
     $classes = $variants[$variant] ?? $variants['muted'];
 @endphp
 
-<span {{ $attributes->merge(['class' => "inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs font-medium whitespace-nowrap $classes"]) }}>
+<span {{ $attributes->merge(['class' => "inline-flex h-6 items-center gap-1.5 rounded-pill border px-2 text-xs font-medium whitespace-nowrap $classes"]) }}>
     @if ($dot)
-        <span class="h-1.5 w-1.5 rounded-full {{ $dotColors[$variant] ?? $dotColors['muted'] }}"></span>
+        <span class="size-1.5 rounded-pill {{ $dotColors[$variant] ?? $dotColors['muted'] }}"></span>
     @endif
     {{ $slot }}
 </span>

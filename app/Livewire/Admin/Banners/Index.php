@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin\Banners;
 
+use App\Livewire\Concerns\AuthorizesAdmin;
 use App\Models\Banner;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -9,6 +10,13 @@ use Livewire\WithPagination;
 
 class Index extends Component
 {
+    use AuthorizesAdmin;
+
+    protected function adminAccess(): ?string
+    {
+        return 'content.manage';
+    }
+
     use WithPagination;
 
     #[Url(history: true)]
@@ -31,6 +39,8 @@ class Index extends Component
 
     public function sortBy(string $field): void
     {
+        $this->authorizeAdmin('content.manage');
+
         if (! in_array($field, $this->sortable, true)) {
             return;
         }
@@ -47,6 +57,8 @@ class Index extends Component
 
     public function updatedSearch(): void
     {
+        $this->authorizeAdmin('content.manage');
+
         $this->resetPage();
     }
 

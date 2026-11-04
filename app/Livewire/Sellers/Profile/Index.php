@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Sellers\Profile;
 
+use App\Livewire\Concerns\AuthorizesSeller;
 use App\Models\Seller;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
@@ -21,6 +22,7 @@ use Livewire\WithFileUploads;
  */
 class Index extends Component
 {
+    use AuthorizesSeller;
     use WithFileUploads;
 
     public $logoUpload = null;
@@ -44,7 +46,7 @@ class Index extends Component
 
     public function saveLogo(): void
     {
-        abort_unless($this->isOwner(), 403);
+        $this->authorizeOwner();
 
         $this->validate([
             'logoUpload' => ['required', 'image', 'mimes:jpg,jpeg,png', 'max:1024'],
@@ -62,7 +64,7 @@ class Index extends Component
 
     public function removeLogo(): void
     {
-        abort_unless($this->isOwner(), 403);
+        $this->authorizeOwner();
 
         $this->seller()->update(['logo_path' => null]);
 

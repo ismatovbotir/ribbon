@@ -23,6 +23,10 @@ return new class extends Migration
             $table->boolean('is_filterable')->default(true);
             $table->unsignedInteger('sort_order')->default(0);
             $table->timestamps();
+
+            $table->index(['category_id', 'sort_order']);
+            // Catalog filter sidebar: filterable parameters of one category.
+            $table->index(['category_id', 'is_filterable', 'sort_order'], 'category_parameters_filterable_index');
         });
     }
 

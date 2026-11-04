@@ -2,8 +2,10 @@
 
 namespace App\Livewire\Storefront\Catalog;
 
+use App\Livewire\Storefront\Concerns\QuickAddsToSelection;
 use App\Models\Article;
 use App\Models\Banner;
+use App\Models\Brand;
 use App\Models\Category;
 use App\Models\CategoryParameter;
 use App\Models\Product;
@@ -18,6 +20,7 @@ use Livewire\WithPagination;
 
 class Show extends Component
 {
+    use QuickAddsToSelection;
     use WithPagination;
 
     public Category $category;
@@ -34,7 +37,7 @@ class Show extends Component
      * (arrives as a string array key from the URL, coerced back to int
      * wherever it's used) => array of selected category_parameter_option_id
      * strings. Rendered as checkbox lists regardless of the parameter's own
-     * authored single/multiple type — see docs/design/11.
+     * authored single/multiple type — see .claude/docs/design/11.
      *
      * @var array<int|string, array<int, string>>
      */
@@ -53,7 +56,15 @@ class Show extends Component
     #[Url(as: 'max', history: true)]
     public array $numMax = [];
 
-    public bool $showMobileFilters = false;
+    /**
+     * Brand ids to filter by (`?brand[]=5`). No sidebar control writes this
+     * yet; it exists so the mega-menu brand shortcuts
+     * (App\Support\CatalogFilterUrl::brand()) land on a really filtered list.
+     *
+     * @var array<int, string>
+     */
+    #[Url(as: 'brand', history: true)]
+    public array $brands = [];
 
     /**
      * Resolves the category from its per-locale JSON slug — Category.slug
@@ -115,7 +126,7 @@ class Show extends Component
 
         $this->category = $found->load(['parameters' => function ($query) {
             // Buyer-facing filter order must match the order the admin who
-            // built the category chose (docs/design/11) — parameters()
+            // built the category chose (.claude/docs/design/11) — parameters()
             // already orders by sort_order, but CategoryParameter::options()
             // has no default ordering, so it's applied explicitly here.
             $query->where('is_filterable', true)->with(['options' => fn ($q) => $q->orderBy('sort_order')]);
@@ -124,20 +135,78 @@ class Show extends Component
         if (! in_array($this->sort, self::SORTS, true)) {
             $this->sort = 'newest';
         }
+
+        // Every option-filter checkbox group binds to `selected.{parameterId}`.
+        // If that key is missing, Livewire treats the checkbox as a single
+        // boolean and sends `true` instead of the option id (QA N-01, a 500
+        // in filter-select). So seed an empty array per filterable parameter,
+        // and coerce anything that isn't a list of ids (e.g. from the URL).
+        foreach ($this->category->parameters as $parameter) {
+            if (in_array($parameter->type, ['select_single', 'select_multiple'], true)) {
+                $this->selected[$parameter->id] ??= [];
+            }
+        }
+
+        $this->normalizeSelected();
+        $this->normalizeNumberFilters();
+        $this->normalizeBrands();
     }
 
     public function updatedSelected(): void
     {
+        $this->normalizeSelected();
         $this->resetPage();
+    }
+
+    /**
+     * Forces every `selected` entry to a list of option-id strings and drops
+     * anything else (booleans, nested arrays, junk from a hand-edited URL).
+     */
+    protected function normalizeSelected(): void
+    {
+        foreach ($this->selected as $parameterId => $optionIds) {
+            $this->selected[$parameterId] = is_array($optionIds)
+                ? array_values(array_map('strval', array_filter($optionIds, fn ($id) => is_scalar($id) && ctype_digit((string) $id))))
+                : [];
+        }
+    }
+
+    /**
+     * Drops nested values (`?min[2][]=1`) that would crash the views, which
+     * expect one raw typed value per parameter (QA N3-05).
+     */
+    protected function normalizeNumberFilters(): void
+    {
+        $this->numMin = array_filter($this->numMin, 'is_scalar');
+        $this->numMax = array_filter($this->numMax, 'is_scalar');
+    }
+
+    /**
+     * Keeps only a list of brand-id strings (`?brand[0][0]=1` is dropped).
+     */
+    protected function normalizeBrands(): void
+    {
+        $this->brands = array_values(array_map('strval', array_filter(
+            $this->brands,
+            fn ($id) => is_scalar($id) && ctype_digit((string) $id),
+        )));
     }
 
     public function updatedNumMin(): void
     {
+        $this->normalizeNumberFilters();
         $this->resetPage();
     }
 
     public function updatedNumMax(): void
     {
+        $this->normalizeNumberFilters();
+        $this->resetPage();
+    }
+
+    public function updatedBrands(): void
+    {
+        $this->normalizeBrands();
         $this->resetPage();
     }
 
@@ -153,10 +222,6 @@ class Show extends Component
             fn ($id) => (string) $id !== $optionId,
         ));
 
-        if (empty($this->selected[$parameterId])) {
-            unset($this->selected[$parameterId]);
-        }
-
         $this->resetPage();
     }
 
@@ -171,17 +236,21 @@ class Show extends Component
         $this->resetPage();
     }
 
-    public function clearFilters(): void
+    public function removeBrandFilter(int $brandId): void
     {
-        $this->selected = [];
-        $this->numMin = [];
-        $this->numMax = [];
+        $this->brands = array_values(array_filter(
+            (array) $this->brands,
+            fn ($id) => (int) $id !== $brandId,
+        ));
         $this->resetPage();
     }
 
-    public function closeMobileFilters(): void
+    public function clearFilters(): void
     {
-        $this->showMobileFilters = false;
+        $this->selected = array_map(fn () => [], $this->selected);
+        $this->numMin = [];
+        $this->numMax = [];
+        $this->brands = [];
         $this->resetPage();
     }
 
@@ -193,11 +262,17 @@ class Show extends Component
      * "what happens if I also pick this option" rather than the
      * already-narrowed-by-itself count).
      */
-    protected function filteredProductsQuery(?int $excludeParameterId = null): Builder
+    protected function filteredProductsQuery(?int $excludeParameterId = null, bool $ignoreBrands = false): Builder
     {
         $query = Product::query()
             ->where('category_id', $this->category->id)
-            ->where('status', 'approved');
+            ->visibleOnStorefront();
+
+        $brandIds = array_values(array_filter(array_map('intval', (array) $this->brands)));
+
+        if ($brandIds !== [] && ! $ignoreBrands) {
+            $query->whereIn('brand_id', $brandIds);
+        }
 
         foreach ($this->selected as $parameterId => $optionIds) {
             $parameterId = (int) $parameterId;
@@ -279,6 +354,35 @@ class Show extends Component
         return $counts;
     }
 
+    /**
+     * Brand filter options: brands that have visible products in this
+     * category (the "no brand" placeholder, id 1, excluded), with counts that
+     * ignore the brand filter itself. Currently selected brands always stay
+     * listed so they can be unticked.
+     *
+     * @return list<array{id: int, name: string, count: int}>
+     */
+    protected function brandFacets(): array
+    {
+        $counts = $this->filteredProductsQuery(null, true)
+            ->where('brand_id', '!=', 1)
+            ->whereNotNull('brand_id')
+            ->reorder()
+            ->selectRaw('brand_id, count(*) as total')
+            ->groupBy('brand_id')
+            ->pluck('total', 'brand_id');
+
+        $selectedIds = array_values(array_filter(array_map('intval', (array) $this->brands)));
+        $ids = $counts->keys()->map(fn ($id) => (int) $id)->merge($selectedIds)->unique()->values();
+
+        return Brand::query()
+            ->whereIn('id', $ids)
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(fn (Brand $brand) => ['id' => $brand->id, 'name' => (string) $brand->name, 'count' => (int) ($counts[$brand->id] ?? 0)])
+            ->all();
+    }
+
     public function render()
     {
         $navCategories = Category::navList();
@@ -327,10 +431,10 @@ class Show extends Component
 
         $categoryHasAnyProducts = Product::query()
             ->where('category_id', $this->category->id)
-            ->where('status', 'approved')
+            ->visibleOnStorefront()
             ->exists();
 
-        $hasActiveFilters = ! empty(array_filter($this->selected)) || ! empty($this->numMin) || ! empty($this->numMax);
+        $hasActiveFilters = ! empty(array_filter($this->selected)) || ! empty($this->numMin) || ! empty($this->numMax) || ! empty(array_filter($this->brands));
 
         // Educational content tagged to this category (Article::categories()
         // — many-to-many, an article can also relate to other categories)
@@ -350,7 +454,7 @@ class Show extends Component
 
         // category_top banner: targeted to this category takes priority,
         // falling back to a generic (category_id null) one — see
-        // docs/design/11-storefront-catalog-filters.md's flagged model gap,
+        // .claude/docs/design/11-storefront-catalog-filters.md's flagged model gap,
         // resolved via the added banners.category_id column.
         $categoryTopBanner = Banner::query()
             ->where('placement', 'category_top')
@@ -393,10 +497,15 @@ class Show extends Component
         // (`page`) is left alone: page 2+ genuinely has different products,
         // so it gets its own self-referential canonical, matching current
         // Google guidance for paginated series.
-        $hasQueryNoise = ! empty(array_filter($this->selected)) || ! empty($this->numMin) || ! empty($this->numMax) || $this->sort !== 'newest';
-        $robots = $hasQueryNoise ? 'noindex,follow' : 'index,follow';
-
+        $hasQueryNoise = ! empty(array_filter($this->selected)) || ! empty($this->numMin) || ! empty($this->numMax) || ! empty(array_filter($this->brands)) || $this->sort !== 'newest';
         $page = $products->currentPage();
+
+        // Also noindex an empty listing (no visible products, or a page
+        // number past the last page) - thin content with nothing to rank.
+        $robots = ($hasQueryNoise || $products->isEmpty()) ? 'noindex,follow' : 'index,follow';
+
+        $langSuffix = $locale !== $defaultLocale ? '?lang='.$locale : '';
+        $homeUrl = url('/').$langSuffix;
 
         $canonicalQuery = [];
 
@@ -450,14 +559,18 @@ class Show extends Component
             ->filter()
             ->values();
 
-        $categoryTitle = __('storefront.seo.catalog_title', ['category' => $categoryName]);
+        // Page 2+ of the clean series gets a distinct title/description so
+        // paginated URLs are not duplicate-title/meta pages.
+        $pageSuffix = ($page > 1 && ! $hasQueryNoise) ? __('storefront.seo.page_suffix', ['n' => $page]) : '';
 
-        $metaDescription = $specNames->isNotEmpty()
+        $categoryTitle = __('storefront.seo.catalog_title', ['category' => $categoryName]).$pageSuffix;
+
+        $metaDescription = ($specNames->isNotEmpty()
             ? __('storefront.seo.catalog_description_with_specs', [
                 'category' => $categoryName,
                 'specs' => $specNames->take(4)->implode(', '),
             ])
-            : __('storefront.seo.catalog_description', ['category' => $categoryName]);
+            : __('storefront.seo.catalog_description', ['category' => $categoryName])).$pageSuffix;
 
         // category_top banner image first (already the page's own visual
         // header), falling back to the first visible product's cover image
@@ -485,13 +598,13 @@ class Show extends Component
                         '@type' => 'ListItem',
                         'position' => 1,
                         'name' => __('storefront.catalog.breadcrumb_home'),
-                        'item' => url('/'),
+                        'item' => $homeUrl,
                     ],
                     [
                         '@type' => 'ListItem',
                         'position' => 2,
                         'name' => $categoryName,
-                        'item' => $baseUrl,
+                        'item' => $baseUrl.$langSuffix,
                     ],
                 ],
             ],
@@ -506,7 +619,9 @@ class Show extends Component
                     'numberOfItems' => $products->total(),
                     'itemListElement' => collect($products->items())
                         ->values()
-                        ->map(fn (Product $product, int $index) => $this->productListItemJsonLd($product, $index + 1, $locale, $defaultLocale))
+                        // Absolute position across the whole series, so page 2
+                        // continues from page 1 instead of restarting at 1.
+                        ->map(fn (Product $product, int $index) => $this->productListItemJsonLd($product, (($page - 1) * self::PER_PAGE) + $index + 1, $locale, $defaultLocale))
                         ->all(),
                 ],
             ],
@@ -516,6 +631,7 @@ class Show extends Component
             'products' => $products,
             'filterableParameters' => $filterableParameters,
             'facetCounts' => $facetCounts,
+            'brandFacets' => $this->brandFacets(),
             'categoryHasAnyProducts' => $categoryHasAnyProducts,
             'hasActiveFilters' => $hasActiveFilters,
             'categoryTopBanner' => $categoryTopBanner,
@@ -529,6 +645,7 @@ class Show extends Component
             'ogImage' => $ogImage,
             'structuredData' => $structuredData,
             'navCategories' => $navCategories,
+            'bottomBar' => 'selection',
         ]);
     }
 
@@ -551,7 +668,7 @@ class Show extends Component
      * Product model) — `sku` falls back to the product's internal ULID id,
      * which is not a true SKU; flagged as a seo-engineer follow-up.
      *
-     * `storefront.products.show` (docs/design/12,
+     * `storefront.products.show` (.claude/docs/design/12,
      * App\Livewire\Storefront\Products\Show) now exists — this was
      * previously a hardcoded `/products/{slug}` string with a "404s until
      * that page ships" caveat; now resolved via the named route like every
@@ -619,6 +736,7 @@ class Show extends Component
                 // is assumed InStock as a simplification; flagged as a
                 // follow-up if real stock tracking is ever added.
                 'availability' => 'https://schema.org/InStock',
+                'itemCondition' => 'https://schema.org/NewCondition',
                 'seller' => $product->seller ? ['@type' => 'Organization', 'name' => $product->seller->name] : null,
             ], fn ($value) => $value !== null);
         }
@@ -626,6 +744,7 @@ class Show extends Component
         return [
             '@type' => 'ListItem',
             'position' => $position,
+            'url' => $productUrl,
             'item' => $productNode,
         ];
     }

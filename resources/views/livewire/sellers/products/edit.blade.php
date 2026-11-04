@@ -50,7 +50,7 @@
             </div>
             <form wire:submit="saveDetails" class="grid grid-cols-1 gap-4 p-5 sm:grid-cols-2">
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-text-primary">{{ __('sellers.products.edit.category_label') }}</label>
+                    <p class="mb-1 block text-sm font-medium text-text-primary">{{ __('sellers.products.edit.category_label') }}</p>
                     <p class="flex h-9 items-center rounded-sm border border-border bg-surface-sunken px-3 text-base text-text-secondary">
                         {{ $categoryName }}
                     </p>
@@ -58,10 +58,10 @@
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-text-primary">
+                    <label for="field-brandId" class="mb-1 block text-sm font-medium text-text-primary">
                         {{ __('sellers.products.edit.brand_label') }} <span class="text-danger-600">*</span>
                     </label>
-                    <x-select wire:model="brandId" :error="$errors->has('brandId')">
+                    <x-select id="field-brandId" wire:model="brandId" :error="$errors->has('brandId')">
                         @foreach ($this->brands as $brand)
                             <option value="{{ $brand->id }}">{{ $brand->name }}</option>
                         @endforeach
@@ -72,7 +72,7 @@
                 </div>
 
                 <div class="sm:col-span-2">
-                    <label class="mb-1 block text-sm font-medium text-text-primary">{{ __('sellers.products.edit.generated_name_label') }}</label>
+                    <p class="mb-1 block text-sm font-medium text-text-primary">{{ __('sellers.products.edit.generated_name_label') }}</p>
                     <p class="flex min-h-9 items-center rounded-sm border border-border bg-surface-sunken px-3 py-1.5 font-mono text-sm text-text-secondary">
                         {{ $this->previewName !== '' ? $this->previewName : __('sellers.products.edit.generated_name_empty') }}
                     </p>
@@ -80,8 +80,8 @@
                 </div>
 
                 <div class="sm:col-span-2">
-                    <label class="mb-1 block text-sm font-medium text-text-primary">{{ __('sellers.products.edit.name_extra_label') }}</label>
-                    <x-input type="text" wire:model.blur="nameExtra" placeholder="{{ __('sellers.products.create.name_extra_placeholder') }}" :error="$errors->has('nameExtra')" />
+                    <label for="field-nameExtra" class="mb-1 block text-sm font-medium text-text-primary">{{ __('sellers.products.edit.name_extra_label') }}</label>
+                    <x-input id="field-nameExtra" type="text" wire:model.blur="nameExtra" placeholder="{{ __('sellers.products.create.name_extra_placeholder') }}" :error="$errors->has('nameExtra')" />
                     <p class="mt-1 text-xs text-text-muted">{{ __('sellers.products.edit.name_extra_caption') }}</p>
                     @error('nameExtra')
                         <p class="mt-1 text-xs text-danger-600">{{ $message }}</p>
@@ -159,8 +159,8 @@
                                     @else
                                         <div>
                                             <div class="flex items-center gap-2 text-sm text-text-secondary">
-                                                <span>{{ __('sellers.products.edit.pricing.qty_prefix', ['unit' => __('sellers.products.unit.'.$unit)]) }}</span>
-                                                <x-input type="number" min="1" step="1" wire:model.blur="priceForm.{{ $unit }}.qty_in_pcs" class="h-8 w-20 text-right" :error="$errors->has('priceForm.'.$unit.'.qty_in_pcs')" />
+                                                <label for="qty-{{ $unit }}">{{ __('sellers.products.edit.pricing.qty_prefix', ['unit' => __('sellers.products.unit.'.$unit)]) }}</label>
+                                                <x-input id="qty-{{ $unit }}" type="number" min="1" step="1" wire:model.blur="priceForm.{{ $unit }}.qty_in_pcs" class="h-8 w-20 text-right" :error="$errors->has('priceForm.'.$unit.'.qty_in_pcs')" />
                                                 <span>{{ __('sellers.products.edit.pricing.pcs_suffix') }}</span>
                                             </div>
                                             @error('priceForm.'.$unit.'.qty_in_pcs')
@@ -171,8 +171,8 @@
 
                                     <div>
                                         <div class="flex items-center gap-2">
-                                            <label class="text-sm text-text-secondary">{{ __('sellers.products.edit.pricing.price_label') }}</label>
-                                            <x-input type="number" min="0" step="0.01" wire:model.blur="priceForm.{{ $unit }}.price" class="h-9 w-36 text-right text-base" :error="$errors->has('priceForm.'.$unit.'.price')" />
+                                            <label for="price-{{ $unit }}" class="text-sm text-text-secondary">{{ __('sellers.products.edit.pricing.price_label') }}<span class="sr-only"> {{ __('sellers.products.unit.'.$unit) }}</span></label>
+                                            <x-input id="price-{{ $unit }}" type="number" min="0" step="0.01" wire:model.blur="priceForm.{{ $unit }}.price" class="h-9 w-36 text-right text-base" :error="$errors->has('priceForm.'.$unit.'.price')" />
                                             <span class="text-sm text-text-secondary">UZS</span>
                                         </div>
                                         @error('priceForm.'.$unit.'.price')
@@ -214,8 +214,8 @@
                                 <div class="mt-3 flex flex-wrap items-start justify-between gap-4">
                                     <div>
                                         <div class="flex items-center gap-2 text-sm text-text-secondary">
-                                            <span>{{ __('sellers.products.edit.pricing.qty_prefix', ['unit' => __('sellers.products.unit.'.$unit)]) }}</span>
-                                            <x-input type="number" min="1" step="1" wire:model="newRowForm.{{ $unit }}.qty_in_pcs" class="h-8 w-20 text-right" :error="$errors->has('newRowForm.'.$unit.'.qty_in_pcs')" />
+                                            <label for="new-qty-{{ $unit }}">{{ __('sellers.products.edit.pricing.qty_prefix', ['unit' => __('sellers.products.unit.'.$unit)]) }}</label>
+                                            <x-input id="new-qty-{{ $unit }}" type="number" min="1" step="1" wire:model="newRowForm.{{ $unit }}.qty_in_pcs" class="h-8 w-20 text-right" :error="$errors->has('newRowForm.'.$unit.'.qty_in_pcs')" />
                                             <span>{{ __('sellers.products.edit.pricing.pcs_suffix') }}</span>
                                         </div>
                                         @error('newRowForm.'.$unit.'.qty_in_pcs')
@@ -225,8 +225,8 @@
 
                                     <div>
                                         <div class="flex items-center gap-2">
-                                            <label class="text-sm text-text-secondary">{{ __('sellers.products.edit.pricing.price_label') }}</label>
-                                            <x-input type="number" min="0" step="0.01" wire:model="newRowForm.{{ $unit }}.price" class="h-9 w-36 text-right text-base" :error="$errors->has('newRowForm.'.$unit.'.price')" />
+                                            <label for="new-price-{{ $unit }}" class="text-sm text-text-secondary">{{ __('sellers.products.edit.pricing.price_label') }}<span class="sr-only"> {{ __('sellers.products.unit.'.$unit) }}</span></label>
+                                            <x-input id="new-price-{{ $unit }}" type="number" min="0" step="0.01" wire:model="newRowForm.{{ $unit }}.price" class="h-9 w-36 text-right text-base" :error="$errors->has('newRowForm.'.$unit.'.price')" />
                                             <span class="text-sm text-text-secondary">UZS</span>
                                         </div>
                                         @error('newRowForm.'.$unit.'.price')
@@ -272,13 +272,13 @@
                             <div class="relative h-24 w-24 overflow-hidden rounded-md border border-border">
                                 <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($image->path) }}" alt="" class="h-full w-full object-cover">
                                 @if ($index === 0)
-                                    <span class="absolute top-1 left-1 rounded-sm bg-accent-600 px-1.5 py-0.5 text-[10px] font-medium text-white">{{ __('sellers.products.images.primary_badge') }}</span>
+                                    <span class="absolute top-1 left-1 rounded-sm bg-accent-700 px-1.5 py-0.5 text-[10px] font-medium text-white">{{ __('sellers.products.images.primary_badge') }}</span>
                                 @endif
                                 <button
                                     type="button"
                                     wire:click="removeImage({{ $image->id }})"
                                     wire:confirm="{{ __('sellers.products.images.remove_confirm') }}"
-                                    class="absolute top-1 right-1 flex h-5 w-5 items-center justify-center rounded-full bg-slate-900/60 text-xs text-white hover:bg-slate-900/80"
+                                    class="absolute top-1 right-1 flex h-5 w-5 items-center justify-center hit bg-text-primary text-xs text-white hover:bg-accent-800"
                                     aria-label="{{ __('sellers.products.images.remove') }}"
                                 >
                                     ✕
@@ -296,10 +296,10 @@
                     @endforeach
 
                     @if ($this->images->count() < 4)
-                        <label wire:key="product-image-upload-slot" class="flex h-24 w-24 cursor-pointer flex-col items-center justify-center gap-1 rounded-md border border-dashed border-border-strong text-xs text-text-secondary hover:border-accent-300 hover:text-text-primary">
-                            <span class="text-lg leading-none">+</span>
-                            <span>{{ __('sellers.products.images.add') }}</span>
-                            <input type="file" wire:model="newImageUpload" accept="image/jpeg,image/png" class="hidden">
+                        <label wire:key="product-image-upload-slot" class="flex h-24 w-24 cursor-pointer flex-col items-center justify-center gap-1 rounded-md border border-dashed border-border-strong text-xs text-text-secondary hover:border-accent-300 hover:text-text-primary focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent-700">
+                            <span class="text-lg leading-none" aria-hidden="true">+</span>
+                            <span>{{ __('sellers.products.images.add') }}<span class="sr-only"> {{ __('sellers.products.images.section_title') }}</span></span>
+                            <input type="file" wire:model="newImageUpload" accept="image/jpeg,image/png" class="sr-only">
                         </label>
                     @endif
                 </div>
@@ -317,9 +317,9 @@
 
     {{-- Remove confirmation modal --}}
     @if ($showRemoveConfirm)
-        <div class="fixed inset-0 z-modal-backdrop bg-slate-900/40" wire:click="cancelRemove"></div>
-        <div class="fixed inset-0 z-modal flex items-center justify-center p-4">
-            <div class="w-full max-w-md rounded-lg border border-border bg-surface-overlay p-5 shadow-lg">
+        <div class="fixed inset-0 z-(--z-modal-backdrop) bg-scrim" wire:click="cancelRemove"></div>
+        <div class="fixed inset-0 z-(--z-modal) flex items-center justify-center p-4">
+            <div class="w-full max-w-md rounded-lg border border-border bg-surface-overlay p-5">
                 <h2 class="text-lg font-semibold text-text-primary">
                     {{ __('sellers.products.edit.pricing.remove_confirm_title', ['unit' => __('sellers.products.unit.'.($removingUnit ?? 'pack'))]) }}
                 </h2>

@@ -2,15 +2,31 @@
 
 namespace App\Livewire\Admin\Sellers;
 
+use App\Livewire\Concerns\AuthorizesAdmin;
 use App\Models\Seller;
+use App\Models\Setting;
 use App\Models\User;
+use App\Services\SubscriptionService;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 class Show extends Component
 {
+    use AuthorizesAdmin;
+
+    protected function adminAccess(): ?string
+    {
+        return 'sellers.moderate';
+    }
+
+    // Seller is bound by route model binding in mount() and never taken
+    // from the client afterwards.
+    #[Locked]
     public Seller $seller;
 
     public bool $showRejectForm = false;
@@ -23,6 +39,8 @@ class Show extends Component
 
     public function mount(Seller $seller): void
     {
+        $this->authorizeAdmin('sellers.moderate');
+
         $this->seller = $seller;
     }
 
@@ -57,6 +75,8 @@ class Show extends Component
 
     public function approve(): void
     {
+        $this->authorizeAdmin('sellers.moderate');
+
         $this->seller->approve($this->actingAdmin());
 
         session()->flash('status', 'Seller approved.');
@@ -64,11 +84,15 @@ class Show extends Component
 
     public function openRejectForm(): void
     {
+        $this->authorizeAdmin('sellers.moderate');
+
         $this->showRejectForm = true;
     }
 
     public function cancelReject(): void
     {
+        $this->authorizeAdmin('sellers.moderate');
+
         $this->showRejectForm = false;
         $this->rejectReason = '';
         $this->resetErrorBag('rejectReason');
@@ -76,6 +100,8 @@ class Show extends Component
 
     public function reject(): void
     {
+        $this->authorizeAdmin('sellers.moderate');
+
         $this->validate([
             'rejectReason' => ['required', 'string', 'max:1000'],
         ]);
@@ -90,11 +116,15 @@ class Show extends Component
 
     public function openSuspendForm(): void
     {
+        $this->authorizeAdmin('sellers.moderate');
+
         $this->showSuspendForm = true;
     }
 
     public function cancelSuspend(): void
     {
+        $this->authorizeAdmin('sellers.moderate');
+
         $this->showSuspendForm = false;
         $this->suspendReason = '';
         $this->resetErrorBag('suspendReason');
@@ -106,6 +136,8 @@ class Show extends Component
      */
     public function suspend(): void
     {
+        $this->authorizeAdmin('sellers.moderate');
+
         $this->validate([
             'suspendReason' => ['required', 'string', 'max:1000'],
         ]);
@@ -116,6 +148,156 @@ class Show extends Component
         $this->suspendReason = '';
 
         session()->flash('status', 'Seller blocked.');
+    }
+
+    // ---- Subscription (Super Admin only: `manage-subscriptions` gate) ----
+
+    /** '' | 'payment' | 'free' | 'correct' - which form drawer is open. */
+    public string $subscriptionDrawer = '';
+
+    public ?string $paymentAmount = null;
+
+    public ?string $paymentMonths = '1';
+
+    public ?string $paymentNote = null;
+
+    public ?string $freeMonths = '1';
+
+    public ?string $freeNote = null;
+
+    public ?string $correctDate = null;
+
+    public string $correctReason = '';
+
+    protected function canManageSubscriptions(): bool
+    {
+        return Gate::allows('manage-subscriptions');
+    }
+
+    /** @return array<string, mixed>|null null for users who may not see it. */
+    #[Computed]
+    public function subscription(): ?array
+    {
+        if (! $this->canManageSubscriptions()) {
+            return null;
+        }
+
+        return app(SubscriptionService::class)->statusFor($this->seller);
+    }
+
+    #[Computed]
+    public function subscriptionPayments()
+    {
+        if (! $this->canManageSubscriptions()) {
+            return collect();
+        }
+
+        return $this->seller->subscriptionPayments()->with('recordedBy:id,name')->latest('id')->limit(50)->get();
+    }
+
+    #[Computed]
+    public function subscriptionAudits()
+    {
+        if (! $this->canManageSubscriptions()) {
+            return collect();
+        }
+
+        return $this->seller->subscriptionAudits()->with('user:id,name')->latest('id')->limit(50)->get();
+    }
+
+    public function openSubscriptionDrawer(string $kind): void
+    {
+        $this->authorizeSuperAdmin();
+
+        abort_unless(in_array($kind, ['payment', 'free', 'correct'], true), 404);
+
+        $this->resetErrorBag();
+        $this->paymentAmount = Setting::current()->subscription_price_uzs !== null
+            ? (string) Setting::current()->subscription_price_uzs
+            : null;
+        $this->paymentMonths = '1';
+        $this->paymentNote = null;
+        $this->freeMonths = '1';
+        $this->freeNote = null;
+        $this->correctDate = $this->seller->subscription_paid_until?->toDateString();
+        $this->correctReason = '';
+        $this->subscriptionDrawer = $kind;
+    }
+
+    public function closeSubscriptionDrawer(): void
+    {
+        $this->authorizeSuperAdmin();
+
+        $this->subscriptionDrawer = '';
+        $this->resetErrorBag();
+    }
+
+    public function recordPayment(SubscriptionService $subscriptions): void
+    {
+        $this->authorizeSuperAdmin();
+
+        $this->validate([
+            'paymentAmount' => ['required', 'integer', 'min:0', 'max:2000000000'],
+            'paymentMonths' => ['required', 'integer', 'min:1', 'max:12'],
+            'paymentNote' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $subscriptions->recordPayment(
+            $this->seller,
+            $this->actingAdmin(),
+            (int) $this->paymentAmount,
+            (int) $this->paymentMonths,
+            filled($this->paymentNote) ? $this->paymentNote : null,
+        );
+
+        $this->afterSubscriptionChange('payment');
+    }
+
+    public function grantFreeMonths(SubscriptionService $subscriptions): void
+    {
+        $this->authorizeSuperAdmin();
+
+        $this->validate([
+            'freeMonths' => ['required', 'integer', 'min:1', 'max:12'],
+            'freeNote' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $subscriptions->grantFreeMonths(
+            $this->seller,
+            $this->actingAdmin(),
+            (int) $this->freeMonths,
+            filled($this->freeNote) ? $this->freeNote : null,
+        );
+
+        $this->afterSubscriptionChange('free');
+    }
+
+    public function correctPaidUntil(SubscriptionService $subscriptions): void
+    {
+        $this->authorizeSuperAdmin();
+
+        $this->validate([
+            'correctDate' => ['nullable', 'date_format:Y-m-d'],
+            'correctReason' => ['required', 'string', 'max:500'],
+        ]);
+
+        $subscriptions->setPaidUntil(
+            $this->seller,
+            $this->actingAdmin(),
+            filled($this->correctDate) ? Carbon::parse($this->correctDate) : null,
+            $this->correctReason,
+        );
+
+        $this->afterSubscriptionChange('corrected');
+    }
+
+    protected function afterSubscriptionChange(string $flash): void
+    {
+        $this->seller->refresh();
+        $this->subscriptionDrawer = '';
+        unset($this->subscription, $this->subscriptionPayments, $this->subscriptionAudits);
+
+        session()->flash('status', __('admin.subscription.flash.'.$flash));
     }
 
     public function render()

@@ -18,4 +18,5 @@ return [
     'validation.email_required' => 'Elektron pochta kiritilishi shart.',
     'validation.email_invalid' => "Elektron pochta manzili noto'g'ri.",
     'validation.password_required' => 'Parol kiritilishi shart.',
+    'login.throttled' => 'Kirish urinishlari juda ko\'p. :seconds soniyadan keyin qayta urinib ko\'ring.',
 ];

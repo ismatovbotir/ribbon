@@ -2,9 +2,11 @@
 
 namespace App\Livewire\Admin\Geography\Countries;
 
+use App\Livewire\Concerns\AuthorizesAdmin;
 use App\Models\Country;
 use App\Models\Seller;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -12,12 +14,19 @@ use Livewire\WithPagination;
 /**
  * Top level of the Country -> Region -> City geography tree (genuinely
  * nested, unlike Categories' deliberate flatness — see CLAUDE.md and
- * docs/design). Mirrors Categories\Index's list + inline-create-form
+ * .claude/docs/design). Mirrors Categories\Index's list + inline-create-form
  * pattern; drilling into a country's Regions happens on
  * Admin\Geography\Regions\Index.
  */
 class Index extends Component
 {
+    use AuthorizesAdmin;
+
+    protected function adminAccess(): ?string
+    {
+        return 'catalog.manage';
+    }
+
     use WithPagination;
 
     #[Url(history: true)]
@@ -36,6 +45,7 @@ class Index extends Component
 
     // ---- Inline row edit ----
 
+    #[Locked]
     public ?int $editingCountryId = null;
 
     /** @var array<string, string> */
@@ -45,6 +55,7 @@ class Index extends Component
 
     public bool $showDeleteConfirm = false;
 
+    #[Locked]
     public ?int $deletingCountryId = null;
 
     /**
@@ -56,11 +67,15 @@ class Index extends Component
 
     public function mount(): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         $this->resetForm();
     }
 
     public function sortBy(string $field): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         if (! in_array($field, $this->sortable, true)) {
             return;
         }
@@ -77,6 +92,8 @@ class Index extends Component
 
     public function updatedSearch(): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         $this->resetPage();
     }
 
@@ -86,6 +103,8 @@ class Index extends Component
 
     public function toggleCreateForm(): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         $this->showCreateForm = ! $this->showCreateForm;
 
         if (! $this->showCreateForm) {
@@ -95,6 +114,8 @@ class Index extends Component
 
     public function createCountry(): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         $rules = [];
 
         foreach (config('ribbon.locales') as $locale) {
@@ -137,6 +158,8 @@ class Index extends Component
 
     public function startEdit(int $countryId): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         $country = Country::findOrFail($countryId);
 
         $this->editingCountryId = $country->id;
@@ -148,6 +171,8 @@ class Index extends Component
 
     public function cancelEdit(): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         $this->editingCountryId = null;
         $this->editingName = [];
         $this->resetErrorBag();
@@ -155,6 +180,8 @@ class Index extends Component
 
     public function updateCountry(): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         if (! $this->editingCountryId) {
             return;
         }
@@ -189,12 +216,16 @@ class Index extends Component
 
     public function confirmDeleteCountry(int $countryId): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         $this->deletingCountryId = $countryId;
         $this->showDeleteConfirm = true;
     }
 
     public function cancelDelete(): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         $this->showDeleteConfirm = false;
         $this->deletingCountryId = null;
     }
@@ -227,6 +258,8 @@ class Index extends Component
 
     public function deleteCountry(): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         // Blocked in the UI with a clear message rather than letting the
         // regions FK (RESTRICT) throw a raw QueryException — a country with
         // any regions is already covered here, and a direct Seller

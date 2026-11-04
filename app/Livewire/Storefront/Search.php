@@ -2,18 +2,22 @@
 
 namespace App\Livewire\Storefront;
 
+use App\Livewire\Storefront\Concerns\QuickAddsToSelection;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\SearchQueryEvent;
+use App\Models\Setting;
 use App\Services\ProductAnalyticsService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
 class Search extends Component
 {
+    use QuickAddsToSelection;
     use WithPagination;
 
     public const PER_PAGE = 24;
@@ -30,7 +34,7 @@ class Search extends Component
 
     /**
      * Cross-category "narrow by category" filter — the only filter this
-     * page offers (docs/design/11's explicit v1 scope cut: categories share
+     * page offers (.claude/docs/design/11's explicit v1 scope cut: categories share
      * no parameter vocabulary to build a faceted sidebar across, unlike a
      * single category page). Holds selected Category ids as strings (URL
      * query-string values arrive as strings). Rendered as a row of toggle
@@ -94,7 +98,7 @@ class Search extends Component
         $term = trim($this->query);
         $locale = app()->getLocale();
 
-        $query = Product::query()->where('status', 'approved');
+        $query = Product::query()->visibleOnStorefront();
 
         if ($term !== '') {
             $query->where(function (Builder $q) use ($term, $locale) {
@@ -247,13 +251,45 @@ class Search extends Component
 
         $hreflangAlternates['x-default'] = $hreflangAlternates[$defaultLocale];
 
-        $title = $hasQuery
-            ? __('storefront.seo.search_title_with_query', ['query' => $term])
-            : __('storefront.seo.search_title_empty');
+        // User input echoed into <title>/description: capped so a long or
+        // abusive query cannot blow up the tags (Blade still escapes it).
+        $termForMeta = Str::limit($term, 60, '…');
+        $pageSuffix = $page > 1 ? __('storefront.seo.page_suffix', ['n' => $page]) : '';
+
+        $title = ($hasQuery
+            ? __('storefront.seo.search_title_with_query', ['query' => $termForMeta])
+            : __('storefront.seo.search_title_empty')).$pageSuffix;
 
         $metaDescription = $hasQuery
-            ? __('storefront.seo.search_description_with_query', ['query' => $term, 'count' => $products->total()])
+            ? __('storefront.seo.search_description_with_query', ['query' => $termForMeta, 'count' => $products->total()])
             : __('storefront.seo.search_description_empty');
+
+        // ItemList of the current page of results (URLs + names only; the
+        // page is noindex, so this is for consumers that read it anyway and
+        // keeps the page-type schema consistent with the catalog).
+        $structuredData = [];
+
+        if ($hasQuery && $products->isNotEmpty()) {
+            $structuredData[] = [
+                '@context' => 'https://schema.org',
+                '@type' => 'ItemList',
+                'name' => $title,
+                'numberOfItems' => $products->total(),
+                'itemListElement' => collect($products->items())
+                    ->values()
+                    ->map(function (Product $product, int $index) use ($locale, $defaultLocale, $page) {
+                        $name = $product->localizedName($locale);
+
+                        return [
+                            '@type' => 'ListItem',
+                            'position' => (($page - 1) * self::PER_PAGE) + $index + 1,
+                            'url' => route('storefront.products.show', ['productSlug' => $product->slug[$locale] ?? ($product->slug[$defaultLocale] ?? $product->id)]),
+                            'name' => $name !== '' ? $name : (string) $product->name,
+                        ];
+                    })
+                    ->all(),
+            ];
+        }
 
         // First result's cover image, if any — same fallback rule
         // Catalog\Show/Home use when no dedicated default share image
@@ -274,6 +310,8 @@ class Search extends Component
             'filterCategories' => $filterCategories,
             'facetCounts' => $facetCounts,
             'hasActiveCategoryFilter' => $hasActiveCategoryFilter,
+            'navCategories' => $navCategories,
+            'settings' => Setting::current(),
         ])->layout('layouts.storefront', [
             'title' => $title,
             'metaDescription' => $metaDescription,
@@ -283,6 +321,7 @@ class Search extends Component
             // above) — always noindex,follow, independent of query state.
             'robots' => 'noindex,follow',
             'ogImage' => $ogImage,
+            'structuredData' => $structuredData,
             'navCategories' => $navCategories,
         ]);
     }

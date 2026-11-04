@@ -2,38 +2,42 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class DatabaseSeeder extends Seeder
 {
+    // Keeps seeding from firing side effects such as Telegram notifications
+    // for new sellers/requests. Seeders that need a model hook's behaviour
+    // (e.g. Product's slug/pcs price) replicate it explicitly.
     use WithoutModelEvents;
 
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // One transaction: SQLite commits per statement otherwise, which
+        // makes a full seed many times slower, and a failure half-way
+        // leaves nothing behind.
+        DB::transaction(function () {
+            // Reference data — required in every environment, idempotent.
+            $this->call([
+                PermissionSeeder::class,
+                SuperAdminSeeder::class,
+                GeographySeeder::class,
+                BrandSeeder::class,      // "No Brand" must land at id 1
+                CatalogSeeder::class,
+                PageSeeder::class,
+                ArticleSeeder::class,
+            ]);
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
-
-        $this->call(SuperAdminSeeder::class);
-        $this->call(GeographySeeder::class);
-        $this->call(BrandSeeder::class);
-        $this->call(BannerSeeder::class);
-        $this->call(ArticleSeeder::class);
-
-        // Fake sellers/categories/products — local dev convenience only.
-        // Guarded by environment (not just "not called by default") so it
-        // can never fire from a production `db:seed`/`migrate:fresh --seed`
-        // even by accident. See DemoCatalogSeeder's own docblock.
-        //if (app()->environment('local')) {
-        $this->call(DemoCatalogSeeder::class);
-        //}
+            // Fake data — local development only, never a real deploy.
+            if (app()->environment('local')) {
+                $this->call([
+                    BannerSeeder::class,
+                    DemoCatalogSeeder::class,
+                    DemoStaffSeeder::class,  // admin@ / moderator@ / employee@demo.ribbon.uz
+                ]);
+            }
+        });
     }
 }

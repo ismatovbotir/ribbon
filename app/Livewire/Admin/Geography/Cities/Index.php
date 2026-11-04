@@ -2,11 +2,13 @@
 
 namespace App\Livewire\Admin\Geography\Cities;
 
+use App\Livewire\Concerns\AuthorizesAdmin;
 use App\Models\City;
 use App\Models\Country;
 use App\Models\Region;
 use App\Models\Seller;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -22,6 +24,13 @@ use Livewire\WithPagination;
  */
 class Index extends Component
 {
+    use AuthorizesAdmin;
+
+    protected function adminAccess(): ?string
+    {
+        return 'catalog.manage';
+    }
+
     use WithPagination;
 
     public Country $country;
@@ -44,6 +53,7 @@ class Index extends Component
 
     // ---- Inline row edit ----
 
+    #[Locked]
     public ?int $editingCityId = null;
 
     /** @var array<string, string> */
@@ -53,12 +63,15 @@ class Index extends Component
 
     public bool $showDeleteConfirm = false;
 
+    #[Locked]
     public ?int $deletingCityId = null;
 
     protected array $sortable = ['sort_order', 'created_at'];
 
     public function mount(Country $country, Region $region): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         // The URL nests region under country for a readable breadcrumb, but
         // route-model binding resolves each independently — guard against a
         // mismatched pair (e.g. a stale/tampered link) rather than silently
@@ -72,6 +85,8 @@ class Index extends Component
 
     public function sortBy(string $field): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         if (! in_array($field, $this->sortable, true)) {
             return;
         }
@@ -88,6 +103,8 @@ class Index extends Component
 
     public function updatedSearch(): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         $this->resetPage();
     }
 
@@ -97,6 +114,8 @@ class Index extends Component
 
     public function toggleCreateForm(): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         $this->showCreateForm = ! $this->showCreateForm;
 
         if (! $this->showCreateForm) {
@@ -106,6 +125,8 @@ class Index extends Component
 
     public function createCity(): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         $rules = [];
 
         foreach (config('ribbon.locales') as $locale) {
@@ -149,6 +170,8 @@ class Index extends Component
 
     public function startEdit(int $cityId): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         $city = $this->region->cities()->findOrFail($cityId);
 
         $this->editingCityId = $city->id;
@@ -160,6 +183,8 @@ class Index extends Component
 
     public function cancelEdit(): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         $this->editingCityId = null;
         $this->editingName = [];
         $this->resetErrorBag();
@@ -167,6 +192,8 @@ class Index extends Component
 
     public function updateCity(): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         if (! $this->editingCityId) {
             return;
         }
@@ -201,12 +228,16 @@ class Index extends Component
 
     public function confirmDeleteCity(int $cityId): void
     {
-        $this->deletingCityId = $cityId;
+        $this->authorizeAdmin('catalog.manage');
+
+        $this->deletingCityId = $this->region->cities()->findOrFail($cityId)->id;
         $this->showDeleteConfirm = true;
     }
 
     public function cancelDelete(): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         $this->showDeleteConfirm = false;
         $this->deletingCityId = null;
     }
@@ -218,7 +249,7 @@ class Index extends Component
             return null;
         }
 
-        return City::find($this->deletingCityId);
+        return $this->region->cities()->find($this->deletingCityId);
     }
 
     #[Computed]
@@ -233,11 +264,13 @@ class Index extends Component
 
     public function deleteCity(): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         if ($this->deleteBlockedBySellersCount > 0) {
             return;
         }
 
-        City::where('id', $this->deletingCityId)->delete();
+        $this->region->cities()->whereKey($this->deletingCityId)->delete();
 
         $this->showDeleteConfirm = false;
         $this->deletingCityId = null;

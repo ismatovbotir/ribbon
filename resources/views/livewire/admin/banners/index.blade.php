@@ -2,7 +2,7 @@
     <x-page-header title="Banners" subtitle="Promotional banners scheduled for the buyer storefront — the storefront itself doesn't render them yet.">
         <x-slot:actions>
             <x-button tag="a" href="{{ route('admin.banners.create') }}" wire:navigate variant="primary">
-                <svg class="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" /></svg>
+                <x-icon name="add" class="size-4" />
                 Add Banner
             </x-button>
         </x-slot:actions>
@@ -26,7 +26,7 @@
     <div class="overflow-hidden rounded-md border border-border-strong bg-surface-raised">
         <div class="overflow-x-auto">
             <table class="w-full min-w-[820px] border-collapse">
-                <thead class="sticky top-0 z-sticky bg-surface-subtle">
+                <thead class="sticky top-0 z-(--z-sticky) bg-surface-subtle">
                     <tr class="border-b border-border text-left text-xs font-medium text-text-muted uppercase">
                         <th class="px-4 py-2.5">Image</th>
                         <th class="px-4 py-2.5">Title</th>

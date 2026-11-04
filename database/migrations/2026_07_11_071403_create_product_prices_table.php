@@ -30,6 +30,8 @@ return new class extends Migration
             // A seller enables whichever units apply to a product — at
             // most one price row per unit.
             $table->unique(['product_id', 'unit']);
+            // Storefront vitrin price lookup / sort (where product_id = ? and is_vitrin).
+            $table->index(['product_id', 'is_vitrin']);
         });
     }
 

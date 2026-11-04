@@ -18,7 +18,7 @@
             </div>
 
             <div class="mt-5">
-                <label class="mb-1 block text-sm font-medium text-text-primary">{{ __('sellers.profile.logo_label') }}</label>
+                <label @if ($isOwner) for="logoUpload" @endif class="mb-1 block text-sm font-medium text-text-primary">{{ __('sellers.profile.logo_label') }}</label>
 
                 <div class="flex items-start gap-4">
                     @if ($logoUpload)
@@ -31,7 +31,7 @@
 
                     <div class="flex-1">
                         @if ($isOwner)
-                            <input type="file" wire:model="logoUpload" accept="image/jpeg,image/png" class="block w-full max-w-xs text-sm text-text-secondary file:mr-3 file:rounded-sm file:border file:border-border-strong file:bg-surface file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-text-primary hover:file:bg-surface-hover">
+                            <x-file-input id="logoUpload" wire:model="logoUpload" accept="image/jpeg,image/png" :label="__('sellers.profile.logo_label')" />
 
                             <div wire:loading wire:target="logoUpload" class="mt-1 text-xs text-text-muted">{{ __('sellers.uploading') }}</div>
 

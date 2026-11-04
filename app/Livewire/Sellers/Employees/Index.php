@@ -2,12 +2,14 @@
 
 namespace App\Livewire\Sellers\Employees;
 
+use App\Livewire\Concerns\AuthorizesSeller;
 use App\Models\Role;
 use App\Models\Seller;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 /**
@@ -21,6 +23,7 @@ use Livewire\Component;
  */
 class Index extends Component
 {
+    use AuthorizesSeller;
     // ---- Add Employee form ----
 
     public bool $showAddForm = false;
@@ -44,11 +47,12 @@ class Index extends Component
 
     public bool $showRemoveConfirm = false;
 
+    #[Locked]
     public ?int $removingUserId = null;
 
     public function mount(): void
     {
-        abort_unless(Auth::user()->isOwnerOf($this->seller()), 403);
+        $this->authorizeOwner();
     }
 
     public function seller(): Seller
@@ -106,6 +110,8 @@ class Index extends Component
 
     public function toggleAddForm(): void
     {
+        $this->authorizeOwner();
+
         $this->showAddForm = ! $this->showAddForm;
 
         if (! $this->showAddForm) {
@@ -115,7 +121,7 @@ class Index extends Component
 
     public function addEmployee(): void
     {
-        abort_unless(Auth::user()->isOwnerOf($this->seller()), 403);
+        $this->authorizeOwner();
 
         $this->validate($this->addEmployeeRules(), $this->addEmployeeMessages());
 
@@ -142,12 +148,16 @@ class Index extends Component
 
     public function confirmRemove(int $userId): void
     {
-        $this->removingUserId = $userId;
+        $this->authorizeOwner();
+
+        $this->removingUserId = $this->seller()->users()->findOrFail($userId)->id;
         $this->showRemoveConfirm = true;
     }
 
     public function cancelRemove(): void
     {
+        $this->authorizeOwner();
+
         $this->showRemoveConfirm = false;
         $this->removingUserId = null;
     }
@@ -173,7 +183,7 @@ class Index extends Component
      */
     public function removeEmployee(): void
     {
-        abort_unless(Auth::user()->isOwnerOf($this->seller()), 403);
+        $this->authorizeOwner();
 
         $target = $this->removingUser;
 

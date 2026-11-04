@@ -19,6 +19,8 @@ return new class extends Migration
             $table->timestamps();
 
             $table->unique(['seller_id', 'user_id']);
+            // Login/dashboard resolves the current user's seller on every request.
+            $table->index(['user_id', 'seller_id']);
         });
     }
 

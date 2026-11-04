@@ -2,10 +2,12 @@
 
 namespace App\Livewire\Admin\Geography\Regions;
 
+use App\Livewire\Concerns\AuthorizesAdmin;
 use App\Models\Country;
 use App\Models\Region;
 use App\Models\Seller;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -18,6 +20,13 @@ use Livewire\WithPagination;
  */
 class Index extends Component
 {
+    use AuthorizesAdmin;
+
+    protected function adminAccess(): ?string
+    {
+        return 'catalog.manage';
+    }
+
     use WithPagination;
 
     public Country $country;
@@ -38,6 +47,7 @@ class Index extends Component
 
     // ---- Inline row edit ----
 
+    #[Locked]
     public ?int $editingRegionId = null;
 
     /** @var array<string, string> */
@@ -47,18 +57,23 @@ class Index extends Component
 
     public bool $showDeleteConfirm = false;
 
+    #[Locked]
     public ?int $deletingRegionId = null;
 
     protected array $sortable = ['sort_order', 'created_at'];
 
     public function mount(Country $country): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         $this->country = $country;
         $this->resetForm();
     }
 
     public function sortBy(string $field): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         if (! in_array($field, $this->sortable, true)) {
             return;
         }
@@ -75,6 +90,8 @@ class Index extends Component
 
     public function updatedSearch(): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         $this->resetPage();
     }
 
@@ -84,6 +101,8 @@ class Index extends Component
 
     public function toggleCreateForm(): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         $this->showCreateForm = ! $this->showCreateForm;
 
         if (! $this->showCreateForm) {
@@ -93,6 +112,8 @@ class Index extends Component
 
     public function createRegion(): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         $rules = [];
 
         foreach (config('ribbon.locales') as $locale) {
@@ -136,6 +157,8 @@ class Index extends Component
 
     public function startEdit(int $regionId): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         $region = $this->country->regions()->findOrFail($regionId);
 
         $this->editingRegionId = $region->id;
@@ -147,6 +170,8 @@ class Index extends Component
 
     public function cancelEdit(): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         $this->editingRegionId = null;
         $this->editingName = [];
         $this->resetErrorBag();
@@ -154,6 +179,8 @@ class Index extends Component
 
     public function updateRegion(): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         if (! $this->editingRegionId) {
             return;
         }
@@ -188,12 +215,16 @@ class Index extends Component
 
     public function confirmDeleteRegion(int $regionId): void
     {
-        $this->deletingRegionId = $regionId;
+        $this->authorizeAdmin('catalog.manage');
+
+        $this->deletingRegionId = $this->country->regions()->findOrFail($regionId)->id;
         $this->showDeleteConfirm = true;
     }
 
     public function cancelDelete(): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         $this->showDeleteConfirm = false;
         $this->deletingRegionId = null;
     }
@@ -205,7 +236,7 @@ class Index extends Component
             return null;
         }
 
-        return Region::withCount('cities')->find($this->deletingRegionId);
+        return $this->country->regions()->withCount('cities')->find($this->deletingRegionId);
     }
 
     #[Computed]
@@ -226,11 +257,13 @@ class Index extends Component
 
     public function deleteRegion(): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         if ($this->deleteBlockedByCitiesCount > 0 || $this->deleteBlockedBySellersCount > 0) {
             return;
         }
 
-        Region::where('id', $this->deletingRegionId)->delete();
+        $this->country->regions()->whereKey($this->deletingRegionId)->delete();
 
         $this->showDeleteConfirm = false;
         $this->deletingRegionId = null;

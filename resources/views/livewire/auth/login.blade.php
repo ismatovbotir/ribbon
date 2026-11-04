@@ -6,20 +6,20 @@
 
     <form wire:submit="login" class="space-y-4">
         <div>
-            <label class="mb-1 block text-sm font-medium text-text-primary">
+            <label for="field-email" class="mb-1 block text-sm font-medium text-text-primary">
                 {{ __('auth.email_label') }} <span class="text-danger-600">*</span>
             </label>
-            <x-input type="email" wire:model.blur="email" :error="$errors->has('email')" placeholder="{{ __('auth.email_placeholder') }}" autofocus />
+            <x-input id="field-email" type="email" wire:model.blur="email" :error="$errors->has('email')" placeholder="{{ __('auth.email_placeholder') }}" autofocus />
             @error('email')
                 <p class="mt-1 text-xs text-danger-600">{{ $message }}</p>
             @enderror
         </div>
 
         <div>
-            <label class="mb-1 block text-sm font-medium text-text-primary">
+            <label for="field-password" class="mb-1 block text-sm font-medium text-text-primary">
                 {{ __('auth.password_label') }} <span class="text-danger-600">*</span>
             </label>
-            <x-input type="password" wire:model.blur="password" :error="$errors->has('password')" />
+            <x-input id="field-password" type="password" wire:model.blur="password" :error="$errors->has('password')" />
             @error('password')
                 <p class="mt-1 text-xs text-danger-600">{{ $message }}</p>
             @enderror

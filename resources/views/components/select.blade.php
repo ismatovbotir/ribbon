@@ -1,8 +1,8 @@
 @props(['error' => false])
 
 <select {{ $attributes->merge([
-    'class' => 'block h-9 w-full rounded-sm border bg-surface px-3 text-base text-text-primary focus:border-accent-500 focus:ring-2 focus:ring-accent-100 focus:outline-none disabled:cursor-not-allowed disabled:bg-surface-sunken disabled:text-text-disabled '
-        .($error ? 'border-danger-600' : 'border-border'),
+    'class' => 'block h-field w-full appearance-none rounded-sm border bg-surface bg-[length:1rem] bg-[position:right_0.75rem_center] bg-no-repeat py-0 pr-9 pl-3 text-field text-text-primary field-chevron focus-visible:border-accent-700 focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-focus-ring disabled:cursor-not-allowed disabled:bg-surface-sunken disabled:text-text-muted '
+        .($error ? 'border-danger-600' : 'border-border-input'),
 ]) }}>
     {{ $slot }}
 </select>

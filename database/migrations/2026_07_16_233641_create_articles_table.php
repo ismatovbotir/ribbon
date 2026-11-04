@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -45,7 +46,21 @@ return new class extends Migration
             $table->timestamp('published_at')->nullable();
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
+
+            $table->index('published_at');
+            $table->index(['type', 'published_at']);
         });
+
+        // Per-locale slug lookups (`where("slug->{$locale}", ...)`) hit this on
+        // every storefront page view. SQLite compiles that to
+        // json_extract("slug", '$."uz"'), so an expression index on the same
+        // expression lets it use an index instead of scanning every row.
+        // MySQL/Postgres need a generated column instead — add when switching.
+        if (DB::getDriverName() === 'sqlite') {
+            foreach (config('ribbon.locales', ['uz', 'ru', 'en']) as $locale) {
+                DB::statement("CREATE INDEX articles_slug_{$locale}_index ON articles (json_extract(slug, '$.\"{$locale}\"'))");
+            }
+        }
     }
 
     /**

@@ -27,6 +27,8 @@ return new class extends Migration
             // `product_parameter_value_options_product_parameter_value_id_category_parameter_option_id_unique`
             // is 96 chars, over MySQL's 64-char identifier limit.
             $table->unique(['product_parameter_value_id', 'category_parameter_option_id'], 'ppvo_value_option_unique');
+            // Catalog select filters: "which values chose option X" (reverse of the unique above).
+            $table->index(['category_parameter_option_id', 'product_parameter_value_id'], 'ppvo_option_value_index');
         });
     }
 

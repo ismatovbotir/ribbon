@@ -1,32 +1,25 @@
-@props(['parameter', 'live' => true])
+@props(['parameter', 'variant' => 'sidebar'])
 
 @php
     $locale = app()->getLocale();
     $defaultLocale = config('ribbon.locales')[0];
+    $sheet = $variant === 'sheet';
+    $uid = ($sheet ? 'fg-' : 'fs-').$parameter->id;
+    $inputClass = 'font-mono tabular-nums '.($sheet ? '' : 'h-9 text-sm');
 @endphp
 
-<div class="mb-4 border-b border-border pb-4 last:mb-0 last:border-b-0 last:pb-0">
-    <p class="mb-2 text-sm font-semibold text-text-primary">
-        {{ $parameter->name[$locale] ?? ($parameter->name[$defaultLocale] ?? '') }}
-        @if ($parameter->unit)
-            <span class="font-normal text-text-muted">({{ $parameter->unit }})</span>
-        @endif
-    </p>
-    <div class="flex items-center gap-2">
-        <input
-            type="number"
-            inputmode="decimal"
-            placeholder="{{ __('storefront.catalog.filters_min') }}"
-            @if ($live) wire:model.live.blur @else wire:model.blur @endif="numMin.{{ $parameter->id }}"
-            class="h-8 w-full rounded-sm border border-border px-2 text-sm text-text-primary focus:border-accent-500 focus:ring-2 focus:ring-accent-100 focus:outline-none"
-        >
-        <span class="text-text-muted" aria-hidden="true">–</span>
-        <input
-            type="number"
-            inputmode="decimal"
-            placeholder="{{ __('storefront.catalog.filters_max') }}"
-            @if ($live) wire:model.live.blur @else wire:model.blur @endif="numMax.{{ $parameter->id }}"
-            class="h-8 w-full rounded-sm border border-border px-2 text-sm text-text-primary focus:border-accent-500 focus:ring-2 focus:ring-accent-100 focus:outline-none"
-        >
+<details id="{{ $uid }}" open class="group border-b border-border {{ $sheet ? '' : 'last:border-b-0' }}">
+    <summary class="flex cursor-pointer items-center justify-between font-semibold text-text-primary {{ $sheet ? 'h-14 text-base' : 'h-11 px-4 text-sm' }}">
+        <span>
+            {{ $parameter->name[$locale] ?? ($parameter->name[$defaultLocale] ?? '') }}
+            @if ($parameter->unit)
+                <span class="font-normal text-text-muted">({{ $parameter->unit }})</span>
+            @endif
+        </span>
+        <x-storefront.icon name="chevron-down" class="size-4 text-text-muted group-open:rotate-180" stroke="2" />
+    </summary>
+    <div class="grid grid-cols-2 gap-2 pb-3 {{ $sheet ? '' : 'px-4' }}">
+        <x-input type="number" inputmode="decimal" aria-label="{{ ($parameter->name[$locale] ?? '').' - '.__('storefront.catalog.filters_min') }}" placeholder="{{ __('storefront.catalog.filters_min') }}" wire:model.live.blur="numMin.{{ $parameter->id }}" class="{{ $inputClass }}" />
+        <x-input type="number" inputmode="decimal" aria-label="{{ ($parameter->name[$locale] ?? '').' - '.__('storefront.catalog.filters_max') }}" placeholder="{{ __('storefront.catalog.filters_max') }}" wire:model.live.blur="numMax.{{ $parameter->id }}" class="{{ $inputClass }}" />
     </div>
-</div>
+</details>

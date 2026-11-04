@@ -29,7 +29,14 @@ return new class extends Migration
             $table->foreignId('approved_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamp('approved_at')->nullable();
             $table->text('rejected_reason')->nullable();
+            // Last day the manual monthly subscription covers (inclusive).
+            // Null = never paid. Visibility is computed from this, never by
+            // changing `status` (see Product::scopeVisibleOnStorefront()).
+            $table->date('subscription_paid_until')->nullable();
             $table->timestamps();
+
+            // Storefront visibility scope (seller approved) + admin moderation lists.
+            $table->index(['status', 'created_at']);
         });
     }
 

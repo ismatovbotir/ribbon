@@ -22,4 +22,13 @@ return [
     // out of sync with each other.
     'user_locales' => ['uz', 'en', 'ru'],
 
+    // Reverse proxies whose X-Forwarded-For header may be trusted, so
+    // request()->ip() is the real visitor (rate limits on login, /request,
+    // "Show phone", selection; lead dedupe). Empty = trust nobody, which is
+    // correct when visitors connect straight to the web server. Production is
+    // shared hosting (webname.uz): leave empty unless every visitor shows the
+    // same IP, then set the host's proxy IP(s), comma-separated. Never "*" on
+    // a server reachable directly — clients could then forge their IP.
+    'trusted_proxies' => env('TRUSTED_PROXIES'),
+
 ];

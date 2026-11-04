@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin\Categories;
 
+use App\Livewire\Concerns\AuthorizesAdmin;
 use App\Models\Category;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
@@ -11,6 +12,13 @@ use Livewire\WithPagination;
 
 class Index extends Component
 {
+    use AuthorizesAdmin;
+
+    protected function adminAccess(): ?string
+    {
+        return 'catalog.manage';
+    }
+
     use WithFileUploads, WithPagination;
 
     #[Url(history: true)]
@@ -29,6 +37,9 @@ class Index extends Component
 
     public bool $isActive = true;
 
+    /** UI inverse of categories.requires_subscription. */
+    public bool $isFree = false;
+
     /**
      * Staged category image for the create form — jpg/png only, max 1MB
      * (see createCategory()). Stored under `categories/` on the `public`
@@ -46,6 +57,8 @@ class Index extends Component
 
     public function mount(): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         $this->resetForm();
     }
 
@@ -58,11 +71,15 @@ class Index extends Component
      */
     public function slugPreview(string $locale): string
     {
+        $this->authorizeAdmin('catalog.manage');
+
         return Category::generateUniqueSlug($this->name[$locale] ?? '', $locale);
     }
 
     public function sortBy(string $field): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         if (! in_array($field, $this->sortable, true)) {
             return;
         }
@@ -79,11 +96,15 @@ class Index extends Component
 
     public function updatedSearch(): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         $this->resetPage();
     }
 
     public function toggleCreateForm(): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         $this->showCreateForm = ! $this->showCreateForm;
 
         if (! $this->showCreateForm) {
@@ -93,6 +114,8 @@ class Index extends Component
 
     public function createCategory(): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         $locales = config('ribbon.locales');
 
         $rules = [
@@ -122,6 +145,7 @@ class Index extends Component
             'name' => $this->name,
             'slug' => $slug,
             'is_active' => $this->isActive,
+            'requires_subscription' => ! $this->isFree,
             'sort_order' => (int) (Category::max('sort_order') ?? 0) + 1,
             'image_path' => $imagePath,
         ]);
@@ -138,6 +162,8 @@ class Index extends Component
      */
     public function removeImageUpload(): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         $this->imageUpload = null;
     }
 
@@ -147,6 +173,7 @@ class Index extends Component
 
         $this->name = array_fill_keys($locales, '');
         $this->isActive = true;
+        $this->isFree = false;
         $this->imageUpload = null;
         $this->resetErrorBag();
         $this->resetValidation();

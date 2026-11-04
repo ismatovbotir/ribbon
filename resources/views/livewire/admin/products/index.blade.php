@@ -1,135 +1,107 @@
+@php
+    $activeCount = ($search !== '' ? 1 : 0) + ($status !== '' ? 1 : 0);
+    $sortLabels = ['name' => 'Product', 'status' => 'Status', 'created_at' => 'Submitted'];
+@endphp
+
 <div>
     <x-page-header title="Products" subtitle="Review and moderate product listings submitted by sellers across the catalog." />
 
     @if (session('status'))
-        <div class="mb-6 rounded-md border border-success-200 bg-success-50 p-3 text-sm text-success-700">
-            {{ session('status') }}
-        </div>
+        <x-alert variant="success">{{ session('status') }}</x-alert>
     @endif
 
-    <div class="mb-4 flex flex-wrap items-center gap-3">
-        <div class="w-full max-w-xs">
-            <x-input type="search" wire:model.live.debounce.400ms="search" placeholder="Search by name…" class="h-8" />
-        </div>
-        @if ($search !== '')
-            <button type="button" wire:click="$set('search', '')" class="text-xs text-text-secondary hover:text-text-primary">Clear</button>
+    <x-table :loading="false">
+        <x-slot:toolbar>
+            <x-table.status-tabs aria-label="Filter by status">
+                <x-table.tab wire:click="filterByStatus('')" :active="$status === ''" :count="$statusCounts->sum()">All</x-table.tab>
+                @foreach ($statuses as $option)
+                    <x-table.tab wire:key="tab-{{ $option }}" wire:click="filterByStatus('{{ $option }}')" :active="$status === $option" :count="$statusCounts[$option] ?? 0">{{ ucfirst($option) }}</x-table.tab>
+                @endforeach
+            </x-table.status-tabs>
+
+            <x-table.toolbar :active-count="$activeCount" :result-count="$products->total()">
+                <x-slot:search>
+                    <x-input type="search" enterkeyhint="search" wire:model.live.debounce.400ms="search" placeholder="Search by name…" aria-label="Search products" />
+                </x-slot:search>
+                <x-slot:filters>
+                    <x-select wire:model.live="status" aria-label="Status" class="md:hidden">
+                        <option value="">All statuses</option>
+                        @foreach ($statuses as $option)
+                            <option value="{{ $option }}">{{ ucfirst($option) }}</option>
+                        @endforeach
+                    </x-select>
+                    <x-select wire:model.live="sortField" aria-label="Sort by" class="md:hidden">
+                        @foreach ($sortLabels as $field => $label)
+                            <option value="{{ $field }}">Sort by: {{ $label }}</option>
+                        @endforeach
+                    </x-select>
+                    <x-select wire:model.live="sortDirection" aria-label="Sort direction" class="md:hidden">
+                        <option value="asc">Ascending</option>
+                        <option value="desc">Descending</option>
+                    </x-select>
+                </x-slot:filters>
+                <x-slot:chips>
+                    @if ($status !== '')
+                        <x-table.chip wire:click="filterByStatus('{{ $status }}')">Status: {{ ucfirst($status) }}</x-table.chip>
+                    @endif
+                    @if ($search !== '')
+                        <x-table.chip wire:click="$set('search', '')">Search: {{ $search }}</x-table.chip>
+                    @endif
+                </x-slot:chips>
+            </x-table.toolbar>
+        </x-slot:toolbar>
+
+        <x-slot:head>
+            <x-table.th :sortable="true" :sort="$sortField === 'name' ? $sortDirection : null" wire:click="sortBy('name')">Product</x-table.th>
+            <x-table.th :sortable="true" :sort="$sortField === 'status' ? $sortDirection : null" wire:click="sortBy('status')">Status</x-table.th>
+            <x-table.th>Seller</x-table.th>
+            <x-table.th>Category</x-table.th>
+            <x-table.th :tier="3">Brand</x-table.th>
+            <x-table.th :tier="3" :sortable="true" :sort="$sortField === 'created_at' ? $sortDirection : null" wire:click="sortBy('created_at')">Submitted</x-table.th>
+            <x-table.th><span class="sr-only">Actions</span></x-table.th>
+        </x-slot:head>
+
+        @if ($products->isEmpty())
+            <tbody class="block md:table-row-group">
+                <tr class="block md:table-row"><td colspan="7" class="block md:table-cell">
+                    @if ($activeCount > 0)
+                        <x-empty-state variant="filtered" title="No results match your filters" description="Try a different search term or status.">
+                            <x-slot:actions><x-button variant="secondary" wire:click="clearFilters">Clear filters</x-button></x-slot:actions>
+                        </x-empty-state>
+                    @else
+                        <x-empty-state title="No products yet" description="Listings submitted by sellers will appear here." />
+                    @endif
+                </td></tr>
+            </tbody>
+        @else
+            <tbody role="rowgroup" wire:loading.remove wire:target="search, sortBy, filterByStatus, status, sortField, sortDirection" class="block divide-y divide-border md:table-row-group">
+                @foreach ($products as $product)
+                    <x-table.row wire:key="product-{{ $product->id }}">
+                        <x-table.cell role="primary">
+                            <a href="{{ route('admin.products.show', $product) }}" wire:navigate title="{{ $product->name }}" class="line-clamp-2 after:absolute after:inset-0 hover:text-accent-700 hover:underline md:line-clamp-none">{{ $product->name ?: '(untitled)' }}</a>
+                        </x-table.cell>
+                        <x-table.cell role="status"><x-status-badge :status="$product->status" /></x-table.cell>
+                        <x-table.cell role="meta" label="Seller">
+                            @if ($product->seller)
+                                <a href="{{ route('admin.sellers.show', $product->seller) }}" wire:navigate class="relative z-10 hover:text-accent-700 hover:underline">{{ $product->seller->name }}</a>
+                            @else
+                                —
+                            @endif
+                        </x-table.cell>
+                        <x-table.cell role="meta" label="Category">{{ $product->category?->name[$defaultLocale] ?? '—' }}</x-table.cell>
+                        <x-table.cell role="meta" :tier="3">{{ $product->brand?->name ?? '—' }}</x-table.cell>
+                        <x-table.cell role="meta" :tier="3" class="font-mono text-xs">{{ $product->created_at->format('d M Y') }}</x-table.cell>
+                        <x-table.cell role="actions">
+                            <x-menu :title="$product->name ?: '(untitled)'" label="Row actions">
+                                <x-menu.item icon="review" :href="route('admin.products.show', $product)" wire:navigate>Review</x-menu.item>
+                            </x-menu>
+                        </x-table.cell>
+                    </x-table.row>
+                @endforeach
+            </tbody>
+            <x-table.skeleton target="search, sortBy, filterByStatus, status, sortField, sortDirection" :rows="6" :cols="6" />
         @endif
 
-        <div class="flex items-center gap-1 rounded-sm border border-border p-0.5 text-xs sm:ml-auto">
-            <button
-                type="button"
-                wire:click="filterByStatus('')"
-                class="rounded-sm px-2.5 py-1 font-medium transition-colors {{ $status === '' ? 'bg-accent-50 text-accent-700' : 'text-text-muted hover:text-text-primary' }}"
-            >
-                All
-            </button>
-            @foreach ($statuses as $option)
-                <button
-                    type="button"
-                    wire:click="filterByStatus('{{ $option }}')"
-                    class="rounded-sm px-2.5 py-1 font-medium capitalize transition-colors {{ $status === $option ? 'bg-accent-50 text-accent-700' : 'text-text-muted hover:text-text-primary' }}"
-                >
-                    {{ $option }} ({{ $statusCounts[$option] ?? 0 }})
-                </button>
-            @endforeach
-        </div>
-    </div>
-
-    <div class="overflow-hidden rounded-md border border-border-strong bg-surface-raised">
-        <div class="overflow-x-auto">
-            <table class="w-full min-w-[860px] border-collapse">
-                <thead class="sticky top-0 z-sticky bg-surface-subtle">
-                    <tr class="border-b border-border text-left text-xs font-medium text-text-muted uppercase">
-                        <th class="px-4 py-2.5">
-                            <button type="button" wire:click="sortBy('name')" class="inline-flex items-center gap-1 hover:text-text-secondary">
-                                Product
-                                @if ($sortField === 'name')
-                                    <span>{{ $sortDirection === 'asc' ? '▲' : '▼' }}</span>
-                                @endif
-                            </button>
-                        </th>
-                        <th class="px-4 py-2.5">Category</th>
-                        <th class="px-4 py-2.5">Seller</th>
-                        <th class="px-4 py-2.5">Brand</th>
-                        <th class="px-4 py-2.5">
-                            <button type="button" wire:click="sortBy('status')" class="inline-flex items-center gap-1 hover:text-text-secondary">
-                                Status
-                                @if ($sortField === 'status')
-                                    <span>{{ $sortDirection === 'asc' ? '▲' : '▼' }}</span>
-                                @endif
-                            </button>
-                        </th>
-                        <th class="px-4 py-2.5 text-right">
-                            <button type="button" wire:click="sortBy('created_at')" class="inline-flex items-center gap-1 hover:text-text-secondary">
-                                Submitted
-                                @if ($sortField === 'created_at')
-                                    <span>{{ $sortDirection === 'asc' ? '▲' : '▼' }}</span>
-                                @endif
-                            </button>
-                        </th>
-                        <th class="px-4 py-2.5"><span class="sr-only">Actions</span></th>
-                    </tr>
-                </thead>
-                <tbody wire:loading.class="opacity-50" wire:target="search, sortBy, filterByStatus" class="divide-y divide-border">
-                    @forelse ($products as $product)
-                        <tr wire:key="product-{{ $product->id }}" class="h-row-comfortable text-sm text-text-primary hover:bg-surface-hover">
-                            <td class="max-w-xs truncate px-4 py-2 font-medium" title="{{ $product->name }}">
-                                <a href="{{ route('admin.products.show', $product) }}" wire:navigate class="hover:text-accent-700 hover:underline">
-                                    {{ $product->name ?: '(untitled)' }}
-                                </a>
-                            </td>
-                            <td class="px-4 py-2 text-text-secondary">{{ $product->category?->name[$defaultLocale] ?? '—' }}</td>
-                            <td class="px-4 py-2 text-text-secondary">
-                                @if ($product->seller)
-                                    <a href="{{ route('admin.sellers.show', $product->seller) }}" wire:navigate class="hover:text-accent-700 hover:underline">
-                                        {{ $product->seller->name }}
-                                    </a>
-                                @else
-                                    —
-                                @endif
-                            </td>
-                            <td class="px-4 py-2 text-text-secondary">{{ $product->brand?->name ?? '—' }}</td>
-                            <td class="px-4 py-2">
-                                @php
-                                    $variant = match ($product->status) {
-                                        'approved' => 'success',
-                                        'pending' => 'warning',
-                                        'rejected' => 'danger',
-                                        'suspended' => 'muted',
-                                        default => 'muted',
-                                    };
-                                @endphp
-                                <x-badge :variant="$variant" dot>{{ ucfirst($product->status) }}</x-badge>
-                            </td>
-                            <td class="px-4 py-2 text-right text-xs text-text-secondary">{{ $product->created_at->format('M j, Y') }}</td>
-                            <td class="px-4 py-2 text-right">
-                                <x-button tag="a" href="{{ route('admin.products.show', $product) }}" wire:navigate variant="secondary" size="sm">
-                                    Review
-                                </x-button>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="7" class="px-4 py-16 text-center">
-                                @if ($search !== '' || $status !== '')
-                                    <p class="text-sm font-medium text-text-primary">No results match your filters</p>
-                                    <p class="mt-1 text-sm text-text-secondary">Try a different search term or status.</p>
-                                    <button type="button" wire:click="clearFilters" class="mt-3 text-sm font-medium text-accent-700 hover:underline">Clear filters</button>
-                                @else
-                                    <p class="text-sm font-medium text-text-primary">No products yet</p>
-                                    <p class="mt-1 text-sm text-text-secondary">Listings submitted by sellers will appear here.</p>
-                                @endif
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-
-        @if ($products->hasPages())
-            <div class="border-t border-border px-4 py-3">
-                {{ $products->links() }}
-            </div>
-        @endif
-    </div>
+        <x-slot:footer>{{ $products->links('pagination.admin') }}</x-slot:footer>
+    </x-table>
 </div>

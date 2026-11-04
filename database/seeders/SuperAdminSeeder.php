@@ -2,15 +2,17 @@
 
 namespace Database\Seeders;
 
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class SuperAdminSeeder extends Seeder
 {
     /**
-     * Seed the application's database.
+     * The one platform-owner account, from SUPER_ADMIN_EMAIL /
+     * SUPER_ADMIN_PASSWORD. Idempotent: re-running keeps the account and
+     * role, and only re-hashes the password when it actually changed.
      */
     public function run(): void
     {
@@ -23,25 +25,18 @@ class SuperAdminSeeder extends Seeder
             return;
         }
 
-        $user = User::updateOrCreate(
-            ['email' => $email],
-            ['name' => 'Super Admin', 'password' => Hash::make($password)],
-        );
+        $user = User::firstOrNew(['email' => $email]);
 
-        $roleId = DB::table('roles')->where('type', 'admin')->where('is_super_admin', true)->value('id');
-
-        $alreadyAssigned = DB::table('role_user')
-            ->where('role_id', $roleId)
-            ->where('user_id', $user->id)
-            ->exists();
-
-        if (! $alreadyAssigned) {
-            DB::table('role_user')->insert([
-                'role_id' => $roleId,
-                'user_id' => $user->id,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+        if (! $user->exists || ! Hash::check($password, $user->password)) {
+            $user->password = Hash::make($password);
         }
+
+        $user->name ??= 'Super Admin';
+        $user->save();
+
+        // The Super Admin role itself is inserted by create_roles_table.
+        $roleId = Role::where('type', 'admin')->where('is_super_admin', true)->value('id');
+
+        $user->roles()->syncWithoutDetaching([$roleId]);
     }
 }

@@ -39,6 +39,7 @@ class SitemapGeneratorTest extends TestCase
             'name' => ['uz' => 'Lentalar', 'ru' => 'Ленты', 'en' => 'Ribbons'],
             'slug' => ['uz' => 'lentalar', 'ru' => 'lenty', 'en' => 'ribbons'],
             'is_active' => true,
+            'requires_subscription' => false,
         ]);
     }
 
@@ -48,7 +49,7 @@ class SitemapGeneratorTest extends TestCase
         $region = Region::create(['country_id' => $country->id, 'name' => array_fill_keys(config('ribbon.locales'), 'Tashkent')]);
         $city = City::create(['region_id' => $region->id, 'name' => array_fill_keys(config('ribbon.locales'), 'Tashkent')]);
 
-        return Seller::register(
+        $seller = Seller::register(
             [
                 'name' => 'Test Seller LLC',
                 'address' => 'Main warehouse',
@@ -65,6 +66,11 @@ class SitemapGeneratorTest extends TestCase
                 'locale' => 'uz',
             ],
         );
+
+        // Only approved sellers' products are storefront-visible (shared scope).
+        $seller->forceFill(['status' => 'approved'])->save();
+
+        return $seller;
     }
 
     private function makeProduct(Category $category, Seller $seller, string $status = 'approved'): Product

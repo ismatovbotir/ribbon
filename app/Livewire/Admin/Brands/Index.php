@@ -2,9 +2,11 @@
 
 namespace App\Livewire\Admin\Brands;
 
+use App\Livewire\Concerns\AuthorizesAdmin;
 use App\Models\Brand;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -12,6 +14,13 @@ use Livewire\WithPagination;
 
 class Index extends Component
 {
+    use AuthorizesAdmin;
+
+    protected function adminAccess(): ?string
+    {
+        return 'catalog.manage';
+    }
+
     use WithFileUploads, WithPagination;
 
     #[Url(history: true)]
@@ -38,6 +47,7 @@ class Index extends Component
 
     // ---- Inline row edit ----
 
+    #[Locked]
     public ?int $editingBrandId = null;
 
     public string $editingName = '';
@@ -50,6 +60,7 @@ class Index extends Component
 
     public bool $showDeleteConfirm = false;
 
+    #[Locked]
     public ?int $deletingBrandId = null;
 
     /**
@@ -59,6 +70,8 @@ class Index extends Component
 
     public function sortBy(string $field): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         if (! in_array($field, $this->sortable, true)) {
             return;
         }
@@ -75,6 +88,8 @@ class Index extends Component
 
     public function updatedSearch(): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         $this->resetPage();
     }
 
@@ -84,6 +99,8 @@ class Index extends Component
 
     public function toggleCreateForm(): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         $this->showCreateForm = ! $this->showCreateForm;
 
         if (! $this->showCreateForm) {
@@ -93,6 +110,8 @@ class Index extends Component
 
     public function createBrand(): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         $this->validate([
             'name' => ['required', 'string', 'max:120', 'unique:brands,name'],
             'logoUpload' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:1024'],
@@ -119,6 +138,8 @@ class Index extends Component
      */
     public function removeLogoUpload(): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         $this->logoUpload = null;
     }
 
@@ -136,6 +157,8 @@ class Index extends Component
 
     public function startEdit(int $brandId): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         $brand = Brand::findOrFail($brandId);
 
         $this->editingBrandId = $brand->id;
@@ -147,6 +170,8 @@ class Index extends Component
 
     public function cancelEdit(): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         $this->editingBrandId = null;
         $this->editingName = '';
         $this->editingLogoUpload = null;
@@ -162,12 +187,16 @@ class Index extends Component
      */
     public function removeEditingLogo(): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         $this->editingLogoUpload = null;
         $this->editingExistingLogoPath = null;
     }
 
     public function updateBrand(): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         if (! $this->editingBrandId) {
             return;
         }
@@ -198,12 +227,16 @@ class Index extends Component
 
     public function confirmDeleteBrand(int $brandId): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         $this->deletingBrandId = $brandId;
         $this->showDeleteConfirm = true;
     }
 
     public function cancelDelete(): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         $this->showDeleteConfirm = false;
         $this->deletingBrandId = null;
     }
@@ -226,6 +259,8 @@ class Index extends Component
 
     public function deleteBrand(): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         $brand = $this->deletingBrand;
 
         // "No Brand" is never offered a Delete action in the UI, but guard

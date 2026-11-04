@@ -27,6 +27,15 @@ class EnsureAdminIsAuthenticated
         try {
             Auth::user()->adminRoleOrFail();
         } catch (AdminAccessDeniedException) {
+            // A legitimate seller who follows (or guesses) an /admin URL
+            // gets a 403 and stays logged in. Only a user with no other
+            // valid access (e.g. a staff member whose admin role was revoked)
+            // is logged out. Logging out on a plain GET would otherwise
+            // let any link to /admin end a seller's session.
+            if (Auth::user()->sellers()->exists()) {
+                abort(403);
+            }
+
             Auth::logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();

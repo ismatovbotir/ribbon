@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Article;
 use App\Models\Category;
+use App\Models\Page;
 use App\Models\Product;
 use App\Models\Setting;
 use Carbon\CarbonInterface;
@@ -94,13 +95,29 @@ class SitemapGeneratorService
         $groups = [
             $this->homeGroup(),
             $this->articlesIndexGroup(),
+            // /contact is always live (its intro page row is optional).
+            [
+                'urlsByLocale' => $this->queryLocaleUrls(url('/contact')),
+                'lastmod' => now(),
+            ],
         ];
+
+        // /news is left out until it has at least one published item (an
+        // empty list is noindex on the page itself).
+        if ($this->publishedContent('news')->exists()) {
+            $groups[] = [
+                'urlsByLocale' => $this->queryLocaleUrls(url('/news')),
+                'lastmod' => now(),
+            ];
+        }
 
         return array_merge(
             $groups,
             $this->categoryGroups(),
             $this->productGroups(),
-            $this->articleGroups(),
+            $this->articleGroups('article', 'storefront.articles.show'),
+            $this->articleGroups('news', 'storefront.news.show'),
+            $this->pageGroups(),
         );
     }
 
@@ -165,7 +182,7 @@ class SitemapGeneratorService
         // what's comfortable to hold in memory all at once, unlike
         // categories (a handful of rows by design, see CLAUDE.md's flat
         // category list).
-        foreach (Product::query()->where('status', 'approved')->lazy() as $product) {
+        foreach (Product::query()->visibleOnStorefront()->lazy() as $product) {
             $urlsByLocale = $this->localizedUrls($product->slug ?? [], 'storefront.products.show', 'productSlug');
 
             if ($urlsByLocale === []) {
@@ -182,18 +199,18 @@ class SitemapGeneratorService
     }
 
     /**
-     * Every published article (published_at set and in the past — matches
-     * Storefront\Articles\Index's own visibility query exactly), one group
-     * per row.
+     * Every published item of the given Article type (published_at set and
+     * in the past — matches the Articles/News index visibility query
+     * exactly), one group per row.
      *
      * @return array<int, array{urlsByLocale: array<string, string>, lastmod: ?CarbonInterface}>
      */
-    private function articleGroups(): array
+    private function articleGroups(string $type, string $routeName): array
     {
         $groups = [];
 
-        foreach (Article::query()->whereNotNull('published_at')->where('published_at', '<=', now())->lazy() as $article) {
-            $urlsByLocale = $this->localizedUrls($article->slug ?? [], 'storefront.articles.show', 'articleSlug');
+        foreach ($this->publishedContent($type)->lazy() as $article) {
+            $urlsByLocale = $this->localizedUrls($article->slug ?? [], $routeName, 'articleSlug');
 
             if ($urlsByLocale === []) {
                 continue;
@@ -210,6 +227,43 @@ class SitemapGeneratorService
                 'urlsByLocale' => $urlsByLocale,
                 'lastmod' => $lastmod,
             ];
+        }
+
+        return $groups;
+    }
+
+    /**
+     * Published items of one Article type (article|news).
+     */
+    private function publishedContent(string $type)
+    {
+        return Article::query()
+            ->where('type', $type)
+            ->whereNotNull('published_at')
+            ->where('published_at', '<=', now());
+    }
+
+    /**
+     * Published CMS pages: system pages at their fixed path (the `contact`
+     * key only supplies /contact's intro, which is added separately), and
+     * custom pages through their per-locale slug at /p/{slug}.
+     *
+     * @return array<int, array{urlsByLocale: array<string, string>, lastmod: ?CarbonInterface}>
+     */
+    private function pageGroups(): array
+    {
+        $groups = [];
+
+        foreach (Page::query()->isPublished()->where(fn ($q) => $q->whereNull('key')->orWhere('key', '!=', 'contact'))->get() as $page) {
+            $urlsByLocale = $page->key !== null
+                ? $this->queryLocaleUrls(url($page->path()))
+                : $this->localizedUrls($page->slug ?? [], 'storefront.pages.show', 'pageSlug');
+
+            if ($urlsByLocale === []) {
+                continue;
+            }
+
+            $groups[] = ['urlsByLocale' => $urlsByLocale, 'lastmod' => $page->updated_at];
         }
 
         return $groups;

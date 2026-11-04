@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin\Analytics;
 
+use App\Livewire\Concerns\AuthorizesAdmin;
 use App\Services\PlatformAnalyticsService;
 use App\Support\LocalizedDate;
 use Illuminate\Support\Carbon;
@@ -19,6 +20,13 @@ use Livewire\Component;
  */
 class Show extends Component
 {
+    use AuthorizesAdmin;
+
+    protected function adminAccess(): ?string
+    {
+        return 'super-admin';
+    }
+
     private const DAYS = 30;
 
     /**

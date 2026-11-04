@@ -18,4 +18,5 @@ return [
     'validation.email_required' => 'Укажите email.',
     'validation.email_invalid' => 'Некорректный email.',
     'validation.password_required' => 'Укажите пароль.',
+    'login.throttled' => 'Слишком много попыток входа. Повторите через :seconds сек.',
 ];

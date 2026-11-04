@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -46,7 +47,26 @@ return new class extends Migration
             $table->timestamp('moderated_at')->nullable();
             $table->text('rejection_reason')->nullable();
             $table->timestamps();
+
+            // Catalog page: approved products of one category, newest first.
+            $table->index(['category_id', 'status', 'created_at']);
+            // Home/search/sitemap (no category) + admin moderation queue.
+            $table->index(['status', 'created_at']);
+            // Seller dashboard list + storefront scope join through seller.
+            $table->index(['seller_id', 'status', 'created_at']);
+            $table->index('brand_id');
         });
+
+        // Per-locale slug lookups (`where("slug->{$locale}", ...)`) hit this on
+        // every storefront page view. SQLite compiles that to
+        // json_extract("slug", '$."uz"'), so an expression index on the same
+        // expression lets it use an index instead of scanning every row.
+        // MySQL/Postgres need a generated column instead — add when switching.
+        if (DB::getDriverName() === 'sqlite') {
+            foreach (config('ribbon.locales', ['uz', 'ru', 'en']) as $locale) {
+                DB::statement("CREATE INDEX products_slug_{$locale}_index ON products (json_extract(slug, '$.\"{$locale}\"'))");
+            }
+        }
     }
 
     /**

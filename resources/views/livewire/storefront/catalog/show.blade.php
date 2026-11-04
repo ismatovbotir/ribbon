@@ -12,55 +12,50 @@
         ->map(fn ($parameter) => $parameter->name[$locale] ?? ($parameter->name[$defaultLocale] ?? ''))
         ->filter(fn ($name) => $name !== '')
         ->implode(', ');
+
+    $loadingTargets = 'selected,numMin,numMax,brands,sort,removeOptionFilter,removeNumberFilter,removeBrandFilter,clearFilters';
+    $chip = 'hit inline-flex h-11 shrink-0 snap-start items-center gap-2 rounded-sm border px-3 text-sm font-medium whitespace-nowrap';
+    $chipOff = 'border-border-input bg-surface text-text-primary hover:bg-surface-hover';
+    $chipOn = 'border-accent-700 bg-accent-50 text-accent-800';
+    $activeCount = collect($selected)->sum(fn ($ids) => count(array_filter((array) $ids))) + count(array_filter($numMin, fn ($v) => $v !== null && $v !== '')) + count(array_filter($numMax, fn ($v) => $v !== null && $v !== '')) + count(array_filter((array) $brands));
+    $brandNames = collect($brandFacets)->pluck('name', 'id');
+    $quickParameters = $filterableParameters->filter(fn ($p) => in_array($p->type, ['select_single', 'select_multiple'], true))->take(3);
+    $sortLabels = ['newest' => __('storefront.catalog.sort_newest'), 'price_asc' => __('storefront.catalog.sort_price_asc'), 'price_desc' => __('storefront.catalog.sort_price_desc')];
 @endphp
 
 <div>
-    {{-- Breadcrumb --}}
-    <nav aria-label="Breadcrumb" class="mb-3 flex items-center gap-1.5 text-sm">
-        <a href="{{ route('storefront.home') }}" wire:navigate class="text-text-secondary hover:text-text-primary">{{ __('storefront.catalog.breadcrumb_home') }}</a>
+    {{-- Breadcrumb (scroll strip on phones) --}}
+    <nav aria-label="{{ __('storefront.catalog.breadcrumb_label') }}" class="no-scrollbar -mx-4 mb-3 flex items-center gap-1.5 overflow-x-auto px-4 text-sm whitespace-nowrap md:mx-0 md:px-0">
+        <a href="{{ route('storefront.home') }}" wire:navigate class="hit text-text-secondary hover:text-text-primary hover:underline">{{ __('storefront.catalog.breadcrumb_home') }}</a>
         <span class="text-text-muted" aria-hidden="true">/</span>
-        <span class="font-medium text-text-primary">{{ $categoryName }}</span>
+        <span class="font-medium text-text-primary" aria-current="page">{{ $categoryName }}</span>
     </nav>
 
-    <h1 class="text-2xl font-semibold text-text-primary">{{ $categoryName }}</h1>
+    <h1 class="text-xl font-semibold text-text-primary md:text-2xl">{{ $categoryName }}</h1>
 
     {{--
-        Category intro — a direct, factual, self-contained statement of
-        what this page lists, for an AI answer engine to extract/cite
-        without needing the filter sidebar or product grid. The product
-        count is only stated when unfiltered ($products->total() reflects
-        whatever filters are currently applied, so it would misrepresent
-        the category's real size otherwise); the spec list is always safe
-        since it's the category's fixed parameter set, not a per-result
-        figure. There is no admin-authored category description field
-        today (see Category model) — this is generated entirely from
-        already-true, already-queried page data rather than static/stale
-        marketing copy.
-
-        Rendered inside a tinted band only when there's no admin-authored
-        category_top banner (see below) — when a banner exists, it already
-        supplies the visual anchor, so the intro stays plain directly under
-        the H1 as before (docs/design/13 §5).
+        Category intro - a direct, factual, self-contained statement of what
+        this page lists (GEO). The product count is only stated when
+        unfiltered; the spec list is the category's fixed parameter set.
+        Generated from already-true page data, not static marketing copy.
     --}}
-
-    {{-- category_top banner: targeted to this category, or a generic
-         fallback (banners.category_id null) — see Show::render(). --}}
-    @if ($categoryTopBanner)
-        <div class="mt-2 max-w-3xl space-y-1 text-sm text-text-secondary">
-            <p>
-                @if (! $hasActiveFilters)
-                    {{ __('storefront.catalog.intro_with_count', ['category' => $categoryName, 'count' => $products->total()]) }}
-                @else
-                    {{ __('storefront.catalog.intro_no_count', ['category' => $categoryName]) }}
-                @endif
-            </p>
-            @if ($specNames !== '')
-                <p>{{ __('storefront.catalog.intro_specs', ['specs' => $specNames]) }}</p>
+    <div class="mt-3 max-w-3xl space-y-1 text-sm text-text-secondary {{ $categoryTopBanner ? '' : 'rounded-md border border-border bg-surface-band px-4 py-3' }}">
+        <p>
+            @if (! $hasActiveFilters)
+                {{ trans_choice('storefront.catalog.intro_with_count', $products->total(), ['category' => $categoryName]) }}
+            @else
+                {{ __('storefront.catalog.intro_no_count', ['category' => $categoryName]) }}
             @endif
-        </div>
+        </p>
+        @if ($specNames !== '')
+            <p>{{ __('storefront.catalog.intro_specs', ['specs' => $specNames]) }}</p>
+        @endif
+    </div>
 
+    {{-- category_top banner: targeted to this category, or a generic fallback. --}}
+    @if ($categoryTopBanner)
         @php $bannerTitle = $categoryTopBanner->title[$locale] ?? ($categoryTopBanner->title[$defaultLocale] ?? ''); @endphp
-        <x-storefront.banner-frame :href="$categoryTopBanner->link_url" class="relative mt-6 block overflow-hidden rounded-2xl bg-surface-subtle">
+        <x-storefront.banner-frame :href="$categoryTopBanner->link_url" class="mt-4 block overflow-hidden rounded-lg border border-border bg-surface-subtle hover:border-accent-700">
             <img
                 src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($categoryTopBanner->image_path) }}"
                 alt="{{ $bannerTitle }}"
@@ -68,166 +63,202 @@
                 loading="eager"
             >
             @if ($bannerTitle !== '')
-                <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-900/70 to-transparent p-4">
-                    <p class="text-lg font-semibold text-white">{{ $bannerTitle }}</p>
-                </div>
+                <p class="border-t border-border bg-surface-band px-3 py-2 text-sm font-semibold text-text-primary">{{ $bannerTitle }}</p>
             @endif
         </x-storefront.banner-frame>
-    @else
-        <div class="mt-6 rounded-2xl bg-accent-50 p-6 md:p-8">
-            <div class="max-w-3xl space-y-1 text-sm text-text-secondary">
-                <p>
-                    @if (! $hasActiveFilters)
-                        {{ __('storefront.catalog.intro_with_count', ['category' => $categoryName, 'count' => $products->total()]) }}
-                    @else
-                        {{ __('storefront.catalog.intro_no_count', ['category' => $categoryName]) }}
-                    @endif
-                </p>
-                @if ($specNames !== '')
-                    <p>{{ __('storefront.catalog.intro_specs', ['specs' => $specNames]) }}</p>
-                @endif
-            </div>
-        </div>
     @endif
 
-    <div class="mt-6 lg:grid lg:grid-cols-[18rem_1fr] lg:items-start lg:gap-8">
-        {{-- Filter sidebar (desktop) --}}
-        <aside class="hidden lg:sticky lg:top-[calc(var(--spacing-storefront-header)+1rem)] lg:block">
-            <div class="rounded-xl border border-border bg-surface-raised p-4">
-                <div class="mb-3 flex items-center justify-between">
-                    <p class="text-sm font-semibold text-text-primary">{{ __('storefront.catalog.filters_heading') }}</p>
+    {{-- Phone/tablet sticky filter chip bar (below lg). Sticks directly under the 56/64px header. --}}
+    <div class="sticky top-(--spacing-storefront-header) z-(--z-bar) -mx-4 mt-4 border-b border-border-strong bg-surface px-4 md:-mx-6 md:px-6 lg:hidden">
+        <div class="no-scrollbar flex h-filterbar snap-x items-center gap-2 overflow-x-auto">
+            <button type="button" x-on:click="filtersOpen = true" aria-haspopup="dialog" class="{{ $chip }} {{ $activeCount > 0 ? 'border-accent-700 bg-accent-700 text-white' : $chipOff }}">
+                <x-storefront.icon name="filter" class="size-4" stroke="2" />
+                {{ __('storefront.catalog.filters_button') }}
+                @if ($activeCount > 0)<span class="text-xs tabular-nums">{{ $activeCount }}</span>@endif
+            </button>
+            @foreach ($quickParameters as $qp)
+                @php
+                    $qpSelected = array_values(array_filter((array) ($selected[$qp->id] ?? [])));
+                    $qpFirst = $qpSelected ? $qp->options->firstWhere('id', (int) $qpSelected[0]) : null;
+                    $qpFirstLabel = $qpFirst ? ($qpFirst->value[$locale] ?? ($qpFirst->value[$defaultLocale] ?? '')) : '';
+                @endphp
+                <button
+                    type="button"
+                    x-on:click="filtersOpen = true; $nextTick(() => { const d = document.getElementById('fg-{{ $qp->id }}'); if (d) { d.open = true; d.scrollIntoView({ block: 'start' }); } })"
+                    aria-haspopup="dialog"
+                    class="{{ $chip }} {{ $qpSelected ? $chipOn : $chipOff }}"
+                >
+                    {{ $qp->name[$locale] ?? ($qp->name[$defaultLocale] ?? '') }}@if ($qpSelected): {{ $qpFirstLabel }}@if (count($qpSelected) > 1) +{{ count($qpSelected) - 1 }}@endif @endif
+                    <x-storefront.icon name="chevron-down" class="size-3" stroke="2" />
+                </button>
+            @endforeach
+            <button
+                type="button"
+                x-on:click="filtersOpen = true; $nextTick(() => document.getElementById('fg-sort')?.scrollIntoView({ block: 'start' }))"
+                aria-haspopup="dialog"
+                class="{{ $chip }} {{ $chipOff }} md:hidden"
+            >
+                {{ __('storefront.catalog.sort_label') }}: {{ $sortLabels[$sort] ?? '' }}
+                <x-storefront.icon name="chevron-down" class="size-3" stroke="2" />
+            </button>
+        </div>
+    </div>
+
+    <div class="mt-4 lg:mt-6 lg:grid lg:grid-cols-[var(--spacing-filters)_minmax(0,1fr)] lg:items-start lg:gap-8">
+        {{-- Desktop filter sidebar --}}
+        <aside aria-label="{{ __('storefront.catalog.filters_heading') }}" class="hidden lg:sticky lg:top-[calc(var(--spacing-storefront-header)+1rem)] lg:block lg:max-h-[calc(100dvh-var(--spacing-storefront-header)-2rem)] lg:overflow-y-auto">
+            <div class="overflow-hidden rounded-md border border-border-strong bg-surface">
+                <div class="flex h-12 items-center justify-between border-b border-border-strong bg-surface-band px-4">
+                    <h2 class="text-base font-semibold text-text-primary">{{ __('storefront.catalog.filters_heading') }}</h2>
                     @if ($hasActiveFilters)
-                        <button type="button" wire:click="clearFilters" class="text-xs text-accent-700 hover:underline">{{ __('storefront.catalog.filters_clear_all') }}</button>
+                        <button type="button" wire:click="clearFilters" class="h-9 px-2 text-sm text-accent-700 hover:underline">{{ __('storefront.catalog.filters_clear_all') }}</button>
                     @endif
                 </div>
-
-                <x-storefront.filter-groups
-                    :filterable-parameters="$filterableParameters"
-                    :facet-counts="$facetCounts"
-                    :selected="$selected"
-                    :live="true"
-                />
+                <x-storefront.filter-groups :filterable-parameters="$filterableParameters" :facet-counts="$facetCounts" :selected="$selected" :brand-facets="$brandFacets" :selected-brands="$brands" variant="sidebar" />
             </div>
         </aside>
 
-        <div class="mt-6 lg:mt-0">
-            {{-- Mobile filters trigger --}}
-            <div class="mb-4 lg:hidden">
-                <button
-                    type="button"
-                    wire:click="$set('showMobileFilters', true)"
-                    class="flex h-9 items-center gap-2 rounded-lg border border-border px-3 text-sm font-medium text-text-primary"
-                >
-                    <svg class="h-4 w-4" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                        <path d="M3 5h14M6 10h8M8.5 15h3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
-                    </svg>
-                    {{ __('storefront.catalog.filters_button') }}
-                    @if ($hasActiveFilters)
-                        <span class="flex h-4 min-w-4 items-center justify-center rounded-full bg-accent-600 px-1 text-[10px] font-semibold text-white">
-                            {{ collect($selected)->sum(fn ($ids) => count($ids)) + count($numMin) + count($numMax) }}
-                        </span>
-                    @endif
-                </button>
-            </div>
-
+        <div id="list" class="scroll-mt-32 min-w-0">
             {{-- Result bar --}}
-            <div class="flex flex-wrap items-center justify-between gap-3">
-                <p class="text-sm text-text-secondary">{{ __('storefront.catalog.results_count', ['count' => $products->total()]) }}</p>
+            <div class="flex items-center justify-between gap-3">
+                <p class="text-sm text-text-secondary" aria-live="polite"><span class="tabular-nums">{{ $products->total() }}</span> {{ trans_choice('storefront.catalog.results_word', $products->total()) }}</p>
 
-                <label class="flex items-center gap-2 text-sm">
+                <label class="hidden items-center gap-2 text-sm md:flex">
                     <span class="text-text-secondary">{{ __('storefront.catalog.sort_label') }}</span>
-                    <select wire:model.live="sort" class="h-9 rounded-lg border border-border bg-surface px-2 text-sm text-text-primary focus:border-accent-500 focus:ring-2 focus:ring-accent-100 focus:outline-none">
-                        <option value="newest">{{ __('storefront.catalog.sort_newest') }}</option>
-                        <option value="price_asc">{{ __('storefront.catalog.sort_price_asc') }}</option>
-                        <option value="price_desc">{{ __('storefront.catalog.sort_price_desc') }}</option>
-                    </select>
+                    <x-select wire:model.live="sort" class="w-auto!">
+                        @foreach ($sortLabels as $sortKey => $sortText)
+                            <option value="{{ $sortKey }}">{{ $sortText }}</option>
+                        @endforeach
+                    </x-select>
                 </label>
             </div>
 
-            {{-- Applied filter chips --}}
+            {{-- Applied filter chips (tablet/desktop; phones rely on the sticky bar) --}}
             @if ($hasActiveFilters)
-                <div class="mt-3 flex flex-wrap items-center gap-2">
+                <div class="no-scrollbar mt-3 hidden gap-2 overflow-x-auto md:flex lg:flex-wrap">
                     @foreach ($filterableParameters as $parameter)
-                        @foreach (($selected[$parameter->id] ?? []) as $optionId)
+                        @foreach (array_filter((array) ($selected[$parameter->id] ?? [])) as $optionId)
                             @php
                                 $option = $parameter->options->firstWhere('id', (int) $optionId);
                                 $paramLabel = $parameter->name[$locale] ?? ($parameter->name[$defaultLocale] ?? '');
                                 $optionLabel = $option ? ($option->value[$locale] ?? ($option->value[$defaultLocale] ?? '')) : $optionId;
                             @endphp
-                            <button
-                                type="button"
-                                wire:click="removeOptionFilter({{ $parameter->id }}, '{{ $optionId }}')"
-                                class="inline-flex items-center gap-1 rounded-full border border-border bg-surface-subtle px-2.5 py-1 text-xs text-text-secondary hover:text-text-primary"
-                            >
+                            <button type="button" wire:click="removeOptionFilter({{ $parameter->id }}, '{{ $optionId }}')" class="{{ $chip }} {{ $chipOn }}">
                                 {{ $paramLabel }}: {{ $optionLabel }}
-                                <span aria-hidden="true">×</span>
+                                <x-storefront.icon name="close" class="size-3" stroke="2" />
+                                <span class="sr-only">{{ __('storefront.catalog.filter_remove') }}</span>
                             </button>
                         @endforeach
 
                         @if (! empty($numMin[$parameter->id] ?? null))
-                            <button type="button" wire:click="removeNumberFilter({{ $parameter->id }}, 'min')" class="inline-flex items-center gap-1 rounded-full border border-border bg-surface-subtle px-2.5 py-1 text-xs text-text-secondary hover:text-text-primary">
-                                {{ $parameter->name[$locale] ?? '' }} ≥ {{ $numMin[$parameter->id] }}{{ $parameter->unit }}
-                                <span aria-hidden="true">×</span>
+                            <button type="button" wire:click="removeNumberFilter({{ $parameter->id }}, 'min')" class="{{ $chip }} {{ $chipOn }}">
+                                {{ $parameter->name[$locale] ?? '' }} &ge; <span class="font-mono tabular-nums">{{ $numMin[$parameter->id] }}{{ $parameter->unit }}</span>
+                                <x-storefront.icon name="close" class="size-3" stroke="2" />
+                                <span class="sr-only">{{ __('storefront.catalog.filter_remove') }}</span>
                             </button>
                         @endif
 
                         @if (! empty($numMax[$parameter->id] ?? null))
-                            <button type="button" wire:click="removeNumberFilter({{ $parameter->id }}, 'max')" class="inline-flex items-center gap-1 rounded-full border border-border bg-surface-subtle px-2.5 py-1 text-xs text-text-secondary hover:text-text-primary">
-                                {{ $parameter->name[$locale] ?? '' }} ≤ {{ $numMax[$parameter->id] }}{{ $parameter->unit }}
-                                <span aria-hidden="true">×</span>
+                            <button type="button" wire:click="removeNumberFilter({{ $parameter->id }}, 'max')" class="{{ $chip }} {{ $chipOn }}">
+                                {{ $parameter->name[$locale] ?? '' }} &le; <span class="font-mono tabular-nums">{{ $numMax[$parameter->id] }}{{ $parameter->unit }}</span>
+                                <x-storefront.icon name="close" class="size-3" stroke="2" />
+                                <span class="sr-only">{{ __('storefront.catalog.filter_remove') }}</span>
                             </button>
                         @endif
                     @endforeach
+                    @foreach (array_filter((array) $brands) as $brandId)
+                        <button type="button" wire:click="removeBrandFilter({{ (int) $brandId }})" class="{{ $chip }} {{ $chipOn }}">
+                            {{ __('storefront.catalog.filter_brand') }}: {{ $brandNames[(int) $brandId] ?? $brandId }}
+                            <x-storefront.icon name="close" class="size-3" stroke="2" />
+                            <span class="sr-only">{{ __('storefront.catalog.filter_remove') }}</span>
+                        </button>
+                    @endforeach
+                    <button type="button" wire:click="clearFilters" class="hit inline-flex h-11 shrink-0 items-center px-3 text-sm font-medium text-accent-700 hover:underline">{{ __('storefront.catalog.filters_clear_all') }}</button>
                 </div>
             @endif
 
-            {{-- Grid / states --}}
+            {{-- List / states --}}
             <div class="mt-4">
-                <div wire:loading.grid wire:target="selected,numMin,numMax,sort,removeOptionFilter,removeNumberFilter,clearFilters,closeMobileFilters" class="hidden grid-cols-2 gap-4 md:grid-cols-3 md:gap-6 lg:grid-cols-4 lg:gap-8">
-                    @for ($i = 0; $i < 8; $i++)
-                        <x-storefront.product-card-skeleton />
-                    @endfor
+                <div wire:loading.block wire:target="{{ $loadingTargets }}" aria-busy="true" class="hidden overflow-hidden rounded-md border border-border-strong bg-surface">
+                    <ul>
+                        @for ($i = 0; $i < 8; $i++)
+                            <x-storefront.product-row-skeleton />
+                        @endfor
+                    </ul>
                 </div>
 
-                <div wire:loading.remove wire:target="selected,numMin,numMax,sort,removeOptionFilter,removeNumberFilter,clearFilters,closeMobileFilters">
+                <div wire:loading.remove wire:target="{{ $loadingTargets }}">
                     @if ($products->isEmpty())
-                        @if (! $categoryHasAnyProducts)
-                            <div class="rounded-xl border border-dashed border-border p-10 text-center">
-                                <p class="text-base font-medium text-text-primary">{{ __('storefront.catalog.empty_title') }}</p>
-                                <p class="mt-1 text-sm text-text-secondary">{{ __('storefront.catalog.empty_body') }}</p>
-                                <a href="{{ route('storefront.home') }}" wire:navigate class="mt-4 inline-block text-sm font-medium text-accent-700 hover:underline">{{ __('storefront.catalog.empty_cta') }}</a>
-                            </div>
-                        @else
-                            <div class="rounded-xl border border-dashed border-border p-10 text-center">
-                                <p class="text-base font-medium text-text-primary">{{ __('storefront.catalog.filtered_empty_title') }}</p>
-                                <p class="mt-1 text-sm text-text-secondary">{{ __('storefront.catalog.filtered_empty_body') }}</p>
-                                <button type="button" wire:click="clearFilters" class="mt-4 text-sm font-medium text-accent-700 hover:underline">{{ __('storefront.catalog.filters_clear') }}</button>
-                            </div>
-                        @endif
+                        <div class="rounded-md border border-border-strong">
+                            @if (! $categoryHasAnyProducts)
+                                <x-empty-state variant="empty" :title="__('storefront.catalog.empty_title')" :description="__('storefront.catalog.empty_body')">
+                                    <x-slot:actions>
+                                        <x-button tag="a" variant="primary" href="{{ route('storefront.home') }}" wire:navigate>{{ __('storefront.catalog.empty_cta') }}</x-button>
+                                    </x-slot:actions>
+                                </x-empty-state>
+                            @else
+                                <x-empty-state variant="filtered" :title="__('storefront.catalog.filtered_empty_title')" :description="__('storefront.catalog.filtered_empty_body')">
+                                    <x-slot:actions>
+                                        <x-button variant="primary" wire:click="clearFilters">{{ __('storefront.catalog.filters_clear') }}</x-button>
+                                    </x-slot:actions>
+                                </x-empty-state>
+                            @endif
+                        </div>
                     @else
-                        <div class="grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-6 lg:grid-cols-4 lg:gap-8">
-                            @foreach ($products as $product)
-                                <x-storefront.product-card :product="$product" :show-category="false" wire:key="catalog-product-{{ $product->id }}" />
-                            @endforeach
+                        <h2 class="sr-only">{{ __('storefront.list.products_heading') }}</h2>
+                        <div class="overflow-hidden rounded-md border border-border-strong bg-surface">
+                            <x-storefront.product-list-header />
+                            <ul aria-label="{{ $categoryName }}">
+                                @foreach ($products as $product)
+                                    <x-storefront.product-row :product="$product" :show-category="false" wire:key="catalog-product-{{ $product->id }}" />
+                                @endforeach
+                            </ul>
                         </div>
 
-                        <div class="mt-8">
-                            {{ $products->links() }}
-                        </div>
+                        {{ $products->links('pagination.storefront') }}
                     @endif
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- Related articles — educational content tagged to this category
-         (Article::category()), a lightweight cross-link back to /articles.
-         Hidden entirely when nothing's tagged, same "no empty state" rule
-         as the home page teaser. --}}
+    {{--
+        About this category (GEO): server-rendered, filter-independent facts.
+        Lists each filterable parameter with its unit or its option values so an
+        answer engine can see which specs/values exist in this category.
+    --}}
+    <section aria-labelledby="category-about-heading" class="mt-12 max-w-3xl">
+        <h2 id="category-about-heading" class="text-lg font-semibold text-text-primary md:text-xl">{{ __('storefront.catalog.about_heading', ['category' => $categoryName]) }}</h2>
+        <p class="mt-2 text-base text-text-secondary">{{ __('storefront.catalog.about_lead', ['category' => $categoryName]) }}</p>
+        @if ($filterableParameters->isNotEmpty())
+            <dl class="mt-4 overflow-hidden rounded-md border border-border-strong text-sm">
+                @foreach ($filterableParameters as $aboutParameter)
+                    @php
+                        $aboutLabel = $aboutParameter->name[$locale] ?? ($aboutParameter->name[$defaultLocale] ?? '');
+                        $aboutValues = $aboutParameter->options
+                            ->map(fn ($option) => $option->value[$locale] ?? ($option->value[$defaultLocale] ?? ''))
+                            ->filter(fn ($v) => $v !== '')
+                            ->take(15)
+                            ->implode(', ');
+                        if ($aboutValues === '' && $aboutParameter->unit) {
+                            $aboutValues = __('storefront.catalog.about_numeric', ['unit' => $aboutParameter->unit]);
+                        }
+                    @endphp
+                    @continue($aboutLabel === '' || $aboutValues === '')
+                    <div class="grid grid-cols-[2fr_3fr] gap-3 border-b border-border px-3 py-3 last:border-b-0 md:px-4">
+                        <dt class="text-text-secondary">{{ $aboutLabel }}</dt>
+                        <dd class="font-mono tabular-nums break-words text-text-primary">{{ $aboutValues }}</dd>
+                    </div>
+                @endforeach
+            </dl>
+        @endif
+    </section>
+
+    {{-- Related articles --}}
     @if ($relatedArticles->isNotEmpty())
         <section aria-labelledby="related-articles-heading" class="mt-12">
-            <h2 id="related-articles-heading" class="text-xl font-bold tracking-tight text-text-primary">{{ __('storefront.catalog.related_articles_heading') }}</h2>
-            <div class="mt-4 grid grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-3">
+            <x-storefront.section-heading id="related-articles-heading" :title="__('storefront.catalog.related_articles_heading')" />
+            <div class="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-3">
                 @foreach ($relatedArticles as $article)
                     <x-storefront.article-card :article="$article" />
                 @endforeach
@@ -235,41 +266,52 @@
         </section>
     @endif
 
-    {{-- Mobile filters off-canvas sheet --}}
+    {{-- All-filters sheet (below lg). Open state is Alpine (body x-data filtersOpen), inputs are live. --}}
     <div
-        x-show="$wire.showMobileFilters"
+        x-show="filtersOpen"
         x-cloak
-        class="fixed inset-0 z-modal-backdrop bg-slate-900/40 lg:hidden"
-        x-on:click="$wire.closeMobileFilters()"
-    ></div>
-    <div
-        x-show="$wire.showMobileFilters"
-        x-cloak
-        x-transition
-        class="fixed inset-x-0 bottom-0 z-modal flex max-h-[85vh] flex-col rounded-t-2xl border-t border-border bg-surface lg:hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="filters-title"
+        x-trap.noscroll="filtersOpen"
+        x-on:keydown.escape.window="filtersOpen = false"
+        x-transition:enter="transition duration-200 ease-out"
+        x-transition:enter-start="translate-y-full"
+        x-transition:enter-end="translate-y-0"
+        x-transition:leave="transition duration-150 ease-in"
+        x-transition:leave-start="translate-y-0"
+        x-transition:leave-end="translate-y-full"
+        class="fixed inset-0 z-(--z-sheet) flex flex-col bg-surface motion-reduce:transition-none lg:hidden"
     >
-        <div class="flex shrink-0 items-center justify-between border-b border-border px-4 py-3">
-            <p class="text-base font-semibold text-text-primary">{{ __('storefront.catalog.filters_heading') }}</p>
-            <button type="button" wire:click="$set('showMobileFilters', false)" class="text-text-muted" aria-label="{{ __('storefront.nav.close_menu') }}">✕</button>
-        </div>
-
-        <div class="flex-1 overflow-y-auto px-4 py-4">
-            <x-storefront.filter-groups
-                :filterable-parameters="$filterableParameters"
-                :facet-counts="$facetCounts"
-                :selected="$selected"
-                :live="false"
-            />
-        </div>
-
-        <div class="shrink-0 border-t border-border p-4">
-            <button
-                type="button"
-                wire:click="closeMobileFilters"
-                class="flex h-11 w-full items-center justify-center rounded-lg bg-accent-600 text-sm font-semibold text-white hover:bg-accent-700"
-            >
-                {{ __('storefront.catalog.filters_apply', ['count' => $products->total()]) }}
+        <header class="flex h-14 shrink-0 items-center justify-between border-b border-border-strong pr-1 pl-4">
+            <h2 id="filters-title" class="text-lg font-semibold text-text-primary">{{ __('storefront.catalog.filters_heading') }}</h2>
+            <button type="button" x-on:click="filtersOpen = false" aria-label="{{ __('storefront.nav.close_menu') }}" class="flex size-11 items-center justify-center text-text-primary">
+                <x-storefront.icon name="close" class="size-5" />
             </button>
+        </header>
+
+        <div class="flex-1 overflow-y-auto overscroll-contain px-4">
+            <x-storefront.filter-groups :filterable-parameters="$filterableParameters" :facet-counts="$facetCounts" :selected="$selected" :brand-facets="$brandFacets" :selected-brands="$brands" variant="sheet" />
+
+            <details id="fg-sort" open class="group border-b border-border">
+                <summary class="flex h-14 cursor-pointer items-center justify-between text-base font-semibold text-text-primary">
+                    <span>{{ __('storefront.catalog.sort_label') }}</span>
+                    <x-storefront.icon name="chevron-down" class="size-4 text-text-muted group-open:rotate-180" stroke="2" />
+                </summary>
+                <div class="pb-2">
+                    @foreach ($sortLabels as $sortKey => $sortText)
+                        <label class="flex min-h-12 cursor-pointer items-center gap-3 border-t border-border first:border-t-0">
+                            <input type="radio" name="sheet-sort" value="{{ $sortKey }}" wire:model.live="sort" class="size-5 shrink-0 accent-[var(--color-accent-700)]">
+                            <span class="text-base text-text-primary">{{ $sortText }}</span>
+                        </label>
+                    @endforeach
+                </div>
+            </details>
         </div>
+
+        <footer class="grid shrink-0 grid-cols-[auto_minmax(0,1fr)] gap-2 border-t border-border-strong bg-surface p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+            <x-button variant="secondary" wire:click="clearFilters" class="min-h-12 px-4">{{ __('storefront.catalog.filters_reset') }}</x-button>
+            <x-button variant="primary" x-on:click="filtersOpen = false" wire:loading.class="opacity-60" wire:target="{{ $loadingTargets }}" class="min-h-12" aria-live="polite">{{ trans_choice('storefront.catalog.filters_apply', $products->total()) }}</x-button>
+        </footer>
     </div>
 </div>

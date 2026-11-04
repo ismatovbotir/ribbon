@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin\Products;
 
+use App\Livewire\Concerns\AuthorizesAdmin;
 use App\Models\Product;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -9,6 +10,13 @@ use Livewire\WithPagination;
 
 class Index extends Component
 {
+    use AuthorizesAdmin;
+
+    protected function adminAccess(): ?string
+    {
+        return 'products.moderate';
+    }
+
     use WithPagination;
 
     #[Url(history: true)]
@@ -34,6 +42,8 @@ class Index extends Component
 
     public function sortBy(string $field): void
     {
+        $this->authorizeAdmin('products.moderate');
+
         if (! in_array($field, $this->sortable, true)) {
             return;
         }
@@ -50,6 +60,8 @@ class Index extends Component
 
     public function updatedSearch(): void
     {
+        $this->authorizeAdmin('products.moderate');
+
         $this->resetPage();
     }
 
@@ -60,12 +72,16 @@ class Index extends Component
      */
     public function filterByStatus(string $status): void
     {
+        $this->authorizeAdmin('products.moderate');
+
         $this->status = $this->status === $status ? '' : $status;
         $this->resetPage();
     }
 
     public function clearFilters(): void
     {
+        $this->authorizeAdmin('products.moderate');
+
         $this->search = '';
         $this->status = '';
         $this->resetPage();

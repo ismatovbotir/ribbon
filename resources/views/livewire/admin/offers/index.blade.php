@@ -1,105 +1,90 @@
+@php
+    $activeCount = ($search !== '' ? 1 : 0) + ($status !== '' ? 1 : 0);
+    $target = 'search, filterByStatus, status';
+@endphp
+
 <div>
-    <x-page-header title="Commercial Offers" subtitle="Multi-seller price-quote requests submitted by buyers through the public storefront." />
+    <x-page-header title="Commercial offers" subtitle="Multi-seller price-quote requests submitted by buyers through the public storefront." />
 
     @if (session('status'))
-        <div class="mb-6 rounded-md border border-success-200 bg-success-50 p-3 text-sm text-success-700">
-            {{ session('status') }}
-        </div>
+        <x-alert variant="success">{{ session('status') }}</x-alert>
     @endif
 
-    <div class="mb-4 flex flex-wrap items-center gap-3">
-        <div class="w-full max-w-xs">
-            <x-input type="search" wire:model.live.debounce.400ms="search" placeholder="Search by phone or company…" class="h-8" />
-        </div>
-        @if ($search !== '')
-            <button type="button" wire:click="$set('search', '')" class="text-xs text-text-secondary hover:text-text-primary">Clear</button>
+    <x-table>
+        <x-slot:toolbar>
+            <x-table.status-tabs aria-label="Filter by status">
+                <x-table.tab wire:click="filterByStatus('')" :active="$status === ''" :count="$statusCounts->sum()">All</x-table.tab>
+                @foreach ($statuses as $option)
+                    <x-table.tab wire:key="tab-{{ $option }}" wire:click="filterByStatus('{{ $option }}')" :active="$status === $option" :count="$statusCounts[$option] ?? 0">{{ $option === 'pending' ? 'New' : ucfirst($option) }}</x-table.tab>
+                @endforeach
+            </x-table.status-tabs>
+
+            <x-table.toolbar :active-count="$activeCount" :result-count="$requests->total()">
+                <x-slot:search>
+                    <x-input type="search" enterkeyhint="search" wire:model.live.debounce.400ms="search" placeholder="Search by phone or company…" aria-label="Search offers" />
+                </x-slot:search>
+                <x-slot:filters>
+                    <x-select wire:model.live="status" aria-label="Status" class="md:hidden">
+                        <option value="">All statuses</option>
+                        @foreach ($statuses as $option)
+                            <option value="{{ $option }}">{{ $option === 'pending' ? 'New' : ucfirst($option) }}</option>
+                        @endforeach
+                    </x-select>
+                </x-slot:filters>
+                <x-slot:chips>
+                    @if ($status !== '')
+                        <x-table.chip wire:click="filterByStatus('{{ $status }}')">Status: {{ $status === 'pending' ? 'New' : ucfirst($status) }}</x-table.chip>
+                    @endif
+                    @if ($search !== '')
+                        <x-table.chip wire:click="$set('search', '')">Search: {{ $search }}</x-table.chip>
+                    @endif
+                </x-slot:chips>
+            </x-table.toolbar>
+        </x-slot:toolbar>
+
+        <x-slot:head>
+            <x-table.th>Phone</x-table.th>
+            <x-table.th>Status</x-table.th>
+            <x-table.th align="right">Items</x-table.th>
+            <x-table.th>Company</x-table.th>
+            <x-table.th :tier="3">Received</x-table.th>
+            <x-table.th><span class="sr-only">Actions</span></x-table.th>
+        </x-slot:head>
+
+        @if ($requests->isEmpty())
+            <tbody class="block md:table-row-group">
+                <tr class="block md:table-row"><td colspan="6" class="block md:table-cell">
+                    @if ($activeCount > 0)
+                        <x-empty-state variant="filtered" title="No results match your filters" description="Try a different search term or status.">
+                            <x-slot:actions><x-button variant="secondary" wire:click="clearFilters">Clear filters</x-button></x-slot:actions>
+                        </x-empty-state>
+                    @else
+                        <x-empty-state title="No commercial offer requests yet" description="Requests submitted via the public storefront will appear here." />
+                    @endif
+                </td></tr>
+            </tbody>
+        @else
+            <tbody role="rowgroup" wire:loading.remove wire:target="{{ $target }}" class="block divide-y divide-border md:table-row-group">
+                @foreach ($requests as $request)
+                    <x-table.row wire:key="request-{{ $request->id }}">
+                        <x-table.cell role="primary" class="font-mono">
+                            <a href="{{ route('admin.offers.show', $request) }}" wire:navigate class="after:absolute after:inset-0 hover:text-accent-700 hover:underline">{{ $request->phone }}</a>
+                        </x-table.cell>
+                        <x-table.cell role="status"><x-status-badge type="offer" :status="$request->status" /></x-table.cell>
+                        <x-table.cell role="meta" label="Items" :mono="true" align="right">{{ $request->items_count }}</x-table.cell>
+                        <x-table.cell role="meta" label="Company">{{ $request->company_name ?: '—' }}</x-table.cell>
+                        <x-table.cell role="meta" :tier="3" class="font-mono text-xs">{{ $request->created_at->format('d M Y') }}</x-table.cell>
+                        <x-table.cell role="actions">
+                            <x-menu :title="$request->phone" label="Row actions">
+                                <x-menu.item icon="view" :href="route('admin.offers.show', $request)" wire:navigate>View</x-menu.item>
+                            </x-menu>
+                        </x-table.cell>
+                    </x-table.row>
+                @endforeach
+            </tbody>
+            <x-table.skeleton :target="$target" :rows="6" :cols="5" />
         @endif
 
-        <div class="flex items-center gap-1 rounded-sm border border-border p-0.5 text-xs sm:ml-auto">
-            <button
-                type="button"
-                wire:click="filterByStatus('')"
-                class="rounded-sm px-2.5 py-1 font-medium transition-colors {{ $status === '' ? 'bg-accent-50 text-accent-700' : 'text-text-muted hover:text-text-primary' }}"
-            >
-                All
-            </button>
-            @foreach ($statuses as $option)
-                <button
-                    type="button"
-                    wire:click="filterByStatus('{{ $option }}')"
-                    class="rounded-sm px-2.5 py-1 font-medium capitalize transition-colors {{ $status === $option ? 'bg-accent-50 text-accent-700' : 'text-text-muted hover:text-text-primary' }}"
-                >
-                    {{ $option === 'pending' ? 'New' : ucfirst($option) }} ({{ $statusCounts[$option] ?? 0 }})
-                </button>
-            @endforeach
-        </div>
-    </div>
-
-    <div class="overflow-hidden rounded-md border border-border-strong bg-surface-raised">
-        <div class="overflow-x-auto">
-            <table class="w-full min-w-[760px] border-collapse">
-                <thead class="sticky top-0 z-sticky bg-surface-subtle">
-                    <tr class="border-b border-border text-left text-xs font-medium text-text-muted uppercase">
-                        <th class="px-4 py-2.5">Phone</th>
-                        <th class="px-4 py-2.5">Company</th>
-                        <th class="px-4 py-2.5 text-right">Items</th>
-                        <th class="px-4 py-2.5">Status</th>
-                        <th class="px-4 py-2.5 text-right">Submitted</th>
-                        <th class="px-4 py-2.5"><span class="sr-only">Actions</span></th>
-                    </tr>
-                </thead>
-                <tbody wire:loading.class="opacity-50" wire:target="search, filterByStatus" class="divide-y divide-border">
-                    @forelse ($requests as $request)
-                        <tr wire:key="request-{{ $request->id }}" class="h-row-comfortable text-sm text-text-primary hover:bg-surface-hover">
-                            <td class="px-4 py-2 font-mono text-xs font-medium">
-                                <a href="{{ route('admin.offers.show', $request) }}" wire:navigate class="hover:text-accent-700 hover:underline">
-                                    {{ $request->phone }}
-                                </a>
-                            </td>
-                            <td class="px-4 py-2 text-text-secondary">{{ $request->company_name ?: '—' }}</td>
-                            <td class="px-4 py-2 text-right font-mono text-xs text-text-secondary tabular-nums">{{ $request->items_count }}</td>
-                            <td class="px-4 py-2">
-                                @php
-                                    $variant = match ($request->status) {
-                                        'fulfilled' => 'success',
-                                        'pending' => 'warning',
-                                        'contacted' => 'info',
-                                        'cancelled' => 'muted',
-                                        default => 'muted',
-                                    };
-                                    $label = $request->status === 'pending' ? 'New' : ucfirst($request->status);
-                                @endphp
-                                <x-badge :variant="$variant" dot>{{ $label }}</x-badge>
-                            </td>
-                            <td class="px-4 py-2 text-right text-xs text-text-secondary">{{ $request->created_at->format('M j, Y') }}</td>
-                            <td class="px-4 py-2 text-right">
-                                <x-button tag="a" href="{{ route('admin.offers.show', $request) }}" wire:navigate variant="secondary" size="sm">
-                                    View
-                                </x-button>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="6" class="px-4 py-16 text-center">
-                                @if ($search !== '' || $status !== '')
-                                    <p class="text-sm font-medium text-text-primary">No results match your filters</p>
-                                    <p class="mt-1 text-sm text-text-secondary">Try a different search term or status.</p>
-                                    <button type="button" wire:click="clearFilters" class="mt-3 text-sm font-medium text-accent-700 hover:underline">Clear filters</button>
-                                @else
-                                    <p class="text-sm font-medium text-text-primary">No commercial offer requests yet</p>
-                                    <p class="mt-1 text-sm text-text-secondary">Requests submitted via the public storefront will appear here.</p>
-                                @endif
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-
-        @if ($requests->hasPages())
-            <div class="border-t border-border px-4 py-3">
-                {{ $requests->links() }}
-            </div>
-        @endif
-    </div>
+        <x-slot:footer>{{ $requests->links('pagination.admin') }}</x-slot:footer>
+    </x-table>
 </div>

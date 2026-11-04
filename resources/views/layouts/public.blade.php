@@ -4,6 +4,9 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+        <link rel="icon" href="/favicon.ico" sizes="any">
+
         <title>{{ isset($title) ? $title.' · Ribbon' : 'Ribbon' }}</title>
 
         @fonts
@@ -21,8 +24,7 @@
     <body class="panel-seller flex min-h-screen flex-col items-center justify-center bg-surface-subtle px-4 py-10 text-sm text-text-primary antialiased">
         <div class="w-full max-w-lg">
             <div class="mb-6 flex items-center justify-center gap-3">
-                <span class="flex h-7 w-7 items-center justify-center rounded-sm bg-accent-600 text-sm font-semibold text-white">R</span>
-                <span class="text-base font-semibold text-text-primary">Ribbon</span>
+                <x-logo size="md" />
 
                 <nav aria-label="Language" class="ml-1 flex items-center gap-1 text-xs">
                     @foreach (['uz' => 'UZ', 'ru' => 'RU', 'en' => 'EN'] as $locale => $label)

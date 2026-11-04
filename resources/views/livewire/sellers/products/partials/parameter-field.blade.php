@@ -9,10 +9,14 @@
     $fallbackLocale = config('ribbon.locales')[0];
     $label = $parameter->name[$locale] ?? $parameter->name[$fallbackLocale] ?? '';
     $errorKey = 'parameterValues.'.$parameter->id;
+    $fieldId = 'param-'.$parameter->id;
+    $isGroup = $parameter->type === 'select_multiple';
 @endphp
 
 <div>
-    <label class="mb-1 block text-sm font-medium text-text-primary">
+    {{-- A checkbox group gets a plain heading referenced by aria-labelledby.
+         Single controls get a <label for>. --}}
+    <{{ $isGroup ? 'p' : 'label' }} id="{{ $fieldId }}-label" @unless ($isGroup) for="{{ $fieldId }}" @endunless class="mb-1 block text-sm font-medium text-text-primary">
         {{ $label }}
         @if ($parameter->is_required)
             <span class="text-danger-600">*</span>
@@ -20,21 +24,21 @@
         @if ($parameter->type === 'number' && $parameter->unit)
             <span class="text-xs font-normal text-text-muted">({{ $parameter->unit }})</span>
         @endif
-    </label>
+    </{{ $isGroup ? 'p' : 'label' }}>
 
     @if ($parameter->type === 'text')
-        <x-input type="text" wire:model.blur="parameterValues.{{ $parameter->id }}" :error="$errors->has($errorKey)" />
+        <x-input id="{{ $fieldId }}" type="text" wire:model.blur="parameterValues.{{ $parameter->id }}" :error="$errors->has($errorKey)" />
     @elseif ($parameter->type === 'number')
-        <x-input type="number" step="any" wire:model.blur="parameterValues.{{ $parameter->id }}" :error="$errors->has($errorKey)" />
+        <x-input id="{{ $fieldId }}" type="number" step="any" wire:model.blur="parameterValues.{{ $parameter->id }}" :error="$errors->has($errorKey)" />
     @elseif ($parameter->type === 'select_single')
-        <x-select wire:model="parameterValues.{{ $parameter->id }}" :error="$errors->has($errorKey)">
+        <x-select id="{{ $fieldId }}" wire:model="parameterValues.{{ $parameter->id }}" :error="$errors->has($errorKey)">
             <option value="">{{ __('sellers.products.select_placeholder') }}</option>
             @foreach ($parameter->options as $option)
                 <option value="{{ $option->id }}">{{ $option->value[$locale] ?? $option->value[$fallbackLocale] ?? '' }}</option>
             @endforeach
         </x-select>
     @elseif ($parameter->type === 'select_multiple')
-        <div class="flex flex-wrap gap-x-4 gap-y-2 rounded-sm border border-border p-3">
+        <div role="group" aria-labelledby="{{ $fieldId }}-label" class="flex flex-wrap gap-x-4 gap-y-2 rounded-sm border border-border p-3">
             @foreach ($parameter->options as $option)
                 <label class="flex items-center gap-2 text-sm text-text-primary">
                     <input

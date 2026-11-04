@@ -1,81 +1,106 @@
 <div>
     <x-page-header
         :title="$category->name[$defaultLocale] ?? 'Category'"
-        subtitle="Manage this category's parameters — the fields sellers fill in and buyers filter by."
+        subtitle="Manage this category's parameters: the fields sellers fill in and buyers filter by."
+        :back-url="route('admin.categories.index')"
+        back-label="All categories"
     >
         <x-slot:actions>
-            <x-button tag="a" href="{{ route('admin.categories.index') }}" wire:navigate variant="ghost">
-                ← All categories
-            </x-button>
+            <x-button tag="a" href="{{ route('admin.categories.index') }}" wire:navigate variant="ghost" class="hidden md:inline-flex">All categories</x-button>
         </x-slot:actions>
     </x-page-header>
 
     @if (session('status'))
-        <div class="mb-6 rounded-md border border-success-200 bg-success-50 p-3 text-sm text-success-700">
-            {{ session('status') }}
-        </div>
+        <x-alert variant="success">{{ session('status') }}</x-alert>
     @endif
 
-    {{-- 1. Category details — understated relative to the parameter list below --}}
-    <div class="mb-6 rounded-md bg-surface-subtle p-5">
-        <h2 class="mb-4 text-sm font-semibold text-text-secondary uppercase tracking-wide">Category details</h2>
+    <div class="sr-only" aria-live="polite">{{ $announcement }}</div>
 
-        <form wire:submit="saveCategoryDetails">
+    {{-- 1. Category details: collapsed on phones, summary row + Edit --}}
+    <section x-data="{ open: window.matchMedia('(min-width: 48rem)').matches }" class="-mx-4 mb-6 border-y border-border-strong bg-surface md:mx-0 md:border-x">
+        <header class="flex min-h-12 items-center justify-between gap-3 border-b border-border bg-surface-subtle px-4 py-2">
+            <div class="min-w-0">
+                <h2 class="text-lg font-semibold text-text-primary">Category details</h2>
+                <p class="flex items-center gap-2 text-xs text-text-muted md:hidden" x-show="! open">
+                    <span class="truncate">{{ $category->name[$previewLocale ?: $defaultLocale] ?? '' }}</span>
+                    <x-badge :variant="$category->is_active ? 'success' : 'muted'">{{ $category->is_active ? 'Active' : 'Inactive' }}</x-badge>
+                </p>
+            </div>
+            <x-button class="md:hidden" x-on:click="open = ! open" x-bind:aria-expanded="open" aria-controls="category-details">
+                <span x-text="open ? 'Close' : 'Edit'"></span>
+            </x-button>
+        </header>
+
+        <form id="category-details" wire:submit="saveCategoryDetails" x-show="open" class="space-y-4 p-4 md:p-5">
             <x-locale-tabs :incomplete="$this->incompleteCategoryLocales">
                 @foreach (config('ribbon.locales') as $locale)
-                    <div x-show="locale === '{{ $locale }}'" x-cloak>
-                        <label class="mb-1 block text-sm font-medium text-text-primary">
-                            Name <span class="text-danger-600">*</span>
-                        </label>
-                        <x-input type="text" wire:model.blur="catName.{{ $locale }}" :error="$errors->has('catName.'.$locale)" />
-                        @error('catName.'.$locale)
-                            <p class="mt-1 text-xs text-danger-600">{{ $message }}</p>
-                        @enderror
-                        <p class="mt-1 text-xs text-text-muted">
-                            Slug: <span class="font-mono">{{ $category->slug[$locale] ?? '—' }}</span>
-                        </p>
+                    <div x-show="locale === '{{ $locale }}'" x-cloak role="tabpanel" id="panel-{{ $locale }}" aria-labelledby="tab-{{ $locale }}">
+                        <x-field label="Name" for="catName-{{ $locale }}" :required="true" :error="$errors->first('catName.'.$locale)">
+                            <x-input id="catName-{{ $locale }}" type="text" wire:model.blur="catName.{{ $locale }}" :error="$errors->has('catName.'.$locale)" aria-invalid="{{ $errors->has('catName.'.$locale) ? 'true' : 'false' }}" />
+                        </x-field>
+                        <p class="mt-1.5 text-xs text-text-muted">Slug: <span class="font-mono">{{ $category->slug[$locale] ?? '—' }}</span></p>
                     </div>
                 @endforeach
             </x-locale-tabs>
 
-            <div class="mt-4 border-t border-border/60 pt-4">
-                <label class="mb-1 block text-sm font-medium text-text-primary">Image</label>
-
+            <x-field label="Image" for="catImageUpload" hint="Optional. JPG or PNG, max 1MB." :error="$errors->first('catImageUpload')">
                 <div class="flex items-center gap-3">
                     @if ($catImageUpload)
-                        <img src="{{ $catImageUpload->temporaryUrl() }}" alt="New category image preview" class="h-16 w-16 rounded-sm border border-border object-cover">
+                        <img src="{{ $catImageUpload->temporaryUrl() }}" alt="New category image preview" class="size-16 border border-border object-cover">
                     @elseif ($catExistingImagePath)
-                        <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($catExistingImagePath) }}" alt="Current category image" class="h-16 w-16 rounded-sm border border-border object-cover">
+                        <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($catExistingImagePath) }}" alt="Current category image" class="size-16 border border-border object-cover">
                     @else
-                        <span class="flex h-16 w-16 items-center justify-center rounded-sm border border-dashed border-border-strong text-xs text-text-muted">No image</span>
+                        <span class="flex size-16 items-center justify-center border border-dashed border-border-input text-xs text-text-muted">No image</span>
                     @endif
-
-                    <div>
-                        <input type="file" wire:model="catImageUpload" accept="image/jpeg,image/png" class="block text-sm text-text-secondary file:mr-3 file:rounded-sm file:border file:border-border-strong file:bg-surface file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-text-primary hover:file:bg-surface-hover">
+                    <div class="min-w-0 flex-1">
+                        <x-file-input id="catImageUpload" wire:model="catImageUpload" accept="image/jpeg,image/png" />
                         <div wire:loading wire:target="catImageUpload" class="mt-1 text-xs text-text-muted">Uploading…</div>
-                        @error('catImageUpload')
-                            <p class="mt-1 text-xs text-danger-600">{{ $message }}</p>
-                        @enderror
-                        <p class="mt-1 text-xs text-text-muted">Optional. JPG or PNG, max 1MB.</p>
                         @if ($catImageUpload || $catExistingImagePath)
-                            <button type="button" wire:click="removeCategoryImage" class="mt-1 text-xs text-danger-600 hover:underline">Remove image</button>
+                            <button type="button" wire:click="removeCategoryImage" class="inline-flex h-11 items-center text-sm font-medium text-danger-700 hover:underline">Remove image</button>
                         @endif
                     </div>
                 </div>
-            </div>
+            </x-field>
 
-            <div class="mt-4 flex items-center justify-between border-t border-border/60 pt-4">
-                <x-toggle wire:model="catIsActive" label="Active" caption="Inactive categories are hidden from the buyer catalog." />
-                <x-button type="submit" variant="secondary" size="sm" wire:loading.attr="disabled" wire:target="saveCategoryDetails, catImageUpload">
-                    Save details
-                </x-button>
+            {{-- Mega-menu icon (spec 22). Native radios: arrow keys move within the group. --}}
+            <fieldset>
+                <legend class="text-sm font-medium text-text-primary">Menu icon</legend>
+                <p class="mt-0.5 text-xs text-text-muted">Shown next to the category in the storefront catalog menu.</p>
+                <div class="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-7">
+                    @foreach (\App\Support\Icon::CATEGORY_ICONS as $iconName)
+                        <label class="relative flex min-h-11 cursor-pointer flex-col items-center gap-1 rounded-sm border px-2 py-2 text-center text-xs has-checked:border-accent-700 has-checked:bg-accent-50 has-checked:text-accent-800 has-focus-visible:outline-2 has-focus-visible:outline-focus-ring border-border-input text-text-secondary hover:bg-surface-hover">
+                            <input type="radio" name="catIcon" value="{{ $iconName }}" wire:model="catIcon" class="sr-only">
+                            <x-icon :name="$iconName" class="size-6" />
+                            <span class="w-full truncate">{{ $iconName }}</span>
+                        </label>
+                    @endforeach
+                </div>
+                @if ($errors->has('catIcon'))
+                    <p class="mt-1 text-xs text-danger-700">{{ $errors->first('catIcon') }}</p>
+                @endif
+            </fieldset>
+
+            <x-field label="Buying guide" for="catGuideArticleId" hint="Optional. A published article shown as “How to choose” in the catalog menu." :error="$errors->first('catGuideArticleId')">
+                <x-select id="catGuideArticleId" wire:model="catGuideArticleId" :error="$errors->has('catGuideArticleId')">
+                    <option value="">None</option>
+                    @foreach ($this->guideOptions as $articleId => $articleTitle)
+                        <option value="{{ $articleId }}">{{ $articleTitle }}</option>
+                    @endforeach
+                </x-select>
+            </x-field>
+
+            <x-toggle wire:model="catIsActive" label="Active" caption="Inactive categories are hidden from the buyer catalog." />
+            <x-toggle wire:model="catIsFree" :label="__('admin.categories.free_toggle')" :caption="__('admin.categories.free_caption')" />
+
+            <div class="flex">
+                <x-button type="submit" variant="primary" class="w-full md:w-auto" wire:loading.attr="disabled" wire:target="saveCategoryDetails, catImageUpload">Save details</x-button>
             </div>
         </form>
-    </div>
+    </section>
 
-    {{-- 2. Parameters — the primary content of this screen --}}
-    <div class="rounded-md border border-border-strong bg-surface-raised">
-        <div class="flex flex-col gap-3 border-b border-border px-5 py-4 sm:flex-row sm:items-start sm:justify-between">
+    {{-- 2. Parameters: the primary content of this screen --}}
+    <section class="-mx-4 border-y border-border-strong bg-surface md:mx-0 md:border-x">
+        <header class="flex flex-col gap-3 border-b border-border bg-surface-subtle px-4 py-3 md:flex-row md:items-start md:justify-between">
             <div>
                 <h2 class="text-lg font-semibold text-text-primary">Parameters</h2>
                 <p class="mt-0.5 text-xs text-text-muted">
@@ -85,34 +110,24 @@
                 </p>
             </div>
 
-            <div class="flex items-center gap-3">
-                <div class="flex items-center gap-1 rounded-sm border border-border p-0.5 text-xs">
+            <div class="flex flex-col gap-3 md:flex-row md:items-center">
+                <div class="grid grid-cols-3 divide-x divide-border border border-border-input bg-surface md:w-36" role="group" aria-label="Preview language">
                     @foreach (config('ribbon.locales') as $locale)
-                        <button
-                            type="button"
-                            wire:click="$set('previewLocale', '{{ $locale }}')"
-                            title="Preview language: {{ strtoupper($locale) }}"
-                            class="rounded-sm px-2 py-1 font-medium transition-colors {{ $previewLocale === $locale ? 'bg-accent-50 text-accent-700' : 'text-text-muted hover:text-text-primary' }}"
-                        >
-                            {{ strtoupper($locale) }}
-                        </button>
+                        <button type="button" wire:click="$set('previewLocale', '{{ $locale }}')" aria-pressed="{{ $previewLocale === $locale ? 'true' : 'false' }}"
+                            class="h-control text-xs font-semibold {{ $previewLocale === $locale ? 'bg-accent-50 text-accent-700' : 'text-text-secondary hover:bg-surface-hover' }}">{{ strtoupper($locale) }}</button>
                     @endforeach
                 </div>
-                <x-button variant="primary" size="sm" wire:click="openCreateDrawer">
-                    <svg class="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" /></svg>
-                    Add Parameter
+                <x-button variant="primary" wire:click="openCreateDrawer" class="w-full md:w-auto">
+                    <x-icon name="add" class="size-4" />
+                    Add parameter
                 </x-button>
             </div>
-        </div>
+        </header>
 
         @if ($category->parameters->isEmpty())
-            <div class="px-5 py-16 text-center">
-                <p class="text-sm font-medium text-text-primary">This category has no parameters yet</p>
-                <p class="mx-auto mt-1 max-w-sm text-sm text-text-secondary">
-                    Sellers won't be able to add meaningful specs until you add at least one.
-                </p>
-                <x-button variant="primary" size="sm" wire:click="openCreateDrawer" class="mt-4">Add Parameter</x-button>
-            </div>
+            <x-empty-state title="This category has no parameters yet" description="Sellers won't be able to add meaningful specs until you add at least one.">
+                <x-slot:actions><x-button variant="primary" wire:click="openCreateDrawer">Add parameter</x-button></x-slot:actions>
+            </x-empty-state>
         @else
             <ul
                 x-data="{ dragging: null }"
@@ -122,9 +137,6 @@
                     <li
                         wire:key="parameter-{{ $parameter->id }}"
                         data-id="{{ $parameter->id }}"
-                        draggable="true"
-                        x-on:dragstart="dragging = $event.currentTarget.dataset.id; $event.currentTarget.classList.add('opacity-40')"
-                        x-on:dragend="$event.currentTarget.classList.remove('opacity-40')"
                         x-on:dragover.prevent
                         x-on:drop.prevent="
                             let ids = Array.from($el.parentElement.children).map(li => li.dataset.id);
@@ -135,198 +147,158 @@
                                 $wire.reorderParameters(ids);
                             }
                         "
-                        wire:click="openEditDrawer({{ $parameter->id }})"
-                        class="flex h-row-comfortable cursor-pointer items-center gap-3 px-5 text-sm hover:bg-surface-hover"
+                        class="flex items-stretch hover:bg-surface-hover"
                     >
+                        {{-- Drag handle: pointer-fine only. Touch/keyboard use Move up / Move down in the row menu. --}}
                         <span
-                            class="shrink-0 cursor-grab text-text-muted select-none"
-                            title="Drag to reorder"
-                            x-on:click.stop
+                            class="hidden w-10 shrink-0 cursor-grab items-center justify-center text-text-muted select-none dense:flex"
+                            draggable="true"
+                            aria-hidden="true"
+                            x-on:dragstart="dragging = $el.parentElement.dataset.id; $el.parentElement.classList.add('opacity-40')"
+                            x-on:dragend="$el.parentElement.classList.remove('opacity-40')"
                         >⠿</span>
 
-                        <span class="min-w-0 flex-1 truncate font-medium text-text-primary">
-                            {{ $parameter->name[$previewLocale] ?? '—' }}
-                        </span>
+                        <button type="button" wire:click="openEditDrawer({{ $parameter->id }})" class="min-w-0 flex-1 px-4 py-3 text-left dense:pl-0 md:flex md:items-center md:gap-4">
+                            <span class="block truncate text-sm font-medium text-text-primary md:min-w-0 md:flex-1">{{ $parameter->name[$previewLocale] ?? '—' }}</span>
+                            <span class="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 md:mt-0 md:shrink-0">
+                                <x-type-chip>{{ $typeLabels[$parameter->type] ?? $parameter->type }}</x-type-chip>
+                                @if ($parameter->type === 'number' && $parameter->unit)
+                                    <span class="font-mono text-xs text-text-secondary">{{ $parameter->unit }}</span>
+                                @endif
+                                @if (in_array($parameter->type, ['select_single', 'select_multiple']))
+                                    <span class="font-mono text-xs text-text-muted">{{ $parameter->options->count() }} options</span>
+                                @endif
+                            </span>
+                            <span class="mt-1.5 flex gap-4 text-xs text-text-secondary md:mt-0 md:shrink-0">
+                                <span class="flex items-center gap-1.5"><span class="size-2.5 {{ $parameter->is_required ? 'bg-accent-700' : 'border border-border-input' }}"></span>Required<span class="sr-only">: {{ $parameter->is_required ? 'yes' : 'no' }}</span></span>
+                                <span class="flex items-center gap-1.5"><span class="size-2.5 {{ $parameter->is_filterable ? 'bg-accent-700' : 'border border-border-input' }}"></span>Filterable<span class="sr-only">: {{ $parameter->is_filterable ? 'yes' : 'no' }}</span></span>
+                            </span>
+                        </button>
 
-                        <x-type-chip>{{ $typeLabels[$parameter->type] ?? $parameter->type }}</x-type-chip>
-
-                        @if ($parameter->type === 'number' && $parameter->unit)
-                            <span class="shrink-0 text-xs text-text-secondary">{{ $parameter->unit }}</span>
-                        @endif
-
-                        <span class="flex shrink-0 items-center gap-1 text-xs text-text-secondary">
-                            <span class="h-1.5 w-1.5 rounded-full {{ $parameter->is_required ? 'bg-accent-600' : 'border border-border' }}"></span>
-                            Required
-                        </span>
-                        <span class="flex shrink-0 items-center gap-1 text-xs text-text-secondary">
-                            <span class="h-1.5 w-1.5 rounded-full {{ $parameter->is_filterable ? 'bg-accent-600' : 'border border-border' }}"></span>
-                            Filterable
-                        </span>
-
-                        @if (in_array($parameter->type, ['select_single', 'select_multiple']))
-                            <span class="shrink-0 text-xs text-text-muted">{{ $parameter->options->count() }} options</span>
-                        @endif
-
-                        <x-dropdown align="right">
-                            <x-slot:trigger>
-                                <button type="button" x-on:click.stop class="rounded-sm p-1.5 text-text-muted hover:bg-surface-selected hover:text-text-primary" aria-label="Row actions">
-                                    ⋯
-                                </button>
-                            </x-slot:trigger>
-
-                            <button type="button" wire:click="openEditDrawer({{ $parameter->id }})" x-on:click.stop class="block w-full px-3 py-1.5 text-left text-sm text-text-primary hover:bg-surface-hover">
-                                Edit
-                            </button>
-                            <button type="button" wire:click="duplicateParameter({{ $parameter->id }})" x-on:click.stop class="block w-full px-3 py-1.5 text-left text-sm text-text-primary hover:bg-surface-hover">
-                                Duplicate
-                            </button>
-                            <button type="button" wire:click="confirmDeleteParameter({{ $parameter->id }})" x-on:click.stop class="block w-full px-3 py-1.5 text-left text-sm text-danger-600 hover:bg-danger-50">
-                                Delete
-                            </button>
-                        </x-dropdown>
+                        <div class="self-start pt-1 pr-1 md:self-center md:pt-0">
+                            <x-menu :title="$parameter->name[$previewLocale] ?? 'Parameter'" label="Row actions">
+                                <x-menu.item icon="edit" wire:click="openEditDrawer({{ $parameter->id }})">Edit</x-menu.item>
+                                <x-menu.item icon="copy" wire:click="duplicateParameter({{ $parameter->id }})">Duplicate</x-menu.item>
+                                <x-menu.item icon="arrow-up" wire:click="moveParameter({{ $parameter->id }}, 'up')" :disabled="$loop->first" reason="Already first">Move up</x-menu.item>
+                                <x-menu.item icon="arrow-down" wire:click="moveParameter({{ $parameter->id }}, 'down')" :disabled="$loop->last" reason="Already last">Move down</x-menu.item>
+                                <x-menu.item icon="delete" wire:click="confirmDeleteParameter({{ $parameter->id }})" :destructive="true">Delete</x-menu.item>
+                            </x-menu>
+                        </div>
                     </li>
                 @endforeach
             </ul>
         @endif
-    </div>
+    </section>
 
     {{-- Add/Edit Parameter drawer --}}
     @if ($showDrawer)
-        <div class="fixed inset-0 z-modal-backdrop bg-slate-900/40" wire:click="closeDrawer"></div>
+        <x-drawer :title="$editingParameterId ? 'Edit parameter: '.($paramName[$defaultLocale] ?? '') : 'New parameter'" close="closeDrawer">
+            <form id="parameter-form" wire:submit="saveParameter" class="space-y-4">
+                <x-locale-tabs :incomplete="$this->incompleteParameterLocales">
+                    @foreach (config('ribbon.locales') as $locale)
+                        <div x-show="locale === '{{ $locale }}'" x-cloak role="tabpanel" id="panel-{{ $locale }}" aria-labelledby="tab-{{ $locale }}" class="mb-4">
+                            <x-field label="Name" for="paramName-{{ $locale }}" :required="true" :error="$errors->first('paramName.'.$locale)">
+                                <x-input id="paramName-{{ $locale }}" type="text" wire:model.blur="paramName.{{ $locale }}" :error="$errors->has('paramName.'.$locale)" aria-invalid="{{ $errors->has('paramName.'.$locale) ? 'true' : 'false' }}" />
+                            </x-field>
+                        </div>
+                    @endforeach
 
-        <div class="fixed inset-y-0 right-0 z-modal flex w-full max-w-[28rem] flex-col border-l border-border bg-surface-overlay shadow-md">
-            <div class="flex items-center justify-between border-b border-border px-5 py-4">
-                <h2 class="text-lg font-semibold text-text-primary">
-                    {{ $editingParameterId ? 'Edit Parameter: '.($paramName[$defaultLocale] ?? '') : 'New Parameter' }}
-                </h2>
-                <button type="button" wire:click="closeDrawer" class="text-text-muted hover:text-text-primary" aria-label="Close">✕</button>
-            </div>
-
-            <form wire:submit="saveParameter" class="flex flex-1 flex-col overflow-hidden">
-                <div class="flex-1 overflow-y-auto px-5 py-5">
-                    <x-locale-tabs :incomplete="$this->incompleteParameterLocales">
-                        {{-- Name --}}
-                        @foreach (config('ribbon.locales') as $locale)
-                            <div x-show="locale === '{{ $locale }}'" x-cloak class="mb-5">
-                                <label class="mb-1 block text-sm font-medium text-text-primary">
-                                    Name <span class="text-danger-600">*</span>
-                                </label>
-                                <x-input type="text" wire:model.blur="paramName.{{ $locale }}" :error="$errors->has('paramName.'.$locale)" />
-                                @error('paramName.'.$locale)
-                                    <p class="mt-1 text-xs text-danger-600">{{ $message }}</p>
-                                @enderror
-                            </div>
-                        @endforeach
-
-                        {{-- Type --}}
-                        @php($typeLocked = $this->isTypeLocked($editingParameterId))
-                        <div class="mb-5">
-                            <label class="mb-1 block text-sm font-medium text-text-primary">Type <span class="text-danger-600">*</span></label>
-                            <x-select wire:model="paramType" :disabled="$typeLocked">
+                    @php($typeLocked = $this->isTypeLocked($editingParameterId))
+                    <div class="mb-4">
+                        <x-field label="Type" for="paramType" :required="true" :hint="$typeLocked ? 'Type cannot be changed once sellers have entered values for this parameter.' : null">
+                            <x-select id="paramType" wire:model="paramType" :disabled="$typeLocked">
                                 @foreach ($typeLabels as $value => $label)
                                     <option value="{{ $value }}">{{ $label }}</option>
                                 @endforeach
                             </x-select>
-                            @if ($typeLocked)
-                                <p class="mt-1 text-xs text-text-muted">Type can't be changed once sellers have entered values for this parameter.</p>
-                            @endif
-                        </div>
+                        </x-field>
+                    </div>
 
-                        {{-- Unit (Number only) --}}
-                        <div x-show="$wire.paramType === 'number'" x-transition class="mb-5">
-                            <label class="mb-1 block text-sm font-medium text-text-primary">Unit</label>
-                            <x-input type="text" wire:model.blur="paramUnit" placeholder="e.g. mm, dpi, m/s" />
-                        </div>
+                    <div x-show="$wire.paramType === 'number'" x-collapse class="mb-4">
+                        <x-field label="Unit" for="paramUnit">
+                            <x-input id="paramUnit" type="text" wire:model.blur="paramUnit" placeholder="e.g. mm, dpi, m/s" class="font-mono" />
+                        </x-field>
+                    </div>
 
-                        {{-- Required / Filterable --}}
-                        <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                            <x-toggle wire:model="paramRequired" label="Required" caption="Sellers must fill this in to publish a product." />
-                            <x-toggle wire:model="paramFilterable" label="Filterable" caption="Buyers can filter the catalog by this value." />
-                        </div>
+                    <div class="mb-4 divide-y divide-border border-y border-border md:grid md:grid-cols-2 md:gap-4 md:divide-y-0 md:border-y-0">
+                        <x-toggle wire:model="paramRequired" label="Required" caption="Sellers must fill this in to publish a product." />
+                        <x-toggle wire:model="paramFilterable" label="Filterable" caption="Buyers can filter the catalog by this value." />
+                    </div>
 
-                        {{-- Options (select types only) --}}
-                        <div x-show="$wire.paramType === 'select_single' || $wire.paramType === 'select_multiple'" x-transition>
-                            <div class="mb-2 flex items-center justify-between">
-                                <label class="text-sm font-medium text-text-primary">Options</label>
-                            </div>
+                    <div x-show="$wire.paramType === 'select_single' || $wire.paramType === 'select_multiple'" x-collapse>
+                        <p class="mb-2 text-sm font-medium text-text-primary">Options</p>
 
-                            @error('options')
-                                <p class="mb-2 text-xs text-danger-600">{{ $message }}</p>
-                            @enderror
+                        @error('options')
+                            <p class="mb-2 flex items-start gap-1.5 text-xs font-medium text-danger-700" role="alert">{{ $message }}</p>
+                        @enderror
 
-                            <div class="space-y-2">
-                                @foreach ($options as $index => $option)
-                                    <div wire:key="option-{{ $option['key'] }}" class="flex items-center gap-2">
-                                        <span class="shrink-0 cursor-grab text-text-muted select-none" title="Reorder by dragging (drag support: parameters list only in this pass)">⠿</span>
-                                        <div class="min-w-0 flex-1">
-                                            @foreach (config('ribbon.locales') as $locale)
-                                                <div x-show="locale === '{{ $locale }}'" x-cloak>
-                                                    <x-input
-                                                        type="text"
-                                                        wire:model.blur="options.{{ $index }}.value.{{ $locale }}"
-                                                        :error="$errors->has('options.'.$index.'.value.'.$locale)"
-                                                        placeholder="Option value"
-                                                    />
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                        <button type="button" wire:click="removeOption('{{ $option['key'] }}')" class="shrink-0 rounded-sm p-1.5 text-text-muted hover:bg-danger-50 hover:text-danger-600" aria-label="Remove option">
-                                            ✕
-                                        </button>
+                        <ul class="divide-y divide-border border border-border-strong">
+                            @foreach ($options as $index => $option)
+                                <li wire:key="option-{{ $option['key'] }}" class="grid grid-cols-[minmax(0,1fr)_2.75rem] items-center gap-1 p-2">
+                                    <div class="min-w-0">
+                                        @foreach (config('ribbon.locales') as $locale)
+                                            <div x-show="locale === '{{ $locale }}'" x-cloak>
+                                                <x-input
+                                                    type="text"
+                                                    enterkeyhint="next"
+                                                    wire:model.blur="options.{{ $index }}.value.{{ $locale }}"
+                                                    wire:keydown.enter.prevent="addOption"
+                                                    :error="$errors->has('options.'.$index.'.value.'.$locale)"
+                                                    aria-label="Option {{ $index + 1 }} ({{ strtoupper($locale) }})"
+                                                    placeholder="Option value"
+                                                />
+                                            </div>
+                                        @endforeach
                                     </div>
-                                @endforeach
-                            </div>
+                                    <x-menu title="Option {{ $index + 1 }}" label="Option actions">
+                                        <x-menu.item icon="arrow-up" wire:click="moveOption('{{ $option['key'] }}', 'up')" :disabled="$loop->first" reason="Already first">Move up</x-menu.item>
+                                        <x-menu.item icon="arrow-down" wire:click="moveOption('{{ $option['key'] }}', 'down')" :disabled="$loop->last" reason="Already last">Move down</x-menu.item>
+                                        <x-menu.item icon="delete" wire:click="removeOption('{{ $option['key'] }}')" :destructive="true">Remove</x-menu.item>
+                                    </x-menu>
+                                </li>
+                            @endforeach
+                        </ul>
 
-                            <button type="button" wire:click="addOption" class="mt-3 text-sm font-medium text-accent-700 hover:underline">
-                                + Add option
-                            </button>
+                        <button type="button" wire:click="addOption" class="mt-3 h-control w-full border border-dashed border-border-input text-sm font-medium text-accent-700 hover:bg-surface-hover">Add option</button>
+                    </div>
+                </x-locale-tabs>
+
+                @if ($editingParameterId)
+                    <section class="mt-6 border border-danger-200 md:hidden">
+                        <h3 class="bg-danger-50 px-4 py-2 text-sm font-semibold text-danger-700">Danger zone</h3>
+                        <div class="space-y-3 p-4">
+                            <p class="text-sm text-text-secondary">Deleting removes this parameter and every value sellers entered for it.</p>
+                            <x-button type="button" variant="danger-solid" class="w-full" wire:click="confirmDeleteParameter({{ $editingParameterId }})">Delete parameter</x-button>
                         </div>
-                    </x-locale-tabs>
-                </div>
-
-                <div class="flex items-center justify-between border-t border-border px-5 py-4">
-                    <div>
-                        @if ($editingParameterId)
-                            <x-button type="button" variant="danger" size="sm" wire:click="confirmDeleteParameter({{ $editingParameterId }})">
-                                Delete
-                            </x-button>
-                        @endif
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <x-button type="button" variant="ghost" wire:click="closeDrawer">Cancel</x-button>
-                        <x-button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="saveParameter">
-                            Save Parameter
-                        </x-button>
-                    </div>
-                </div>
+                    </section>
+                @endif
             </form>
-        </div>
+
+            <x-slot:footer>
+                @if ($editingParameterId)
+                    <x-button type="button" variant="danger" class="mr-auto hidden md:inline-flex" wire:click="confirmDeleteParameter({{ $editingParameterId }})">Delete</x-button>
+                @endif
+                <div class="flex flex-1 gap-2 md:flex-none [&>*]:flex-1 md:[&>*]:flex-none">
+                    <x-button type="button" variant="ghost" wire:click="closeDrawer">Cancel</x-button>
+                    <x-button type="submit" form="parameter-form" variant="primary" wire:loading.attr="disabled" wire:target="saveParameter">Save parameter</x-button>
+                </div>
+            </x-slot:footer>
+        </x-drawer>
     @endif
 
-    {{-- Delete confirmation modal --}}
+    {{-- Delete confirmation --}}
     @if ($showDeleteConfirm)
-        <div class="fixed inset-0 z-modal-backdrop bg-slate-900/40" wire:click="cancelDelete"></div>
-        <div class="fixed inset-0 z-modal flex items-center justify-center p-4">
-            <div class="w-full max-w-md rounded-lg border border-border bg-surface-overlay p-5 shadow-lg">
-                <h2 class="text-lg font-semibold text-text-primary">
-                    Delete parameter "{{ $this->deletingParameter?->name[$defaultLocale] ?? '' }}"?
-                </h2>
-                <p class="mt-2 text-sm text-text-secondary">
-                    This permanently removes it and any values sellers have entered for it on their products. This can't be undone.
+        <x-modal kind="confirm" :title="'Delete parameter “'.($this->deletingParameter?->name[$defaultLocale] ?? '').'”?'" close="cancelDelete">
+            <p>This permanently removes it and any values sellers have entered for it on their products. This cannot be undone.</p>
+            @if ($this->deleteAffectedProductCount > 0)
+                <p class="mt-2 font-medium text-danger-700">
+                    Used by <span class="font-mono">{{ $this->deleteAffectedProductCount }}</span> {{ \Illuminate\Support\Str::plural('product', $this->deleteAffectedProductCount) }}.
                 </p>
-                @if ($this->deleteAffectedProductCount > 0)
-                    <p class="mt-2 text-sm font-medium text-danger-600">
-                        Used by {{ $this->deleteAffectedProductCount }} {{ \Illuminate\Support\Str::plural('product', $this->deleteAffectedProductCount) }}.
-                    </p>
-                @endif
-
-                <div class="mt-5 flex items-center justify-end gap-2">
-                    <x-button variant="ghost" wire:click="cancelDelete">Cancel</x-button>
-                    <x-button variant="danger-solid" wire:click="deleteParameter" wire:loading.attr="disabled" wire:target="deleteParameter">
-                        Delete parameter
-                    </x-button>
-                </div>
-            </div>
-        </div>
+            @endif
+            <x-slot:footer>
+                <x-button variant="secondary" wire:click="cancelDelete">Cancel</x-button>
+                <x-button variant="danger-solid" wire:click="deleteParameter" wire:loading.attr="disabled" wire:target="deleteParameter">Delete parameter</x-button>
+            </x-slot:footer>
+        </x-modal>
     @endif
 </div>

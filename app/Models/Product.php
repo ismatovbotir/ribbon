@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\FlushesNavMenu;
 use Illuminate\Database\Eloquent\Attributes\Boot;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -24,6 +26,7 @@ use Illuminate\Support\Str;
 ])]
 class Product extends Model
 {
+    use FlushesNavMenu;
     use HasUlids;
 
     /**
@@ -316,6 +319,72 @@ class Product extends Model
         }
 
         return trim(implode(' ', $segments));
+    }
+
+    /**
+     * THE single storefront visibility rule (CLAUDE.md "Storefront
+     * visibility"). Every public query (catalog, search, home, product
+     * page, sitemap, selection/offer-request add, future JSON feed) must go
+     * through this scope; never re-implement `status = approved` inline.
+     *
+     * Product approved AND seller approved AND subscription-covered
+     * (see scopeCoveredBySubscription()). Computed at query level; a lapsed
+     * subscription never mutates any status, so renewal restores visibility.
+     */
+    public function scopeVisibleOnStorefront(Builder $query): Builder
+    {
+        return $query
+            ->where($query->qualifyColumn('status'), 'approved')
+            ->whereHas('seller', fn (Builder $seller) => $seller->where('status', 'approved'))
+            ->coveredBySubscription();
+    }
+
+    /**
+     * Category is free (requires_subscription = false) OR the seller's
+     * subscription_paid_until + grace days >= today. Grace days come from
+     * Settings; the cutoff is computed in PHP so the SQL stays portable
+     * (paid_until >= today - grace).
+     */
+    public function scopeCoveredBySubscription(Builder $query): Builder
+    {
+        $cutoff = now()->startOfDay()->subDays(Setting::current()->graceDays())->toDateString();
+
+        return $query->where(function (Builder $q) use ($cutoff) {
+            $q->whereHas('category', fn (Builder $c) => $c->where('requires_subscription', false))
+                ->orWhereHas('seller', fn (Builder $s) => $s->where('subscription_paid_until', '>=', $cutoff));
+        });
+    }
+
+    /**
+     * Products that are approved (product and seller) but hidden from the
+     * storefront only because of the subscription - the inverse of
+     * scopeCoveredBySubscription() restricted to moderation-approved rows.
+     * Used by the seller dashboard's "N products hidden" notice.
+     */
+    public function scopeHiddenBySubscription(Builder $query): Builder
+    {
+        return $query
+            ->where($query->qualifyColumn('status'), 'approved')
+            ->whereHas('seller', fn (Builder $seller) => $seller->where('status', 'approved'))
+            ->whereNot(fn (Builder $q) => $q->coveredBySubscription());
+    }
+
+    /**
+     * Minimum order quantity in pcs. No MOQ column exists yet (CLAUDE.md:
+     * default 1 pcs); this is the one place to read it from once added.
+     */
+    public function moqInPcs(): int
+    {
+        return 1;
+    }
+
+    /**
+     * Smallest quantity of the given price row's unit that satisfies MOQ:
+     * ceil(MOQ pcs / qty_in_pcs).
+     */
+    public function minQtyForPrice(ProductPrice $price): int
+    {
+        return max(1, (int) ceil($this->moqInPcs() / max(1, (int) $price->qty_in_pcs)));
     }
 
     /**

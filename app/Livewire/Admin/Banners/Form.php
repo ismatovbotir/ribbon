@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin\Banners;
 
+use App\Livewire\Concerns\AuthorizesAdmin;
 use App\Models\Banner;
 use App\Models\Category;
 use Illuminate\Support\Carbon;
@@ -21,6 +22,13 @@ use Livewire\WithFileUploads;
  */
 class Form extends Component
 {
+    use AuthorizesAdmin;
+
+    protected function adminAccess(): ?string
+    {
+        return 'content.manage';
+    }
+
     use WithFileUploads;
 
     /**
@@ -76,6 +84,8 @@ class Form extends Component
 
     public function mount(?Banner $banner = null): void
     {
+        $this->authorizeAdmin('content.manage');
+
         $this->banner = $banner;
 
         if ($this->banner) {
@@ -133,18 +143,24 @@ class Form extends Component
 
     public function removeImage(): void
     {
+        $this->authorizeAdmin('content.manage');
+
         $this->imageUpload = null;
         $this->existingImagePath = null;
     }
 
     public function removeMobileImage(): void
     {
+        $this->authorizeAdmin('content.manage');
+
         $this->mobileImageUpload = null;
         $this->existingMobileImagePath = null;
     }
 
     public function save(): void
     {
+        $this->authorizeAdmin('content.manage');
+
         $locales = config('ribbon.locales');
 
         $rules = [

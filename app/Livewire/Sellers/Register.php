@@ -2,10 +2,12 @@
 
 namespace App\Livewire\Sellers;
 
+use App\Rules\PhoneNumber;
 use App\Models\City;
 use App\Models\Country;
 use App\Models\Region;
 use App\Models\Seller;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
@@ -194,7 +196,7 @@ class Register extends Component
             // marketplace and VAT formats vary; just require it's present,
             // Super Admin vets the value manually during approval.
             'companyVatNumber' => ['required', 'string', 'max:60'],
-            'companyPhone' => ['required', 'string', 'max:30'],
+            'companyPhone' => ['required', 'string', 'max:30', new PhoneNumber],
             'companyLogo' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:1024'],
         ];
     }
@@ -286,6 +288,17 @@ class Register extends Component
     {
         $this->validate($this->companyRules(), $this->companyMessages());
 
+        // Anti-spam: max 3 seller applications per IP per hour.
+        $throttleKey = 'seller-register:'.request()->ip();
+
+        if (RateLimiter::tooManyAttempts($throttleKey, 3)) {
+            $this->addError('companyName', __('sellers.throttled'));
+
+            return;
+        }
+
+        RateLimiter::hit($throttleKey, 3600);
+
         $logoPath = $this->companyLogo ? $this->companyLogo->store('logos', 'public') : null;
 
         Seller::register(
@@ -296,7 +309,7 @@ class Register extends Component
                 'region_id' => $this->regionId,
                 'city_id' => $this->cityId,
                 'vat_number' => $this->companyVatNumber,
-                'phone' => $this->companyPhone,
+                'phone' => trim($this->companyPhone),
                 'logo_path' => $logoPath,
             ],
             [
@@ -313,7 +326,7 @@ class Register extends Component
     public function render()
     {
         return view('livewire.sellers.register')->layout('layouts.public', [
-            'title' => 'Become a Seller',
+            'title' => __('storefront.nav.become_seller'),
         ]);
     }
 }

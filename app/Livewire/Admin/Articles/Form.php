@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin\Articles;
 
+use App\Livewire\Concerns\AuthorizesAdmin;
 use App\Models\Article;
 use App\Models\Category;
 use App\Support\HtmlSanitizer;
@@ -22,6 +23,13 @@ use Livewire\WithFileUploads;
  */
 class Form extends Component
 {
+    use AuthorizesAdmin;
+
+    protected function adminAccess(): ?string
+    {
+        return 'content.manage';
+    }
+
     use WithFileUploads;
 
     public ?Article $article = null;
@@ -62,6 +70,8 @@ class Form extends Component
 
     public function mount(?Article $article = null): void
     {
+        $this->authorizeAdmin('content.manage');
+
         $this->article = $article;
 
         if ($this->article) {
@@ -111,6 +121,8 @@ class Form extends Component
      */
     public function slugPreview(string $locale): string
     {
+        $this->authorizeAdmin('content.manage');
+
         if ($this->article) {
             return $this->article->slug[$locale] ?? '';
         }
@@ -131,12 +143,16 @@ class Form extends Component
 
     public function removeCoverImage(): void
     {
+        $this->authorizeAdmin('content.manage');
+
         $this->coverImageUpload = null;
         $this->existingCoverImagePath = null;
     }
 
     public function storeEditorImage(): string
     {
+        $this->authorizeAdmin('content.manage');
+
         $this->validate([
             'editorImageUpload' => ['required', 'image', 'max:4096'],
         ]);
@@ -150,6 +166,8 @@ class Form extends Component
 
     public function save(): void
     {
+        $this->authorizeAdmin('content.manage');
+
         $locales = config('ribbon.locales');
 
         $rules = [

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Product;
 use App\Models\Seller;
+use Illuminate\Support\Facades\RateLimiter;
 
 /**
  * The buyer's running Commercial Offer request selection — session-backed
@@ -19,12 +20,53 @@ class OfferSelectionService
 {
     private const SESSION_KEY = 'offer_selection';
 
+    public const MIN_QTY = 1;
+
+    public const MAX_QTY = 100000;
+
+    /** Max lines (product+unit) in one selection, across all sellers. */
+    public const MAX_LINES = 50;
+
+    /** Per-IP cap on selection mutations (quickAdd / addToRequest / requestOffer) per minute. */
+    public const THROTTLE_PER_MINUTE = 60;
+
+    public static function clampQty(int|float|string|null $qty): int
+    {
+        return min(self::MAX_QTY, max(self::MIN_QTY, (int) $qty));
+    }
+
+    public static function isFull(): bool
+    {
+        return self::count() >= self::MAX_LINES;
+    }
+
+    /**
+     * Hits the per-IP selection limiter; returns true when the visitor is
+     * over 60 mutations/min and the action should be dropped.
+     */
+    public static function throttled(): bool
+    {
+        $key = 'offer-selection:ip:'.request()->ip();
+
+        if (RateLimiter::tooManyAttempts($key, self::THROTTLE_PER_MINUTE)) {
+            return true;
+        }
+
+        RateLimiter::hit($key, 60);
+
+        return false;
+    }
+
     /**
      * Adds a line, or increments its qty if this product+unit is already
-     * in the selection for this product's seller.
+     * in the selection for this product's seller. Qty is clamped to
+     * 1..MAX_QTY; a new line is rejected (false) once MAX_LINES is reached.
+     *
+     * @return bool false if the line was rejected by the line cap
      */
-    public static function add(Product $product, string $unit, int $qty): void
+    public static function add(Product $product, string $unit, int $qty): bool
     {
+        $qty = self::clampQty($qty);
         $selection = session(self::SESSION_KEY, []);
         $sellerId = $product->seller_id;
 
@@ -41,8 +83,12 @@ class OfferSelectionService
         }
 
         if ($existingIndex !== null) {
-            $selection[$sellerId][$existingIndex]['qty'] += $qty;
+            $selection[$sellerId][$existingIndex]['qty'] = self::clampQty($selection[$sellerId][$existingIndex]['qty'] + $qty);
         } else {
+            if (self::isFull()) {
+                return false;
+            }
+
             $selection[$sellerId][] = [
                 'product_id' => $product->id,
                 'unit' => $unit,
@@ -51,6 +97,47 @@ class OfferSelectionService
         }
 
         session([self::SESSION_KEY => $selection]);
+
+        return true;
+    }
+
+    /**
+     * Idempotently puts a product's line into the selection: a no-op when
+     * the product+unit line already exists (no duplicate, no qty change).
+     * The product id and unit come from the client, so they are NEVER
+     * trusted: the product is re-queried through the shared storefront
+     * visibility scope and the unit must be one of its own price rows
+     * (null unit = the is_vitrin row). The qty is raised to at least the
+     * MOQ-satisfying minimum for that unit.
+     *
+     * @return bool true if the line is in the selection afterwards; false if
+     *              the product is not visible, the unit is not valid, or the
+     *              line cap rejected it (check isFull() to tell them apart)
+     */
+    public static function ensure(string $productId, ?string $unit = null, ?int $qty = null): bool
+    {
+        $product = Product::query()
+            ->visibleOnStorefront()
+            ->with('prices')
+            ->find($productId);
+
+        if (! $product) {
+            return false;
+        }
+
+        $price = $unit === null
+            ? ($product->prices->firstWhere('is_vitrin', true) ?? $product->prices->firstWhere('unit', 'pcs'))
+            : $product->prices->firstWhere('unit', $unit);
+
+        if (! $price) {
+            return false;
+        }
+
+        if (self::currentQty($product->seller_id, $product->id, $price->unit) === null) {
+            return self::add($product, $price->unit, max($product->minQtyForPrice($price), self::clampQty($qty)));
+        }
+
+        return true;
     }
 
     /**
@@ -73,7 +160,7 @@ class OfferSelectionService
     public static function updateQty(int $sellerId, string $productId, string $unit, int $qty): void
     {
         $selection = session(self::SESSION_KEY, []);
-        $qty = max(1, $qty);
+        $qty = self::clampQty($qty);
 
         foreach ($selection[$sellerId] ?? [] as $index => $line) {
             if (($line['product_id'] ?? null) === $productId && ($line['unit'] ?? null) === $unit) {
@@ -149,7 +236,7 @@ class OfferSelectionService
 
             foreach ($lines as $line) {
                 $product = Product::query()
-                    ->where('status', 'approved')
+                    ->visibleOnStorefront()
                     ->with(['prices', 'images', 'brand', 'parameterValues.categoryParameter', 'parameterValues.options.categoryParameterOption'])
                     ->find($line['product_id'] ?? null);
 
@@ -163,7 +250,7 @@ class OfferSelectionService
                     continue;
                 }
 
-                $qty = max(1, (int) ($line['qty'] ?? 1));
+                $qty = self::clampQty($line['qty'] ?? 1);
                 $unitPrice = (float) $price->price;
 
                 // localizedName() can legitimately return '' (no brand, no

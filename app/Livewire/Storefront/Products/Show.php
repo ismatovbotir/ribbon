@@ -4,9 +4,12 @@ namespace App\Livewire\Storefront\Products;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\SellerContactEvent;
 use App\Services\OfferSelectionService;
 use App\Services\ProductAnalyticsService;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Storage;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 class Show extends Component
@@ -23,7 +26,21 @@ class Show extends Component
 
     public string $selectedUnit;
 
-    public int $qty = 1;
+    /**
+     * Client-bound: kept `mixed` (not int) so a non-numeric value typed or
+     * posted into the input can't TypeError; always read via safeQty().
+     */
+    public mixed $qty = 1;
+
+    /**
+     * Seller phone, populated ONLY by revealPhone() (anti-scraping: never in
+     * the initial page data). Locked so the client cannot set it.
+     */
+    #[Locked]
+    public ?string $revealedPhone = null;
+
+    #[Locked]
+    public bool $phoneRevealed = false;
 
     /**
      * Resolves the product from its per-locale JSON slug — mirrors
@@ -48,7 +65,7 @@ class Show extends Component
         $currentLocale = app()->getLocale();
 
         $found = Product::query()
-            ->where('status', 'approved')
+            ->visibleOnStorefront()
             ->where("slug->{$currentLocale}", $productSlug)
             ->first();
 
@@ -59,7 +76,7 @@ class Show extends Component
                 }
 
                 $found = Product::query()
-                    ->where('status', 'approved')
+                    ->visibleOnStorefront()
                     ->where("slug->{$locale}", $productSlug)
                     ->first();
 
@@ -126,12 +143,12 @@ class Show extends Component
 
     public function incrementQty(): void
     {
-        $this->qty++;
+        $this->qty = OfferSelectionService::clampQty($this->safeQty() + 1);
     }
 
     public function decrementQty(): void
     {
-        $this->qty = max(1, $this->qty - 1);
+        $this->qty = OfferSelectionService::clampQty($this->safeQty() - 1);
     }
 
     /**
@@ -141,25 +158,110 @@ class Show extends Component
      */
     public function updatedQty(mixed $value): void
     {
-        $this->qty = max(1, (int) $value);
+        $this->qty = $this->safeQty();
+    }
+
+    protected function safeQty(): int
+    {
+        return OfferSelectionService::clampQty(is_numeric($this->qty) ? $this->qty : 1);
     }
 
     /**
-     * Adds the currently selected unit/qty to the buyer's running
-     * Commercial Offer request selection — see OfferSelectionService for
-     * the session shape and how it's later reconciled against live data.
+     * Adds the selected unit/qty to the buyer's selection. Visibility and
+     * unit are re-validated server-side (client state is untrusted); the
+     * add is idempotent (see OfferSelectionService::ensure()).
      */
     public function addToRequest(): void
     {
-        OfferSelectionService::add($this->product, $this->selectedUnit, $this->qty);
+        if (OfferSelectionService::throttled()) {
+            $this->addError('selection', __('storefront.selection.throttled'));
 
-        // Browser-event-only signal (no Livewire #[On] listener anywhere
-        // yet) — the button's Alpine wrapper listens for this to show
-        // brief inline "Added ✓" feedback. The header selection badge
-        // itself only re-reads session() on a fresh page load/navigation
-        // today (it's plain Blade, not a Livewire component), not live
-        // within the same page view.
-        $this->dispatch('added-to-request');
+            return;
+        }
+
+        if (OfferSelectionService::ensure($this->product->id, $this->selectedUnit, $this->safeQty())) {
+            $this->dispatch('added-to-request');
+        } elseif (OfferSelectionService::isFull()) {
+            $this->addError('selection', __('storefront.selection.line_limit', ['max' => OfferSelectionService::MAX_LINES]));
+        }
+
+        $this->dispatch('selection-changed', count: OfferSelectionService::count());
+    }
+
+    /**
+     * "Request offer": ensure the line is in the selection (idempotent -
+     * repeating it never inflates qty), then go to the request form. A
+     * product that is no longer visible 404s instead of being requested.
+     */
+    public function requestOffer(): mixed
+    {
+        if (OfferSelectionService::throttled()) {
+            $this->addError('selection', __('storefront.selection.throttled'));
+
+            return null;
+        }
+
+        if (! OfferSelectionService::ensure($this->product->id, $this->selectedUnit, $this->safeQty())) {
+            if (OfferSelectionService::isFull()) {
+                $this->addError('selection', __('storefront.selection.line_limit', ['max' => OfferSelectionService::MAX_LINES]));
+
+                return null;
+            }
+
+            abort(404);
+        }
+
+        $this->dispatch('selection-changed', count: OfferSelectionService::count());
+
+        return $this->redirect(route('storefront.offer-request.show'), navigate: true);
+    }
+
+    /**
+     * "Show phone": returns the owning seller's phone and logs one lead
+     * event (no buyer data). Rate limited per IP (10 / 10 min); repeated
+     * reveals by the same visitor on the same product within 24h are
+     * counted as a single lead. Returns null when throttled or hidden.
+     */
+    public function revealPhone(): ?string
+    {
+        $product = Product::query()->visibleOnStorefront()->with('seller')->find($this->product->id);
+
+        abort_unless($product, 404);
+
+        $ip = request()->ip();
+        $rateKey = 'reveal-phone:ip:'.$ip;
+
+        if (RateLimiter::tooManyAttempts($rateKey, 10)) {
+            $this->addError('phone', __('storefront.product.phone_throttled'));
+
+            return null;
+        }
+
+        RateLimiter::hit($rateKey, 600);
+
+        $visitor = SellerContactEvent::visitorHash($ip);
+
+        $alreadyCounted = SellerContactEvent::query()
+            ->where('product_id', $product->id)
+            ->where('type', 'phone_reveal')
+            ->where('visitor_hash', $visitor)
+            ->where('occurred_at', '>=', now()->subDay())
+            ->exists();
+
+        if (! $alreadyCounted) {
+            SellerContactEvent::create([
+                'product_id' => $product->id,
+                'seller_id' => $product->seller_id,
+                'type' => 'phone_reveal',
+                'visitor_hash' => $visitor,
+                'occurred_at' => now(),
+            ]);
+        }
+
+        $this->phoneRevealed = true;
+        $this->revealedPhone = $product->seller->phone;
+
+        return $this->revealedPhone;
     }
 
     public function render()
@@ -306,8 +408,13 @@ class Show extends Component
             // InStock as a simplification, matching Catalog\Show's identical
             // flagged simplification.
             'availability' => 'https://schema.org/InStock',
+            'itemCondition' => 'https://schema.org/NewCondition',
+            // Seller name only - never the seller's phone/contact (revealed
+            // on click by design, anti-scraping).
             'seller' => ['@type' => 'Organization', 'name' => $this->product->seller->name],
         ]) : null;
+
+        $langSuffix = $locale !== $defaultLocale ? '?lang='.$locale : '';
 
         $productNode = array_filter([
             '@context' => 'https://schema.org',
@@ -332,7 +439,7 @@ class Show extends Component
         ], fn ($value) => $value !== null);
 
         $breadcrumbItems = [
-            ['@type' => 'ListItem', 'position' => 1, 'name' => __('storefront.catalog.breadcrumb_home'), 'item' => url('/')],
+            ['@type' => 'ListItem', 'position' => 1, 'name' => __('storefront.catalog.breadcrumb_home'), 'item' => url('/').$langSuffix],
         ];
 
         if ($categorySlug) {
@@ -340,7 +447,7 @@ class Show extends Component
                 '@type' => 'ListItem',
                 'position' => 2,
                 'name' => $categoryName,
-                'item' => route('storefront.catalog.show', ['categorySlug' => $categorySlug]),
+                'item' => route('storefront.catalog.show', ['categorySlug' => $categorySlug]).$langSuffix,
             ];
         }
 
@@ -373,6 +480,7 @@ class Show extends Component
             'ogImage' => $ogImage,
             'structuredData' => $structuredData,
             'navCategories' => $navCategories,
+            'bottomBar' => 'product',
         ]);
     }
 }

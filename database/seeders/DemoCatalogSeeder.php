@@ -2,274 +2,256 @@
 
 namespace Database\Seeders;
 
+use App\Models\Brand;
 use App\Models\Category;
 use App\Models\CategoryParameter;
-use App\Models\CategoryParameterOption;
 use App\Models\City;
-use App\Models\Country;
 use App\Models\Product;
 use App\Models\Region;
-use App\Models\Role;
 use App\Models\Seller;
 use App\Models\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 /**
- * Dev-only demo content: realistic categories/parameters, approved
- * sellers, and approved products with prices + a placeholder image, so
- * the storefront/admin/seller dashboards have something to look at
- * locally. Called from DatabaseSeeder::run() but gated behind
- * `app()->environment('local')` — unlike GeographySeeder/BrandSeeder/
- * BannerSeeder (which the app needs to function at all), this is fake
- * company/product data that must never land in a real deploy, so it's an
- * environment check rather than just "not called by default" (which a
- * copy-pasted deploy seed command could accidentally include).
+ * LOCAL-ONLY demo content: 3 approved sellers and approved products with
+ * filled parameters, prices and a placeholder image, built on the real
+ * catalog structure from CatalogSeeder. DatabaseSeeder only calls this in
+ * the `local` environment — it is fake company data and must never reach
+ * a real deploy.
+ *
+ * Deterministic (no random regions/phones/VAT numbers) and idempotent:
+ * sellers are keyed on name, products on (seller, category, composed
+ * name), so re-running adds nothing new.
+ *
+ * DatabaseSeeder runs with WithoutModelEvents (so demo sellers don't send
+ * a real Telegram "new seller" notification), which also disables
+ * Product's auto-slug and auto-pcs-price hooks — this seeder therefore
+ * composes name/slug through the same Product::composeNameAndSlug() the
+ * seller form uses, and creates the pcs price row itself.
  */
 class DemoCatalogSeeder extends Seeder
 {
+    private const PASSWORD = 'password';
+
+    /** @var array<string, Category> keyed by English category name */
+    private array $categories = [];
+
     public function run(): void
     {
-        $country = Country::first();
-
-        if (! $country) {
-            $this->command?->warn('No geography seeded — run GeographySeeder first.');
+        // Own guard too, so `db:seed --class=DemoCatalogSeeder` can't create
+        // demo sellers (password "password") outside local development.
+        if (! app()->isLocal()) {
+            $this->command?->warn('DemoCatalogSeeder only runs in the local environment — skipped.');
 
             return;
         }
 
-        $ribbons = $this->makeCategory('Termotransfer lentalar', 'Риббоны - термотрансферная Красяшая лента', 'Thermal Transfer Ribbons', 1);
-        $this->makeSelectParameter($ribbons, 'Turi', 'Тип', 'Type', 1, ['Wax', 'Wax-Resin', 'Resin', 'TTO']);
-        $this->makeSelectParameter($ribbons, 'Rangi', 'Цвет', 'Color', 2, ['Qora / Чёрный / Black', 'Ko\'k / Синий / Blue', 'Qizil / Красный / Red']);
-        $widthParam = $this->makeNumberParameter($ribbons, 'Kengligi', 'Ширина', 'Width', 3, 'mm');
+        $this->categories = Category::with('parameters.options')->get()
+            ->keyBy(fn (Category $category) => $category->name['en'])
+            ->all();
 
-        $printers = $this->makeCategory('TT Printerlar', 'TT Принтеры', 'TT Printers', 2);
-        $this->makeSelectParameter($printers, 'Rezolyutsiya', 'Разрешение', 'Resolution', 1, ['203 dpi', '300 dpi', '600 dpi']);
-        $this->makeMultiParameter($printers, 'Ulanish', 'Подключение', 'Connectivity', 2, ['USB', 'Ethernet', 'Wi-Fi', 'Bluetooth']);
+        if ($this->categories === [] || ! Region::exists()) {
+            $this->command?->warn('Run GeographySeeder and CatalogSeeder before DemoCatalogSeeder.');
 
-        $scanners = $this->makeCategory('Shtrix-kod skanerlari', 'Сканеры штрих-кодов', 'Barcode Scanners', 3);
-        $this->makeSelectParameter($scanners, 'Turi', 'Тип', 'Type', 1, ['Qo\'lda / Ручной / Handheld', 'Statsionar / Стационарный / Fixed-mount']);
-        $this->makeMultiParameter($scanners, 'Ulanish', 'Подключение', 'Connectivity', 2, ['USB', 'Bluetooth', 'Wireless']);
+            return;
+        }
 
-        $pdas = $this->makeCategory('PDA qurilmalari', 'PDA устройства', 'PDA Devices', 4);
-        $this->makeSelectParameter($pdas, 'Operatsion tizim', 'Операционная система', 'Operating System', 1, ['Android', 'Windows']);
-        $this->makeNumberParameter($pdas, 'Ekran o\'lchami', 'Размер экрана', 'Screen Size', 2, 'in');
+        $approver = $this->approver();
 
         $sellers = [
-            $this->makeSeller('Tashkent AutoID MChJ', 'seller1@demo.ribbon.uz', $country->id),
-            $this->makeSeller('Samarqand Barcode Solutions', 'seller2@demo.ribbon.uz', $country->id),
-            $this->makeSeller('Buxoro Tech Supply', 'seller3@demo.ribbon.uz', $country->id),
+            $this->seller('Tashkent AutoID MChJ', 'seller1@demo.ribbon.uz', 'Tashkent City', 'Tashkent', '301234567', '+998901234567', $approver),
+            $this->seller('Samarqand Barcode Solutions', 'seller2@demo.ribbon.uz', 'Samarqand Region', 'Samarqand', '302345678', '+998912345678', $approver),
+            $this->seller('Buxoro Tech Supply', 'seller3@demo.ribbon.uz', 'Bukhara Region', 'Bukhara', '303456789', '+998933456789', $approver),
         ];
 
-        $this->makeProducts($ribbons, $sellers, 'banners/ribbons.jpg', [
-            ['name' => '110mm x 300m', 'price' => 45000, 'widthMm' => 110],
-            ['name' => '60mm x 300m', 'price' => 28000, 'widthMm' => 60],
-            ['name' => '90mm x 450m', 'price' => 52000, 'widthMm' => 90],
-        ], $widthParam);
-
-        $this->makeProducts($printers, $sellers, 'banners/honeywell-printers.jpg', [
-            ['name' => 'PC42t', 'price' => 1850000],
-            ['name' => 'ZT230', 'price' => 4200000],
-            ['name' => 'TSC TE244', 'price' => 3100000],
-        ]);
-
-        $this->makeProducts($scanners, $sellers, 'banners/zebra-scanners.jpg', [
-            ['name' => 'DS2208', 'price' => 620000],
-            ['name' => 'LS2208', 'price' => 480000],
-            ['name' => 'MS7120 Orbit', 'price' => 1450000],
-        ]);
-
-        $this->makeProducts($pdas, $sellers, 'banners/zebra-scanners.jpg', [
-            ['name' => 'TC21', 'price' => 6800000],
-            ['name' => 'MC9300', 'price' => 12500000],
-        ]);
-
-        $this->command?->info('Demo catalog seeded: 4 categories, 3 sellers, ' . Product::count() . ' products.');
-    }
-
-    private function makeCategory(string $uz, string $ru, string $en, int $sortOrder): Category
-    {
-        $slug = Str::slug($en);
-
-        return Category::updateOrCreate(
-            ['slug->en' => $slug],
-            [
-                'name' => ['uz' => $uz, 'ru' => $ru, 'en' => $en],
-                'slug' => ['uz' => Str::slug($uz), 'ru' => Str::slug($ru), 'en' => $slug],
-                'is_active' => true,
-                'sort_order' => $sortOrder,
-            ],
-        );
-    }
-
-    private function makeNumberParameter(Category $category, string $uz, string $ru, string $en, int $sortOrder, string $unit): CategoryParameter
-    {
-        return CategoryParameter::create([
-            'category_id' => $category->id,
-            'name' => ['uz' => $uz, 'ru' => $ru, 'en' => $en],
-            'type' => 'number',
-            'unit' => $unit,
-            'is_required' => true,
-            'is_filterable' => true,
-            'sort_order' => $sortOrder,
-        ]);
-    }
-
-    /**
-     * @param  array<int, string>  $optionLabels  "uz / ru / en" per option
-     */
-    private function makeSelectParameter(Category $category, string $uz, string $ru, string $en, int $sortOrder, array $optionLabels): CategoryParameter
-    {
-        $parameter = CategoryParameter::create([
-            'category_id' => $category->id,
-            'name' => ['uz' => $uz, 'ru' => $ru, 'en' => $en],
-            'type' => 'select_single',
-            'is_required' => true,
-            'is_filterable' => true,
-            'sort_order' => $sortOrder,
-        ]);
-
-        $this->makeOptions($parameter, $optionLabels);
-
-        return $parameter;
-    }
-
-    /**
-     * @param  array<int, string>  $optionLabels
-     */
-    private function makeMultiParameter(Category $category, string $uz, string $ru, string $en, int $sortOrder, array $optionLabels): CategoryParameter
-    {
-        $parameter = CategoryParameter::create([
-            'category_id' => $category->id,
-            'name' => ['uz' => $uz, 'ru' => $ru, 'en' => $en],
-            'type' => 'select_multiple',
-            'is_required' => false,
-            'is_filterable' => true,
-            'sort_order' => $sortOrder,
-        ]);
-
-        $this->makeOptions($parameter, $optionLabels);
-
-        return $parameter;
-    }
-
-    /**
-     * @param  array<int, string>  $optionLabels
-     */
-    private function makeOptions(CategoryParameter $parameter, array $optionLabels): void
-    {
-        foreach ($optionLabels as $index => $label) {
-            $parts = array_map('trim', explode('/', $label));
-            [$uz, $ru, $en] = [$parts[0], $parts[1] ?? $parts[0], $parts[2] ?? $parts[0]];
-
-            CategoryParameterOption::create([
-                'category_parameter_id' => $parameter->id,
-                'value' => ['uz' => $uz, 'ru' => $ru, 'en' => $en],
-                'sort_order' => $index,
-            ]);
+        foreach ($this->products() as $index => $spec) {
+            $this->product($sellers[$index % count($sellers)], $spec, $approver);
         }
+
+        $this->command?->info('Demo catalog seeded: '.count($sellers).' sellers, '.Product::count().' products.');
     }
 
-    private function makeSeller(string $name, string $ownerEmail, int $countryId): Seller
+    /**
+     * Parameter values are keyed by the parameter's English name; select
+     * values by the option's English value (array for select_multiple).
+     *
+     * @return array<int, array{category: string, brand: string, extra?: string, price: int, image: string, values: array<string, mixed>}>
+     */
+    private function products(): array
     {
-        $existing = Seller::where('name', $name)->first();
+        $ribbon = fn (string $type, int $width, int $length, string $side, string $core) => [
+            'Type' => $type, 'Width' => $width, 'Length' => $length, 'Ink side' => $side, 'Core' => $core,
+            'Notch' => 'No notch', 'TTO' => 'No', 'Colour' => 'Black',
+        ];
+        $printer = fn (string $dpi, int $width, int $ribbonLength, array $interfaces) => [
+            'Resolution' => $dpi, 'Max print width' => $width, 'Ribbon: max width' => $width + 6,
+            'Ribbon: max length' => $ribbonLength, 'Ribbon: core' => ['1"'], 'Ribbon: ink side' => ['OUT'],
+            'Printhead type' => 'Flat head', 'Interfaces' => $interfaces,
+            'Cutter' => 'Optional (sold separately)', 'Peeler' => 'Optional (sold separately)', 'Rewinder' => 'Not available',
+        ];
 
-        if ($existing) {
+        return [
+            ['category' => 'Thermal transfer ribbons', 'brand' => 'Armor', 'extra' => 'AWR 470', 'price' => 45000, 'image' => 'banners/ribbons.jpg', 'values' => $ribbon('Wax', 110, 300, 'OUT', '1"')],
+            ['category' => 'Thermal transfer ribbons', 'brand' => 'No Brand', 'price' => 28000, 'image' => 'banners/ribbons.jpg', 'values' => $ribbon('Wax', 60, 300, 'OUT', '1"')],
+            ['category' => 'Thermal transfer ribbons', 'brand' => 'Inkanto', 'extra' => 'Premium', 'price' => 52000, 'image' => 'banners/ribbons.jpg', 'values' => $ribbon('Wax-resin', 90, 450, 'OUT', '1"')],
+            ['category' => 'Thermal transfer ribbons', 'brand' => 'DNP', 'price' => 98000, 'image' => 'banners/ribbons.jpg', 'values' => $ribbon('Resin', 110, 300, 'IN', '1"')],
+            ['category' => 'TT labels', 'brand' => 'No Brand', 'price' => 65000, 'image' => 'banners/ribbons.jpg', 'values' => [
+                'Width' => 58, 'Height' => 40, 'Labels per roll' => 1000, 'Gap' => 3, 'Core' => '40 mm',
+                'Material' => 'Coated paper (semi-gloss)', 'Adhesive' => 'Permanent', 'Liner colour' => 'White',
+            ]],
+            ['category' => 'Desktop TT printers', 'brand' => 'Honeywell', 'extra' => 'PC42t', 'price' => 1850000, 'image' => 'banners/honeywell-printers.jpg', 'values' => $printer('203 dpi', 104, 74, ['USB'])],
+            ['category' => 'Desktop TT printers', 'brand' => 'TSC', 'extra' => 'TE244', 'price' => 3100000, 'image' => 'banners/honeywell-printers.jpg', 'values' => $printer('203 dpi', 108, 300, ['USB', 'Ethernet'])],
+            ['category' => 'Industrial TT printers', 'brand' => 'Zebra', 'extra' => 'ZT411', 'price' => 14500000, 'image' => 'banners/honeywell-printers.jpg', 'values' => $printer('300 dpi', 104, 450, ['USB', 'Ethernet', 'Bluetooth'])],
+            ['category' => 'Barcode scanners', 'brand' => 'Zebra', 'extra' => 'DS2208', 'price' => 620000, 'image' => 'banners/zebra-scanners.jpg', 'values' => ['Form factor' => 'Handheld', 'Symbologies' => '2D', 'Interfaces' => ['USB']]],
+            ['category' => 'Barcode scanners', 'brand' => 'Honeywell', 'extra' => 'MS7120 Orbit', 'price' => 1450000, 'image' => 'banners/zebra-scanners.jpg', 'values' => ['Form factor' => 'Presentation', 'Symbologies' => '1D', 'Interfaces' => ['USB', 'RS-232']]],
+            ['category' => 'PDA / mobile computers', 'brand' => 'Zebra', 'extra' => 'TC21', 'price' => 6800000, 'image' => 'banners/zebra-scanners.jpg', 'values' => ['Operating system' => 'Android', 'Screen size' => 5, 'Scanner' => '2D']],
+            ['category' => 'PDA / mobile computers', 'brand' => 'Urovo', 'extra' => 'DT40', 'price' => 4200000, 'image' => 'banners/zebra-scanners.jpg', 'values' => ['Operating system' => 'Android', 'Screen size' => 5, 'Scanner' => '2D']],
+            ['category' => 'Label design & printing software', 'brand' => 'Seagull Scientific', 'extra' => 'BarTender', 'price' => 9800000, 'image' => 'banners/honeywell-printers.jpg', 'values' => ['Edition' => 'Professional', 'License type' => 'Perpetual', 'Deployment' => ['Windows desktop'], 'Printers licensed' => 1, 'Features' => ['Database connection'], 'Interface language' => ['Russian', 'English'], 'Delivery' => 'Electronic licence key', 'Support / maintenance included' => 'Yes']],
+            ['category' => 'Label design & printing software', 'brand' => 'Loftware', 'extra' => 'NiceLabel', 'price' => 4500000, 'image' => 'banners/honeywell-printers.jpg', 'values' => ['Edition' => 'Designer', 'License type' => 'Subscription (annual)', 'Deployment' => ['Windows desktop', 'Cloud / web'], 'Users / seats' => 1, 'Interface language' => ['Russian', 'English'], 'Delivery' => 'Electronic licence key', 'Support / maintenance included' => 'Yes']],
+        ];
+    }
+
+    /**
+     * The seeded Super Admin approves demo records; null when none was
+     * seeded (SUPER_ADMIN_* unset), in which case each seller's owner is
+     * used so the demo data doesn't hard-fail.
+     */
+    private function approver(): ?User
+    {
+        return User::whereHas('roles', fn ($query) => $query->where('type', 'admin')->where('is_super_admin', true))->first();
+    }
+
+    private function seller(string $name, string $email, string $regionEn, string $cityEn, string $vat, string $phone, ?User $approver): Seller
+    {
+        if ($existing = Seller::where('name', $name)->first()) {
             return $existing;
         }
 
-        $region = Region::where('country_id', $countryId)->inRandomOrder()->first();
-        $city = City::where('region_id', $region->id)->inRandomOrder()->first();
+        $region = Region::where('name->en', $regionEn)->firstOrFail();
+        $city = City::where('region_id', $region->id)->where('name->en', $cityEn)->firstOrFail();
 
         $seller = Seller::register(
             [
                 'name' => $name,
-                'address' => $city->name['uz'] . ' shahri, asosiy ombor',
-                'country_id' => $countryId,
+                'address' => $city->name['uz'].' shahri, asosiy ombor',
+                'country_id' => $region->country_id,
                 'region_id' => $region->id,
                 'city_id' => $city->id,
-                'vat_number' => (string) random_int(100000000, 999999999),
-                'phone' => '+998' . random_int(90, 99) . random_int(1000000, 9999999),
+                'vat_number' => $vat,
+                'phone' => $phone,
             ],
             [
-                'name' => $name . ' Owner',
-                'email' => $ownerEmail,
-                'password' => Hash::make('password'),
+                'name' => $name.' Owner',
+                'email' => $email,
+                'password' => Hash::make(self::PASSWORD),
                 'locale' => 'uz',
             ],
         );
 
-        // register() leaves every seller `pending` by construction — approve
-        // immediately so it's buyer-visible, using the seeded Super Admin as
-        // the approving actor (falls back to the owner itself if no Super
-        // Admin has been seeded in this environment, just so the demo data
-        // doesn't hard-fail).
-        $superAdminRoleId = Role::where('type', 'admin')->where('is_super_admin', true)->value('id');
-        $superAdminUserId = $superAdminRoleId
-            ? DB::table('role_user')->where('role_id', $superAdminRoleId)->value('user_id')
-            : null;
+        // register() always creates a pending seller — approve so it's buyer-visible.
+        $seller->approve($approver ?? $seller->users()->first());
 
-        $admin = ($superAdminUserId ? User::find($superAdminUserId) : null)
-            ?? $seller->users()->first();
-
-        $seller->approve($admin);
+        // Demo subscription states, so every seller-dashboard banner can be
+        // tested locally: seller1 active for a year, seller2 expired 3 days
+        // ago (in grace, still visible), seller3 expired 30 days ago (lapsed:
+        // its paid-category products are hidden, ribbons stay live). Set
+        // directly — SubscriptionService requires a Super Admin actor, which
+        // may not be seeded. Only on first creation, so manual changes stick.
+        $seller->forceFill(['subscription_paid_until' => match ($email) {
+            'seller1@demo.ribbon.uz' => now()->addYear(),
+            'seller2@demo.ribbon.uz' => now()->subDays(3),
+            default => now()->subDays(30),
+        }])->save();
 
         return $seller;
     }
 
     /**
-     * @param  array<int, Seller>  $sellers
-     * @param  array<int, array{name: string, price: int, widthMm?: int}>  $specs
+     * @param  array{category: string, brand: string, extra?: string, price: int, image: string, values: array<string, mixed>}  $spec
      */
-    private function makeProducts(Category $category, array $sellers, string $imagePath, array $specs, ?CategoryParameter $widthParameter = null): void
+    private function product(Seller $seller, array $spec, ?User $approver): void
     {
-        foreach ($specs as $index => $spec) {
-            $seller = $sellers[$index % count($sellers)];
+        $category = $this->categories[$spec['category']];
+        $brand = Brand::where('name', $spec['brand'])->firstOrFail();
+        $parameters = $category->parameters->sortBy('sort_order')->values();
+        $values = $this->resolveValues($parameters, $spec['values']);
+        $extra = $spec['extra'] ?? null;
 
-            if (Product::where('seller_id', $seller->id)->where('category_id', $category->id)->where('name', $spec['name'])->exists()) {
+        $label = Product::composeLabel($brand, $parameters, $values, $extra, config('ribbon.locales')[0]);
+
+        if ($seller->products()->where('category_id', $category->id)->where('name', $label)->exists()) {
+            return;
+        }
+
+        ['name' => $name, 'slug' => $slug] = Product::composeNameAndSlug($brand, $parameters, $values, $extra);
+
+        $product = $seller->products()->create([
+            'category_id' => $category->id,
+            'brand_id' => $brand->id,
+            'name' => $name,
+            'name_extra' => $extra,
+            'slug' => $slug,
+            'status' => 'approved',
+            'moderated_by' => ($approver ?? $seller->users()->first())->id,
+            'moderated_at' => now(),
+        ]);
+
+        foreach ($parameters as $parameter) {
+            $value = $values[$parameter->id] ?? null;
+
+            if ($value === null) {
                 continue;
             }
 
-            // DatabaseSeeder uses WithoutModelEvents (so demo sellers don't
-            // fire a real Telegram "new seller" notification via
-            // Seller::bootSeller()) — that also silently disables
-            // Product::bootProduct()'s `creating`/`created` hooks, which
-            // normally auto-generate `slug` and auto-create the mandatory
-            // `pcs` price row. Both are replicated explicitly here rather
-            // than relied on.
-            $slugs = [];
-
-            foreach (config('ribbon.locales') as $locale) {
-                $label = trim(($category->name[$locale] ?? '') . ' ' . $spec['name']);
-                $slugs[$locale] = Product::generateUniqueSlug($label, $locale);
-            }
-
-            $product = Product::create([
-                'seller_id' => $seller->id,
-                'category_id' => $category->id,
-                'brand_id' => 1,
-                'name' => $spec['name'],
-                'slug' => $slugs,
-                'status' => 'approved',
+            $row = $product->parameterValues()->create([
+                'category_parameter_id' => $parameter->id,
+                'value_text' => $parameter->type === 'text' ? $value : null,
+                'value_number' => $parameter->type === 'number' ? $value : null,
             ]);
 
-            if ($widthParameter && isset($spec['widthMm'])) {
-                $product->parameterValues()->create([
-                    'category_parameter_id' => $widthParameter->id,
-                    'value_number' => $spec['widthMm'],
-                ]);
+            if (in_array($parameter->type, ['select_single', 'select_multiple'], true)) {
+                $row->options()->createMany(
+                    collect((array) $value)->map(fn (int $optionId) => ['category_parameter_option_id' => $optionId])->all(),
+                );
             }
-
-            $product->prices()->create([
-                'unit' => 'pcs',
-                'qty_in_pcs' => 1,
-                'price' => $spec['price'],
-                'is_vitrin' => true,
-            ]);
-
-            $product->images()->create(['path' => $imagePath, 'sort_order' => 0]);
         }
+
+        $product->prices()->create(['unit' => 'pcs', 'qty_in_pcs' => 1, 'price' => $spec['price'], 'is_vitrin' => true]);
+        $product->images()->create(['path' => $spec['image'], 'sort_order' => 0]);
+    }
+
+    /**
+     * Turn English-keyed demo values into the id-keyed shape the seller
+     * form and Product::composeLabel() use: scalar for text/number,
+     * option id for select_single, option ids for select_multiple.
+     *
+     * @param  Collection<int, CategoryParameter>  $parameters
+     * @param  array<string, mixed>  $byName
+     * @return array<int, mixed>
+     */
+    private function resolveValues(Collection $parameters, array $byName): array
+    {
+        $values = [];
+
+        foreach ($parameters as $parameter) {
+            $raw = $byName[$parameter->name['en']] ?? null;
+
+            if ($raw === null) {
+                continue;
+            }
+
+            $optionId = fn (string $en) => $parameter->options->first(fn ($option) => $option->value['en'] === $en)?->id
+                ?? throw new \InvalidArgumentException("Unknown option \"{$en}\" for parameter \"{$parameter->name['en']}\".");
+
+            $values[$parameter->id] = match ($parameter->type) {
+                'select_single' => $optionId($raw),
+                'select_multiple' => array_map($optionId, (array) $raw),
+                default => $raw,
+            };
+        }
+
+        return $values;
     }
 }

@@ -1,7 +1,7 @@
 <div>
     <x-page-header :title="__('sellers.products.create.title')" :subtitle="__('sellers.products.create.subtitle')">
         <x-slot:actions>
-            <x-button tag="a" href="{{ route('seller.products.index') }}" wire:navigate variant="ghost">
+            <x-button tag="a" href="{{ route('seller.products.index', $categoryFixed ? ['category' => $categoryId] : []) }}" wire:navigate variant="ghost">
                 {{ __('sellers.products.create.cancel_button') }}
             </x-button>
         </x-slot:actions>
@@ -15,25 +15,35 @@
             </div>
             <div class="grid grid-cols-1 gap-4 p-5 sm:grid-cols-2">
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-text-primary">
-                        {{ __('sellers.products.create.category_label') }} <span class="text-danger-600">*</span>
-                    </label>
-                    <x-select wire:model.live="categoryId" :error="$errors->has('categoryId')">
-                        <option value="">{{ __('sellers.products.create.category_placeholder') }}</option>
-                        @foreach ($this->categories as $category)
-                            <option value="{{ $category->id }}">{{ $category->name[app()->getLocale()] ?? $category->name[config('ribbon.locales')[0]] }}</option>
-                        @endforeach
-                    </x-select>
+                    @if ($categoryFixed)
+                        {{-- Opened from a category's own Add button: category is fixed, only its fields show. --}}
+                        <p class="mb-1 block text-sm font-medium text-text-primary">{{ __('sellers.products.create.category_label') }}</p>
+                        <p class="flex h-9 items-center rounded-sm border border-border bg-surface-sunken px-3 text-base text-text-secondary">
+                            {{ $this->selectedCategory->name[app()->getLocale()] ?? $this->selectedCategory->name[config('ribbon.locales')[0]] }}
+                        </p>
+                        <a href="{{ route('seller.products.create') }}" wire:navigate class="mt-1 inline-block text-xs font-medium text-accent-700 hover:underline">{{ __('sellers.products.create.category_change') }}</a>
+                    @else
+                        <label for="field-categoryId" class="mb-1 block text-sm font-medium text-text-primary">
+                            {{ __('sellers.products.create.category_label') }} <span class="text-danger-600">*</span>
+                        </label>
+                        <x-select id="field-categoryId" wire:model.live="categoryId" :error="$errors->has('categoryId')">
+                            <option value="">{{ __('sellers.products.create.category_placeholder') }}</option>
+                            @foreach ($this->categories as $category)
+                                @php $isLocked = in_array($category->id, $this->lockedCategoryIds, true); @endphp
+                                <option value="{{ $category->id }}" @disabled($isLocked)>{{ $category->name[app()->getLocale()] ?? $category->name[config('ribbon.locales')[0]] }}@if ($isLocked) — {{ __('sellers.products.create.category_locked_suffix') }}@endif</option>
+                            @endforeach
+                        </x-select>
+                    @endif
                     @error('categoryId')
                         <p class="mt-1 text-xs text-danger-600">{{ $message }}</p>
                     @enderror
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-text-primary">
+                    <label for="field-brandId" class="mb-1 block text-sm font-medium text-text-primary">
                         {{ __('sellers.products.create.brand_label') }} <span class="text-danger-600">*</span>
                     </label>
-                    <x-select wire:model="brandId" :error="$errors->has('brandId')">
+                    <x-select id="field-brandId" wire:model="brandId" :error="$errors->has('brandId')">
                         @foreach ($this->brands as $brand)
                             <option value="{{ $brand->id }}">{{ $brand->name }}</option>
                         @endforeach
@@ -44,7 +54,7 @@
                 </div>
 
                 <div class="sm:col-span-2">
-                    <label class="mb-1 block text-sm font-medium text-text-primary">{{ __('sellers.products.create.generated_name_label') }}</label>
+                    <p class="mb-1 block text-sm font-medium text-text-primary">{{ __('sellers.products.create.generated_name_label') }}</p>
                     <p class="flex min-h-9 items-center rounded-sm border border-border bg-surface-sunken px-3 py-1.5 font-mono text-sm text-text-secondary">
                         {{ $this->previewName !== '' ? $this->previewName : __('sellers.products.create.generated_name_empty') }}
                     </p>
@@ -52,8 +62,8 @@
                 </div>
 
                 <div class="sm:col-span-2">
-                    <label class="mb-1 block text-sm font-medium text-text-primary">{{ __('sellers.products.create.name_extra_label') }}</label>
-                    <x-input type="text" wire:model.blur="nameExtra" placeholder="{{ __('sellers.products.create.name_extra_placeholder') }}" :error="$errors->has('nameExtra')" />
+                    <label for="field-nameExtra" class="mb-1 block text-sm font-medium text-text-primary">{{ __('sellers.products.create.name_extra_label') }}</label>
+                    <x-input id="field-nameExtra" type="text" wire:model.blur="nameExtra" placeholder="{{ __('sellers.products.create.name_extra_placeholder') }}" :error="$errors->has('nameExtra')" />
                     <p class="mt-1 text-xs text-text-muted">{{ __('sellers.products.create.name_extra_caption') }}</p>
                     @error('nameExtra')
                         <p class="mt-1 text-xs text-danger-600">{{ $message }}</p>
@@ -99,12 +109,12 @@
                         <div wire:key="staged-image-{{ $staged['key'] }}" class="relative h-24 w-24 overflow-hidden rounded-md border border-border">
                             <img src="{{ $staged['file']->temporaryUrl() }}" alt="" class="h-full w-full object-cover">
                             @if ($index === 0)
-                                <span class="absolute top-1 left-1 rounded-sm bg-accent-600 px-1.5 py-0.5 text-[10px] font-medium text-white">{{ __('sellers.products.images.primary_badge') }}</span>
+                                <span class="absolute top-1 left-1 rounded-sm bg-accent-700 px-1.5 py-0.5 text-[10px] font-medium text-white">{{ __('sellers.products.images.primary_badge') }}</span>
                             @endif
                             <button
                                 type="button"
                                 wire:click="removeStagedImage('{{ $staged['key'] }}')"
-                                class="absolute top-1 right-1 flex h-5 w-5 items-center justify-center rounded-full bg-slate-900/60 text-xs text-white hover:bg-slate-900/80"
+                                class="absolute top-1 right-1 flex h-5 w-5 items-center justify-center hit bg-text-primary text-xs text-white hover:bg-accent-800"
                                 aria-label="{{ __('sellers.products.images.remove') }}"
                             >
                                 ✕
@@ -113,10 +123,10 @@
                     @endforeach
 
                     @if (count($stagedImages) < 4)
-                        <label wire:key="staged-image-upload-slot" class="flex h-24 w-24 cursor-pointer flex-col items-center justify-center gap-1 rounded-md border border-dashed border-border-strong text-xs text-text-secondary hover:border-accent-300 hover:text-text-primary">
-                            <span class="text-lg leading-none">+</span>
-                            <span>{{ __('sellers.products.images.add') }}</span>
-                            <input type="file" wire:model="newImageUpload" accept="image/jpeg,image/png" class="hidden">
+                        <label wire:key="staged-image-upload-slot" class="flex h-24 w-24 cursor-pointer flex-col items-center justify-center gap-1 rounded-md border border-dashed border-border-strong text-xs text-text-secondary hover:border-accent-300 hover:text-text-primary focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent-700">
+                            <span class="text-lg leading-none" aria-hidden="true">+</span>
+                            <span>{{ __('sellers.products.images.add') }}<span class="sr-only"> {{ __('sellers.products.images.section_title') }}</span></span>
+                            <input type="file" wire:model="newImageUpload" accept="image/jpeg,image/png" class="sr-only">
                         </label>
                     @endif
                 </div>

@@ -2,18 +2,29 @@
 
 namespace App\Livewire\Admin\Categories;
 
+use App\Livewire\Concerns\AuthorizesAdmin;
+use App\Models\Article;
 use App\Models\Category;
 use App\Models\CategoryParameter;
 use App\Models\CategoryParameterOption;
+use App\Support\Icon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
 class Show extends Component
 {
+    use AuthorizesAdmin;
+
+    protected function adminAccess(): ?string
+    {
+        return 'catalog.manage';
+    }
+
     use WithFileUploads;
 
     public Category $category;
@@ -25,6 +36,9 @@ class Show extends Component
 
     public bool $catIsActive = true;
 
+    /** UI inverse of categories.requires_subscription. */
+    public bool $catIsFree = false;
+
     /**
      * Staged image replacement — jpg/png only, max 1MB (see
      * saveCategoryDetails()). Stored under `categories/` on the `public`
@@ -33,6 +47,12 @@ class Show extends Component
     public $catImageUpload = null;
 
     public ?string $catExistingImagePath = null;
+
+    /** Mega-menu icon (spec 22), one of Icon::CATEGORY_ICONS; '' = default. */
+    public string $catIcon = '';
+
+    /** Mega-menu "How to choose" guide; null = none. */
+    public ?int $catGuideArticleId = null;
 
     // Page-level "preview language" toggle for the parameter list — only
     // changes which locale's text the list displays, has no bearing on
@@ -43,6 +63,7 @@ class Show extends Component
 
     public bool $showDrawer = false;
 
+    #[Locked]
     public ?int $editingParameterId = null;
 
     /** @var array<string, string> */
@@ -65,6 +86,7 @@ class Show extends Component
 
     public bool $showDeleteConfirm = false;
 
+    #[Locked]
     public ?int $deletingParameterId = null;
 
     public const TYPE_LABELS = [
@@ -76,6 +98,8 @@ class Show extends Component
 
     public function mount(Category $category): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         $this->category = $category;
         $this->previewLocale = config('ribbon.locales')[0];
         $this->resetCategoryDetailsForm();
@@ -85,8 +109,11 @@ class Show extends Component
     {
         $this->catName = $this->category->name;
         $this->catIsActive = $this->category->is_active;
+        $this->catIsFree = ! $this->category->requires_subscription;
         $this->catImageUpload = null;
         $this->catExistingImagePath = $this->category->image_path;
+        $this->catIcon = (string) $this->category->icon;
+        $this->catGuideArticleId = $this->category->guide_article_id;
     }
 
     /**
@@ -95,16 +122,24 @@ class Show extends Component
      */
     public function removeCategoryImage(): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         $this->catImageUpload = null;
         $this->catExistingImagePath = null;
     }
 
     public function saveCategoryDetails(): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         $locales = config('ribbon.locales');
         $rules = [
             'catIsActive' => ['boolean'],
+            'catIsFree' => ['boolean'],
             'catImageUpload' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:1024'],
+            'catIcon' => ['nullable', 'string', Rule::in(Icon::CATEGORY_ICONS)],
+            // Published articles only (the select only offers those).
+            'catGuideArticleId' => ['nullable', 'integer', Rule::exists('articles', 'id')->where(fn ($q) => $q->whereNotNull('published_at')->where('published_at', '<=', now()))],
         ];
 
         foreach ($locales as $locale) {
@@ -123,13 +158,39 @@ class Show extends Component
         $this->category->update([
             'name' => $this->catName,
             'is_active' => $this->catIsActive,
+            'requires_subscription' => ! $this->catIsFree,
             'image_path' => $imagePath,
+            'icon' => $this->catIcon !== '' ? $this->catIcon : null,
+            'guide_article_id' => $this->catGuideArticleId ?: null,
         ]);
 
         $this->catImageUpload = null;
         $this->catExistingImagePath = $this->category->image_path;
 
         session()->flash('status', 'Category details saved.');
+    }
+
+    /**
+     * Published articles for the guide select, newest first, in the
+     * admin's default locale. Ones tagged with this category come first.
+     *
+     * @return array<int, string>
+     */
+    #[Computed]
+    public function guideOptions(): array
+    {
+        $locale = config('ribbon.locales')[0];
+        $tagged = $this->category->articles()->pluck('articles.id')->all();
+
+        return Article::query()
+            ->whereNotNull('published_at')
+            ->where('published_at', '<=', now())
+            ->orderByDesc('published_at')
+            ->limit(200)
+            ->get(['id', 'title'])
+            ->sortBy(fn (Article $a) => in_array($a->id, $tagged, true) ? 0 : 1)
+            ->mapWithKeys(fn (Article $a) => [$a->id => (string) ($a->title[$locale] ?? '#'.$a->id)])
+            ->all();
     }
 
     #[Computed]
@@ -166,6 +227,8 @@ class Show extends Component
      */
     public function reorderParameters(array $orderedIds): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         foreach ($orderedIds as $index => $id) {
             CategoryParameter::where('id', (int) $id)
                 ->where('category_id', $this->category->id)
@@ -175,8 +238,46 @@ class Show extends Component
         $this->category->unsetRelation('parameters');
     }
 
+    /**
+     * Touch/keyboard alternative to drag-reordering (WCAG 2.5.7). Scoped to
+     * this category's own parameters; unknown ids and edge moves are no-ops.
+     */
+    public function moveParameter(int $parameterId, string $direction): void
+    {
+        $this->authorizeAdmin('catalog.manage');
+
+        if (! in_array($direction, ['up', 'down'], true)) {
+            return;
+        }
+
+        $ids = $this->category->parameters()->orderBy('sort_order')->orderBy('id')->pluck('id')->all();
+        $index = array_search($parameterId, $ids, true);
+
+        if ($index === false) {
+            return;
+        }
+
+        $target = $direction === 'up' ? $index - 1 : $index + 1;
+
+        if (! isset($ids[$target])) {
+            return;
+        }
+
+        [$ids[$index], $ids[$target]] = [$ids[$target], $ids[$index]];
+
+        $this->reorderParameters($ids);
+
+        $name = $this->category->parameters()->find($parameterId)?->name[$this->previewLocale ?: config('ribbon.locales')[0]] ?? '';
+        $this->announcement = "{$name} moved to position ".($target + 1);
+    }
+
+    /** Polite live-region text for reorder results. */
+    public string $announcement = '';
+
     public function duplicateParameter(int $parameterId): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         $original = $this->category->parameters()->with('options')->findOrFail($parameterId);
 
         DB::transaction(function () use ($original) {
@@ -205,6 +306,8 @@ class Show extends Component
 
     public function openCreateDrawer(): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         $this->editingParameterId = null;
         $this->resetParameterForm();
         $this->showDrawer = true;
@@ -212,6 +315,8 @@ class Show extends Component
 
     public function openEditDrawer(int $parameterId): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         $parameter = $this->category->parameters()->with('options')->findOrFail($parameterId);
 
         $this->editingParameterId = $parameter->id;
@@ -236,6 +341,8 @@ class Show extends Component
 
     public function closeDrawer(): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         $this->showDrawer = false;
         $this->editingParameterId = null;
         $this->resetParameterForm();
@@ -265,6 +372,8 @@ class Show extends Component
 
     public function addOption(): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         $this->options[] = [
             'key' => (string) Str::uuid(),
             'id' => null,
@@ -272,8 +381,25 @@ class Show extends Component
         ];
     }
 
+    /** Move an in-form option up/down (touch alternative to dragging); persisted on save. */
+    public function moveOption(string $key, string $direction): void
+    {
+        $this->authorizeAdmin('catalog.manage');
+
+        $index = collect($this->options)->search(fn (array $option) => $option['key'] === $key);
+        $target = $direction === 'up' ? $index - 1 : $index + 1;
+
+        if ($index === false || ! in_array($direction, ['up', 'down'], true) || ! isset($this->options[$target])) {
+            return;
+        }
+
+        [$this->options[$index], $this->options[$target]] = [$this->options[$target], $this->options[$index]];
+    }
+
     public function removeOption(string $key): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         $this->options = array_values(array_filter(
             $this->options,
             fn (array $option) => $option['key'] !== $key,
@@ -282,13 +408,15 @@ class Show extends Component
 
     /**
      * Type is locked once the parameter has been saved AND has at least
-     * one product_parameter_values row referencing it (docs/design/06).
+     * one product_parameter_values row referencing it (.claude/docs/design/06).
      * No ProductParameterValue Eloquent model exists yet, so this checks
      * the table directly — a real check, not a stub, it just always
      * evaluates false today since no products/sellers flow exists yet.
      */
     public function isTypeLocked(?int $parameterId): bool
     {
+        $this->authorizeAdmin('catalog.manage');
+
         if (! $parameterId) {
             return false;
         }
@@ -317,6 +445,8 @@ class Show extends Component
 
     public function saveParameter(): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         $locales = config('ribbon.locales');
         $isSelectType = in_array($this->paramType, ['select_single', 'select_multiple'], true);
         $typeLocked = $this->isTypeLocked($this->editingParameterId);
@@ -348,7 +478,7 @@ class Show extends Component
 
         DB::transaction(function () use ($typeLocked) {
             if ($this->editingParameterId) {
-                $parameter = CategoryParameter::findOrFail($this->editingParameterId);
+                $parameter = $this->category->parameters()->findOrFail($this->editingParameterId);
             } else {
                 $parameter = new CategoryParameter;
                 $parameter->category_id = $this->category->id;
@@ -373,8 +503,10 @@ class Show extends Component
                 $keepIds = [];
 
                 foreach ($this->options as $index => $option) {
+                    // Option ids come from the client: resolve only within
+                    // this parameter, silently treating foreign ids as new.
                     $optionModel = ! empty($option['id'])
-                        ? CategoryParameterOption::find($option['id'])
+                        ? $parameter->options()->find($option['id'])
                         : null;
 
                     $optionModel ??= new CategoryParameterOption;
@@ -405,12 +537,16 @@ class Show extends Component
 
     public function confirmDeleteParameter(int $parameterId): void
     {
-        $this->deletingParameterId = $parameterId;
+        $this->authorizeAdmin('catalog.manage');
+
+        $this->deletingParameterId = $this->category->parameters()->findOrFail($parameterId)->id;
         $this->showDeleteConfirm = true;
     }
 
     public function cancelDelete(): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         $this->showDeleteConfirm = false;
         $this->deletingParameterId = null;
     }
@@ -440,8 +576,10 @@ class Show extends Component
 
     public function deleteParameter(): void
     {
+        $this->authorizeAdmin('catalog.manage');
+
         if ($this->deletingParameterId) {
-            CategoryParameter::where('id', $this->deletingParameterId)->delete();
+            $this->category->parameters()->whereKey($this->deletingParameterId)->delete();
         }
 
         $this->category->unsetRelation('parameters');

@@ -9,11 +9,14 @@ use App\Livewire\Admin\Banners\Index as AdminBannersIndex;
 use App\Livewire\Admin\Brands\Index as AdminBrandsIndex;
 use App\Livewire\Admin\Categories\Index as CategoriesIndex;
 use App\Livewire\Admin\Categories\Show as CategoriesShow;
+use App\Livewire\Admin\ContactMessages\Index as AdminContactMessagesIndex;
 use App\Livewire\Admin\Geography\Cities\Index as AdminGeographyCitiesIndex;
 use App\Livewire\Admin\Geography\Countries\Index as AdminGeographyCountriesIndex;
 use App\Livewire\Admin\Geography\Regions\Index as AdminGeographyRegionsIndex;
 use App\Livewire\Admin\Offers\Index as AdminOffersIndex;
 use App\Livewire\Admin\Offers\Show as AdminOffersShow;
+use App\Livewire\Admin\Pages\Form as AdminPagesForm;
+use App\Livewire\Admin\Pages\Index as AdminPagesIndex;
 use App\Livewire\Admin\Products\Index as AdminProductsIndex;
 use App\Livewire\Admin\Products\Show as AdminProductsShow;
 use App\Livewire\Admin\Sellers\Index as AdminSellersIndex;
@@ -32,8 +35,12 @@ use App\Livewire\Sellers\Register as SellerRegister;
 use App\Livewire\Storefront\Articles\Index as StorefrontArticlesIndex;
 use App\Livewire\Storefront\Articles\Show as StorefrontArticlesShow;
 use App\Livewire\Storefront\Catalog\Show as StorefrontCatalogShow;
+use App\Livewire\Storefront\Contact as StorefrontContact;
 use App\Livewire\Storefront\Home as StorefrontHome;
+use App\Livewire\Storefront\News\Index as StorefrontNewsIndex;
+use App\Livewire\Storefront\News\Show as StorefrontNewsShow;
 use App\Livewire\Storefront\OfferRequest\Show as StorefrontOfferRequestShow;
+use App\Livewire\Storefront\Pages\Show as StorefrontPagesShow;
 use App\Livewire\Storefront\Products\Show as StorefrontProductsShow;
 use App\Livewire\Storefront\Search as StorefrontSearch;
 use Illuminate\Support\Facades\Auth;
@@ -71,7 +78,7 @@ Route::get('/sitemap.xml', function () {
 // full-page-component implicit route binding matches route parameter names
 // against public property names/types, and would otherwise try to bind
 // this raw string against the Category model itself and 404/error before
-// mount() ever runs. See docs/design/09 (layout shell) and 11 (catalog
+// mount() ever runs. See .claude/docs/design/09 (layout shell) and 11 (catalog
 // filters).
 Route::get('/', StorefrontHome::class)->name('storefront.home');
 
@@ -98,10 +105,37 @@ Route::prefix('articles')->name('storefront.articles.')->group(function () {
     Route::get('/{articleSlug}', StorefrontArticlesShow::class)->name('show');
 });
 
+// News — the `type = news` articles as their own indexable section (spec
+// 19 section 5). Same slug handling as /articles: Articles\Show 301s a news
+// slug here and News\Show 301s an article slug to /articles; the retired
+// `/articles?type=news` 301s to /news in Articles\Index::mount().
+Route::prefix('news')->name('storefront.news.')->group(function () {
+    Route::get('/', StorefrontNewsIndex::class)->name('index');
+    Route::get('/{articleSlug}', StorefrontNewsShow::class)->name('show');
+});
+
+// CMS pages (spec 19 section 9.4). System pages sit at fixed, guessable
+// paths so footer links and Google never depend on an editable slug; they
+// share one component and the `pageKey` route default picks the Page row.
+// Unpublished => 404. /contact is its own component (it hosts a form).
+// Custom admin-authored pages use /p/{pageSlug} (per-locale JSON slug
+// resolved manually in mount(), like categorySlug; named `pageSlug`, not
+// `page`, to avoid the implicit-binding clash with `public Page $page`).
+// Fixed routes are registered before the /p/ catch-all; none can collide
+// with /catalog, /products, /articles, /news, /search, /request, /sellers.
+foreach (['about', 'for-sellers', 'privacy', 'terms'] as $pageKey) {
+    Route::get('/'.$pageKey, StorefrontPagesShow::class)
+        ->defaults('pageKey', $pageKey)
+        ->name('storefront.pages.'.$pageKey);
+}
+
+Route::get('/contact', StorefrontContact::class)->name('storefront.contact');
+Route::get('/p/{pageSlug}', StorefrontPagesShow::class)->name('storefront.pages.show');
+
 // Global cross-category search — `q` matches the header search form's
 // `name="q"` input (layouts/storefront.blade.php) and Storefront\Home's
 // SearchAction JSON-LD (`/search?q={search_term_string}`) exactly, so both
-// existing integration points work unchanged. See docs/design/11's
+// existing integration points work unchanged. See .claude/docs/design/11's
 // cross-category-views scope cut (category-only filter, no per-parameter
 // faceted sidebar) and Storefront\Search for the matching implementation.
 Route::get('/search', StorefrontSearch::class)->name('storefront.search');
@@ -240,6 +274,22 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
         Route::get('/create', AdminArticlesForm::class)->name('create');
         Route::get('/{article}/edit', AdminArticlesForm::class)->name('edit');
     });
+
+    // CMS pages. `pages.manage` gates the whole area inside each
+    // component; legal-column pages (Privacy, Terms) are additionally
+    // Super-Admin-only to edit (Page::isEditableBy()).
+    Route::prefix('pages')->name('pages.')->group(function () {
+        Route::get('/', AdminPagesIndex::class)->name('index');
+        // /create before /{page}/edit, same reasoning as admin/banners.
+        Route::get('/create', AdminPagesForm::class)->name('create');
+        Route::get('/{page}/edit', AdminPagesForm::class)->name('edit');
+    });
+
+    // Buyer /contact messages (phone + free text) are buyer PII — Super
+    // Admin only, same reasoning as admin/offers.
+    Route::get('/contact-messages', AdminContactMessagesIndex::class)
+        ->name('contact-messages.index')
+        ->middleware('super_admin');
 
     // Sitewide config (analytics IDs, verification tokens, contact info,
     // default SEO tags) — Super Admin only, same reasoning as admin/offers.

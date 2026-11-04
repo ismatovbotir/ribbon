@@ -28,7 +28,14 @@ class EnsureSellerIsAuthenticated
 
         try {
             Auth::user()->sellerOrFail();
-        } catch (SellerAccessDeniedException) {
+        } catch (SellerAccessDeniedException $e) {
+            // Mirror of EnsureAdminIsAuthenticated: staff opening a /seller
+            // URL get a 403 and stay logged in. A seller who is suspended or
+            // rejected mid-session is still logged out.
+            if ($e->status === null && Auth::user()->isAdmin()) {
+                abort(403);
+            }
+
             Auth::logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();

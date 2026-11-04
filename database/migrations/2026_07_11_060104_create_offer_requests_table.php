@@ -18,6 +18,9 @@ return new class extends Migration
             $table->string('email')->nullable();
             $table->enum('status', ['pending', 'contacted', 'fulfilled', 'cancelled'])->default('pending');
             $table->timestamps();
+
+            $table->index(['status', 'created_at']);
+            $table->index('created_at');
         });
 
         // Line items (product + seller + quantity) are added once the

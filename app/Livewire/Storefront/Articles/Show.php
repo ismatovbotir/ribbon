@@ -4,11 +4,23 @@ namespace App\Livewire\Storefront\Articles;
 
 use App\Models\Article;
 use App\Models\Category;
+use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Livewire\Component;
 
 class Show extends Component
 {
+    /** Article::TYPES value this route serves; News\Show overrides these. */
+    protected const TYPE = 'article';
+
+    protected const ROUTE_PREFIX = 'storefront.articles';
+
+    protected const LANG_PREFIX = 'articles';
+
+    protected const SCHEMA_TYPE = 'Article';
+
     public Article $article;
 
     /**
@@ -52,10 +64,23 @@ class Show extends Component
 
         abort_unless($found, 404);
 
+        // Right slug, wrong section: 301 to the section the item belongs to
+        // (articles <-> news), keeping only `?lang=`.
+        if ($found->type !== static::TYPE) {
+            $otherPrefix = $found->type === 'news' ? 'storefront.news' : 'storefront.articles';
+            $lang = request()->query('lang');
+
+            throw new HttpResponseException(new RedirectResponse(
+                route($otherPrefix.'.show', ['articleSlug' => $found->slug[$currentLocale] ?? $articleSlug])
+                    .(is_string($lang) && $lang !== '' ? '?'.http_build_query(['lang' => $lang]) : ''),
+                301,
+            ));
+        }
+
         $canonicalSlug = $found->slug[$currentLocale] ?? null;
 
         if ($canonicalSlug && $canonicalSlug !== $articleSlug) {
-            $this->redirect(route('storefront.articles.show', ['articleSlug' => $canonicalSlug]));
+            $this->redirect(route(static::ROUTE_PREFIX.'.show', ['articleSlug' => $canonicalSlug]));
 
             return;
         }
@@ -73,10 +98,10 @@ class Show extends Component
         $body = $this->article->body[$locale] ?? ($this->article->body[$defaultLocale] ?? '');
         $excerpt = $this->article->excerpt[$locale] ?? ($this->article->excerpt[$defaultLocale] ?? '');
 
-        $metaDescription = $excerpt !== '' ? $excerpt : \Illuminate\Support\Str::limit(strip_tags($body), 160);
+        $metaDescription = $excerpt !== '' ? $excerpt : Str::limit(strip_tags($body), 160);
 
         $articleSlugForLocale = $this->article->slug[$locale] ?? ($this->article->slug[$defaultLocale] ?? '');
-        $baseUrl = route('storefront.articles.show', ['articleSlug' => $articleSlugForLocale]);
+        $baseUrl = route(static::ROUTE_PREFIX.'.show', ['articleSlug' => $articleSlugForLocale]);
         $canonicalUrl = $locale !== $defaultLocale ? $baseUrl.'?lang='.$locale : $baseUrl;
 
         $hreflangAlternates = [];
@@ -88,7 +113,7 @@ class Show extends Component
                 continue;
             }
 
-            $altUrl = route('storefront.articles.show', ['articleSlug' => $slugForLoc]);
+            $altUrl = route(static::ROUTE_PREFIX.'.show', ['articleSlug' => $slugForLoc]);
 
             if ($loc !== $defaultLocale) {
                 $altUrl .= '?lang='.$loc;
@@ -105,12 +130,16 @@ class Show extends Component
             ? Storage::disk('public')->url($this->article->cover_image_path)
             : null;
 
+        $langSuffix = $locale !== $defaultLocale ? '?lang='.$locale : '';
+
         $articleNode = array_filter([
             '@context' => 'https://schema.org',
-            '@type' => 'Article',
+            '@type' => static::SCHEMA_TYPE,
             'headline' => $title,
             'description' => $metaDescription,
             'url' => $canonicalUrl,
+            'mainEntityOfPage' => ['@type' => 'WebPage', '@id' => $canonicalUrl],
+            'inLanguage' => $locale,
             'datePublished' => $this->article->published_at?->toAtomString(),
             'dateModified' => $this->article->updated_at->toAtomString(),
             'image' => $ogImage,
@@ -123,8 +152,8 @@ class Show extends Component
                 '@context' => 'https://schema.org',
                 '@type' => 'BreadcrumbList',
                 'itemListElement' => [
-                    ['@type' => 'ListItem', 'position' => 1, 'name' => __('storefront.catalog.breadcrumb_home'), 'item' => url('/')],
-                    ['@type' => 'ListItem', 'position' => 2, 'name' => __('storefront.articles.title'), 'item' => url('/articles')],
+                    ['@type' => 'ListItem', 'position' => 1, 'name' => __('storefront.catalog.breadcrumb_home'), 'item' => url('/').$langSuffix],
+                    ['@type' => 'ListItem', 'position' => 2, 'name' => __('storefront.'.static::LANG_PREFIX.'.title'), 'item' => route(static::ROUTE_PREFIX.'.index').$langSuffix],
                     ['@type' => 'ListItem', 'position' => 3, 'name' => $title, 'item' => $canonicalUrl],
                 ],
             ],
@@ -136,6 +165,9 @@ class Show extends Component
             'body' => $body,
             'locale' => $locale,
             'defaultLocale' => $defaultLocale,
+            // For the breadcrumb / "back to list" links in the shared view.
+            'listRoute' => static::ROUTE_PREFIX.'.index',
+            'listLabel' => __('storefront.'.static::LANG_PREFIX.'.title'),
         ])->layout('layouts.storefront', [
             'title' => __('storefront.seo.article_title', ['title' => $title]),
             'metaDescription' => $metaDescription,

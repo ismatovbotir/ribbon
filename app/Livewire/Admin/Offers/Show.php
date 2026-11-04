@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin\Offers;
 
+use App\Livewire\Concerns\AuthorizesAdmin;
 use App\Models\OfferRequest;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
@@ -32,10 +33,19 @@ use Livewire\Component;
  */
 class Show extends Component
 {
+    use AuthorizesAdmin;
+
+    protected function adminAccess(): ?string
+    {
+        return 'super-admin';
+    }
+
     public OfferRequest $offerRequest;
 
     public function mount(OfferRequest $offerRequest): void
     {
+        $this->authorizeSuperAdmin();
+
         $this->offerRequest = $offerRequest;
     }
 
@@ -71,6 +81,8 @@ class Show extends Component
 
     public function markContacted(): void
     {
+        $this->authorizeSuperAdmin();
+
         if ($this->offerRequest->status !== 'pending') {
             return;
         }
@@ -82,6 +94,8 @@ class Show extends Component
 
     public function markFulfilled(): void
     {
+        $this->authorizeSuperAdmin();
+
         if (! in_array($this->offerRequest->status, ['pending', 'contacted'], true)) {
             return;
         }
@@ -93,6 +107,8 @@ class Show extends Component
 
     public function cancel(): void
     {
+        $this->authorizeSuperAdmin();
+
         if (! in_array($this->offerRequest->status, ['pending', 'contacted'], true)) {
             return;
         }

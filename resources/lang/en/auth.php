@@ -18,4 +18,5 @@ return [
     'validation.email_required' => 'Email is required.',
     'validation.email_invalid' => 'Please enter a valid email address.',
     'validation.password_required' => 'Password is required.',
+    'login.throttled' => 'Too many login attempts. Please try again in :seconds seconds.',
 ];

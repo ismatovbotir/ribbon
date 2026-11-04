@@ -93,7 +93,7 @@ class User extends Authenticatable
      * authoritative.
      *
      * @throws AdminAccessDeniedException if the user has no admin role
-     *                                     assigned via `role_user`.
+     *                                    assigned via `role_user`.
      */
     public function adminRoleOrFail(): Role
     {
@@ -135,6 +135,33 @@ class User extends Authenticatable
         return $this->sellers()
             ->wherePivot('seller_id', $seller->id)
             ->wherePivot('role_id', $ownerRoleId)
+            ->exists();
+    }
+
+    /**
+     * Whether this user holds any admin-type role via `role_user` — the
+     * boolean form of {@see adminRoleOrFail()}, backing the `admin` gate.
+     */
+    public function isAdmin(): bool
+    {
+        return $this->roles()->exists();
+    }
+
+    /**
+     * Whether any of this user's admin roles grants the given permission
+     * slug via `permission_role`. Super Admin implicitly holds every
+     * permission. Backs the `admin-permission` gate, which is how a
+     * Moderator (or any custom admin role) is scoped to moderation and
+     * catalog/content sections without touching Super-Admin-only ones.
+     */
+    public function hasAdminPermission(string $slug): bool
+    {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        return $this->roles()
+            ->whereHas('permissions', fn ($query) => $query->where('slug', $slug))
             ->exists();
     }
 }

@@ -1,35 +1,42 @@
 {{--
-    Section-scoped locale switcher (docs/design/05-form-patterns.md).
-    One tab strip governs every translatable field nested in the default
-    slot — wrap each locale's field block in `x-show="locale === 'uz'"`
-    (etc.) so switching tabs swaps the visible input in place rather than
-    revealing/hiding side-by-side inputs.
-
-    $incomplete: array of locale codes that should show the red completion
-    dot (a governed field is empty for that locale).
+    Section-scoped locale switcher (05-form-patterns, updated by 16 section 5.5).
+    One 3-segment strip governs every translatable field nested in the default
+    slot: wrap each locale's field block in
+    `x-show="locale === 'uz'" role="tabpanel"` (etc.).
+    $incomplete: locale codes that are missing a value (square marker + text line).
 --}}
 @props(['locales' => null, 'incomplete' => []])
 
 @php($locales = $locales ?? config('ribbon.locales'))
 
-<div x-data="{ locale: '{{ $locales[0] }}' }">
-    <div class="mb-4 flex items-center gap-4 border-b border-border" role="tablist">
+<div x-data="{ locale: '{{ $locales[0] }}', order: @js(array_values($locales)) }">
+    <div role="tablist" aria-label="Language"
+         x-on:keydown.arrow-right.prevent="locale = order[(order.indexOf(locale) + 1) % order.length]; $nextTick(() => $refs['tab-' + locale].focus())"
+         x-on:keydown.arrow-left.prevent="locale = order[(order.indexOf(locale) + order.length - 1) % order.length]; $nextTick(() => $refs['tab-' + locale].focus())"
+         class="sticky top-0 z-(--z-bar) -mx-4 mb-3 grid grid-cols-3 divide-x divide-border border-y border-border-strong bg-surface md:static md:mx-0 md:inline-grid md:grid-cols-[repeat(3,5rem)] md:border">
         @foreach ($locales as $loc)
             <button
                 type="button"
                 role="tab"
-                x-on:click="locale = '{{ $loc }}'"
+                id="tab-{{ $loc }}"
+                x-ref="tab-{{ $loc }}"
+                aria-controls="panel-{{ $loc }}"
                 :aria-selected="locale === '{{ $loc }}'"
-                class="relative -mb-px px-0.5 pb-2 text-sm font-medium text-text-secondary transition-colors"
-                :class="locale === '{{ $loc }}' ? 'border-b-2 border-accent-600 text-accent-700' : 'border-b-2 border-transparent hover:text-text-primary'"
+                :tabindex="locale === '{{ $loc }}' ? 0 : -1"
+                x-on:click="locale = '{{ $loc }}'"
+                class="relative flex h-11 items-center justify-center gap-2 border-b-[3px] text-sm font-semibold dense:h-9"
+                :class="locale === '{{ $loc }}' ? 'border-accent-700 bg-accent-50 text-accent-700' : 'border-transparent text-text-secondary hover:bg-surface-hover'"
             >
                 {{ strtoupper($loc) }}
                 @if (in_array($loc, $incomplete, true))
-                    <span class="absolute -top-0.5 -right-2 h-1.5 w-1.5 rounded-full bg-danger-600" title="Missing a value for this locale"></span>
+                    <span class="size-2 bg-danger-600"><span class="sr-only">missing</span></span>
                 @endif
             </button>
         @endforeach
     </div>
+    @if ($incomplete)
+        <p class="mb-3 text-xs font-medium text-danger-700">Incomplete: {{ strtoupper(implode(', ', $incomplete)) }}</p>
+    @endif
 
     {{ $slot }}
 </div>

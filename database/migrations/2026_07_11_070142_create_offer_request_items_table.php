@@ -30,6 +30,11 @@ return new class extends Migration
             // buyer actually saw.
             $table->decimal('price_at_request', 12, 2);
             $table->timestamps();
+
+            $table->index('offer_request_id');
+            // Seller sees only their own items of each request.
+            $table->index(['seller_id', 'offer_request_id']);
+            $table->index('product_id');
         });
     }
 

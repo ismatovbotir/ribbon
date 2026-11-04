@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\FlushesNavMenu;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,12 +13,25 @@ use Illuminate\Support\Str;
 #[Fillable(['type', 'title', 'slug', 'excerpt', 'body', 'cover_image_path', 'published_at', 'created_by'])]
 class Article extends Model
 {
+    use FlushesNavMenu;
     use HasFactory;
 
     /**
      * @var array<int, string>
      */
     public const TYPES = ['news', 'article'];
+
+    /**
+     * categories.guide_article_id has no DB foreign key (articles is
+     * created after categories), so clear it here: the app-level
+     * equivalent of nullOnDelete.
+     */
+    protected static function booted(): void
+    {
+        static::deleted(function (Article $article) {
+            Category::where('guide_article_id', $article->id)->update(['guide_article_id' => null]);
+        });
+    }
 
     /**
      * Get the attributes that should be cast.

@@ -40,7 +40,7 @@
                     <div class="flex-1 space-y-3 overflow-y-auto px-5 py-4" x-data x-init="$el.scrollTop = $el.scrollHeight" wire:key="thread-{{ $this->selectedContact->id }}">
                         @forelse ($this->conversationMessages as $message)
                             <div class="flex {{ $message->direction === 'out' ? 'justify-end' : 'justify-start' }}">
-                                <div class="max-w-md rounded-md px-3 py-2 text-sm {{ $message->direction === 'out' ? 'bg-accent-600 text-white' : 'bg-surface-subtle text-text-primary' }}">
+                                <div class="max-w-md rounded-md px-3 py-2 text-sm {{ $message->direction === 'out' ? 'bg-accent-700 text-white' : 'bg-surface-subtle text-text-primary' }}">
                                     <p class="whitespace-pre-wrap">{{ $message->body }}</p>
                                     <p class="mt-1 text-xs {{ $message->direction === 'out' ? 'text-accent-100' : 'text-text-muted' }}">{{ $message->created_at->format('M j, H:i') }}</p>
                                 </div>
@@ -55,7 +55,7 @@
                             wire:model="replyText"
                             rows="2"
                             placeholder="Type a reply…"
-                            class="block w-full resize-none rounded-sm border bg-surface px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:border-accent-500 focus:ring-2 focus:ring-accent-100 focus:outline-none {{ $errors->has('replyText') ? 'border-danger-600' : 'border-border' }}"
+                            class="block w-full resize-none rounded-sm border bg-surface px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:border-accent-500 {{ $errors->has('replyText') ? 'border-danger-600' : 'border-border' }}"
                         ></textarea>
                         <x-button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="send">Send</x-button>
                     </form>

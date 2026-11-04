@@ -2,16 +2,20 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\FlushesNavMenu;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
-#[Fillable(['name', 'slug', 'is_active', 'sort_order', 'image_path'])]
+#[Fillable(['name', 'slug', 'is_active', 'requires_subscription', 'sort_order', 'image_path', 'icon', 'guide_article_id'])]
 class Category extends Model
 {
+    use FlushesNavMenu;
+
     /**
      * Get the attributes that should be cast.
      *
@@ -25,7 +29,9 @@ class Category extends Model
             'name' => 'array',
             'slug' => 'array',
             'is_active' => 'boolean',
+            'requires_subscription' => 'boolean',
             'sort_order' => 'integer',
+            'guide_article_id' => 'integer',
         ];
     }
 
@@ -44,10 +50,19 @@ class Category extends Model
         return static::query()
             ->where('is_active', true)
             ->withCount([
-                'products as approved_products_count' => fn ($query) => $query->where('status', 'approved'),
+                'products as approved_products_count' => fn ($query) => $query->visibleOnStorefront(),
             ])
             ->orderBy('sort_order')
             ->get();
+    }
+
+    /**
+     * The admin-picked "How to choose" article for the mega menu (spec 22).
+     * Only shown while that article is published.
+     */
+    public function guideArticle(): BelongsTo
+    {
+        return $this->belongsTo(Article::class, 'guide_article_id');
     }
 
     /**

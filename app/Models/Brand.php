@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\FlushesNavMenu;
 use Illuminate\Database\Eloquent\Attributes\Boot;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
@@ -11,6 +12,8 @@ use LogicException;
 #[Fillable(['name', 'logo_path'])]
 class Brand extends Model
 {
+    use FlushesNavMenu;
+
     #[Boot]
     protected static function bootBrand(): void
     {

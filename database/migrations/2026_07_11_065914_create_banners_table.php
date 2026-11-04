@@ -33,6 +33,10 @@ return new class extends Migration
             $table->timestamp('ends_at')->nullable();
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
+
+            // Storefront: live banners for one placement, in order.
+            $table->index(['placement', 'is_active', 'sort_order']);
+            $table->index('category_id');
         });
     }
 

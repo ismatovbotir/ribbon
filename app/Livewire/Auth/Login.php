@@ -5,6 +5,8 @@ namespace App\Livewire\Auth;
 use App\Exceptions\AdminAccessDeniedException;
 use App\Exceptions\SellerAccessDeniedException;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use Livewire\Component;
 
 /**
@@ -60,11 +62,28 @@ class Login extends Component
     {
         $this->validate();
 
+        // Brute-force protection: 5 failed attempts per email+IP, then a
+        // lockout. Keyed on both so one attacker IP can't lock a victim out
+        // from everywhere, and one email can't be sprayed from one IP.
+        $throttleKey = 'login:'.Str::lower($this->email).'|'.request()->ip();
+
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $this->addError('email', __('auth.login.throttled', [
+                'seconds' => RateLimiter::availableIn($throttleKey),
+            ]));
+
+            return;
+        }
+
         if (! Auth::attempt(['email' => $this->email, 'password' => $this->password])) {
+            RateLimiter::hit($throttleKey, 60);
+
             $this->addError('email', __('auth.login.invalid_credentials'));
 
             return;
         }
+
+        RateLimiter::clear($throttleKey);
 
         $user = Auth::user();
 

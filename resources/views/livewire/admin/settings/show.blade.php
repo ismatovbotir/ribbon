@@ -122,6 +122,24 @@
             <p class="px-5 pb-5 text-xs text-text-muted">Shown in the storefront footer when set.</p>
         </div>
 
+        {{-- Subscriptions --}}
+        <div class="rounded-md border border-border-strong bg-surface-raised">
+            <div class="border-b border-border bg-surface-subtle px-5 py-3">
+                <h2 class="text-lg font-semibold text-text-primary">{{ __('admin.settings.subscriptions') }}</h2>
+            </div>
+            <div class="grid grid-cols-1 gap-5 px-5 py-5 sm:grid-cols-3">
+                <x-field :label="__('admin.settings.price')" for="subscriptionPrice" :hint="__('admin.settings.price_hint')" :error="$errors->first('subscriptionPrice')">
+                    <x-input id="subscriptionPrice" type="number" inputmode="numeric" min="0" step="1" class="font-mono" wire:model="subscriptionPrice" :error="$errors->has('subscriptionPrice')" />
+                </x-field>
+                <x-field :label="__('admin.settings.grace_days')" for="graceDays" :hint="__('admin.settings.grace_hint')" :error="$errors->first('graceDays')">
+                    <x-input id="graceDays" type="number" inputmode="numeric" min="0" max="60" step="1" class="font-mono" wire:model="graceDays" :error="$errors->has('graceDays')" />
+                </x-field>
+                <x-field :label="__('admin.settings.reminder_days')" for="reminderDays" :hint="__('admin.settings.reminder_hint')" :error="$errors->first('reminderDays')">
+                    <x-input id="reminderDays" type="number" inputmode="numeric" min="0" max="30" step="1" class="font-mono" wire:model="reminderDays" :error="$errors->has('reminderDays')" />
+                </x-field>
+            </div>
+        </div>
+
         {{-- Sitemap --}}
         <div class="rounded-md border border-border-strong bg-surface-raised">
             <div class="border-b border-border bg-surface-subtle px-5 py-3">
@@ -158,7 +176,7 @@
                     wire:model="defaultMetaDescription"
                     rows="3"
                     placeholder="Fallback description used when a page doesn't set its own"
-                    class="block w-full rounded-sm border bg-surface px-3 py-2 text-base text-text-primary placeholder:text-text-muted focus:border-accent-500 focus:ring-2 focus:ring-accent-100 focus:outline-none {{ $errors->has('defaultMetaDescription') ? 'border-danger-600' : 'border-border' }}"
+                    class="block w-full rounded-sm border bg-surface px-3 py-2 text-base text-text-primary placeholder:text-text-muted focus:border-accent-500 {{ $errors->has('defaultMetaDescription') ? 'border-danger-600' : 'border-border' }}"
                 ></textarea>
                 @error('defaultMetaDescription')
                     <p class="mt-1 text-xs text-danger-600">{{ $message }}</p>

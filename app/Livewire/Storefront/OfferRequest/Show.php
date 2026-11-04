@@ -2,11 +2,14 @@
 
 namespace App\Livewire\Storefront\OfferRequest;
 
+use App\Rules\PhoneNumber;
 use App\Jobs\NotifyTelegramOfNewOfferRequest;
 use App\Models\OfferRequest;
 use App\Models\OfferRequestItem;
 use App\Services\OfferSelectionService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\RateLimiter;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 /**
@@ -30,12 +33,32 @@ class Show extends Component
     public bool $submitted = false;
 
     /**
+     * Honeypot — visually hidden input real buyers never fill. Bots that
+     * auto-fill every field trip it and get a fake success.
+     */
+    public string $website = '';
+
+    /**
+     * Time trap — set server-side on mount and #[Locked] so the client can't
+     * rewrite it. Submissions faster than MIN_FILL_SECONDS are bots.
+     */
+    #[Locked]
+    public int $renderedAt = 0;
+
+    private const MIN_FILL_SECONDS = 3;
+
+    public function mount(): void
+    {
+        $this->renderedAt = now()->getTimestamp();
+    }
+
+    /**
      * @return array<string, array<int, mixed>>
      */
     protected function rules(): array
     {
         return [
-            'phone' => ['required', 'string', 'max:32'],
+            'phone' => ['required', 'string', 'max:32', new PhoneNumber],
             'companyName' => ['nullable', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255'],
         ];
@@ -69,6 +92,8 @@ class Show extends Component
         $qty = OfferSelectionService::currentQty($sellerId, $productId, $unit) ?? 1;
 
         OfferSelectionService::updateQty($sellerId, $productId, $unit, $qty + 1);
+
+        $this->dispatch('selection-changed', count: OfferSelectionService::count());
     }
 
     public function decrementLine(int $sellerId, string $productId, string $unit): void
@@ -76,11 +101,15 @@ class Show extends Component
         $qty = OfferSelectionService::currentQty($sellerId, $productId, $unit) ?? 1;
 
         OfferSelectionService::updateQty($sellerId, $productId, $unit, $qty - 1);
+
+        $this->dispatch('selection-changed', count: OfferSelectionService::count());
     }
 
     public function removeLine(int $sellerId, string $productId, string $unit): void
     {
         OfferSelectionService::removeLine($sellerId, $productId, $unit);
+
+        $this->dispatch('selection-changed', count: OfferSelectionService::count());
     }
 
     /**
@@ -93,7 +122,28 @@ class Show extends Component
      */
     public function submit(): void
     {
+        // Spam traps first: pretend success so bots get no signal.
+        if ($this->website !== '' || now()->getTimestamp() - $this->renderedAt < self::MIN_FILL_SECONDS) {
+            $this->submitted = true;
+
+            return;
+        }
+
         $this->validate();
+
+        // Rate limits: 5 requests / 10 min per IP, 3 / hour per phone
+        // (digits only, so "+998 90..." and "99890..." count as one).
+        $ipKey = 'offer-request:ip:'.request()->ip();
+        $phoneKey = 'offer-request:phone:'.PhoneNumber::digits($this->phone);
+
+        if (RateLimiter::tooManyAttempts($ipKey, 5) || RateLimiter::tooManyAttempts($phoneKey, 3)) {
+            $this->addError('phone', __('storefront.offer_request.throttled'));
+
+            return;
+        }
+
+        RateLimiter::hit($ipKey, 600);
+        RateLimiter::hit($phoneKey, 3600);
 
         $groups = OfferSelectionService::groupedForDisplay();
 
@@ -105,7 +155,7 @@ class Show extends Component
 
         $offerRequest = DB::transaction(function () use ($groups) {
             $request = OfferRequest::create([
-                'phone' => $this->phone,
+                'phone' => trim($this->phone),
                 'company_name' => $this->companyName !== '' ? $this->companyName : null,
                 'email' => $this->email !== '' ? $this->email : null,
                 'status' => 'pending',
@@ -128,6 +178,7 @@ class Show extends Component
         });
 
         OfferSelectionService::clear();
+        $this->dispatch('selection-changed', count: 0);
 
         // Dispatched after the transaction commits (not from inside the
         // closure) so the job — and whoever reads its Telegram message and
@@ -153,6 +204,10 @@ class Show extends Component
             'defaultLocale' => $defaultLocale,
         ])->layout('layouts.storefront', [
             'title' => __('storefront.offer_request.title'),
+            'robots' => 'noindex,follow',
+            'bottomBar' => 'none',
+            'hideCategoryNav' => true,
+            'hideContentNav' => true,
         ]);
     }
 }

@@ -3,82 +3,72 @@
     $defaultLocale = config('ribbon.locales')[0];
 @endphp
 
-<div class="flex flex-col gap-12 md:gap-16">
+<div class="flex flex-col gap-10 md:gap-16">
     {{--
-        Intro — the page's only <h1> plus a self-contained factual
-        definition of what Ribbon is. Kept as plain, unambiguous prose
-        (not marketing copy) so an AI answer engine can lift this
-        paragraph directly when asked "what is Ribbon" / "what does
-        ribbon.uz sell". Meta title/description/JSON-LD are seo-engineer's
-        concern; this is the visible, server-rendered equivalent for
-        generative crawlers that don't execute JS.
+        Intro - the page's only <h1> plus a self-contained factual
+        definition of what Ribbon is, kept as plain server-rendered prose
+        (GEO: extractable "what is Ribbon" answer). The hero search is the
+        page's search (header search is hidden here).
     --}}
-    <section aria-labelledby="home-intro-heading" class="flex flex-col gap-3">
-        <h1 id="home-intro-heading" class="text-2xl font-bold tracking-tight text-text-primary md:text-3xl">
+    <section aria-labelledby="home-intro-heading" >
+        <h1 id="home-intro-heading" class="max-w-3xl text-xl font-bold text-balance text-text-primary md:text-2xl lg:text-3xl">
             {{ __('storefront.home.h1') }}
         </h1>
-        <p class="max-w-3xl text-base text-text-secondary md:text-lg">
+        <p class="mt-2 max-w-3xl text-base text-text-secondary">
             {{ __('storefront.home.intro') }}
         </p>
+        <x-storefront.search-form id="home-search" hero class="mt-4 max-w-2xl md:mt-6" />
+        <p class="mt-3 text-sm text-text-muted">{{ __('storefront.home.search_hint') }}</p>
+
+        {{-- Reassurance strip (spec 20 8.3): four facts that hold for every seller; copy in lang storefront.trust.* --}}
+        <x-storefront.trust-strip class="mt-6 md:mt-8" />
     </section>
 
-    {{-- Hero banners (home_hero placement, isCurrentlyLive() only,
-         sort_order) — a single banner renders statically; 2+ becomes an
-         auto-advancing carousel (dots + arrows, pauses on hover/focus/
-         touch, respects prefers-reduced-motion). See
-         x-storefront.hero-carousel. --}}
-    @if ($heroBanners->isNotEmpty())
-        <section aria-label="{{ __('storefront.home.categories_heading') }}">
-            <x-storefront.hero-carousel :banners="$heroBanners" :locale="$locale" :default-locale="$defaultLocale" />
-        </section>
-    @endif
-
-    {{-- Category navigation --}}
+    {{-- Category tiles (real links; this grid is the home page's category nav) --}}
     <section aria-labelledby="home-categories-heading">
-        <h2 id="home-categories-heading" class="text-xl font-bold tracking-tight text-text-primary">{{ __('storefront.home.categories_heading') }}</h2>
-
-        @if ($categories->isNotEmpty())
-            {{-- Live count, not hardcoded copy — recomputed from $categories on every render. --}}
-            <p class="mt-1 text-sm text-text-secondary">{{ __('storefront.home.categories_count', ['count' => $categories->count()]) }}</p>
-        @endif
+        <x-storefront.section-heading id="home-categories-heading" :title="__('storefront.home.categories_heading')" />
 
         @if ($categories->isEmpty())
-            <div class="mt-4 rounded-xl border border-dashed border-border p-8 text-center">
-                <p class="text-base font-medium text-text-primary">{{ __('storefront.home.no_categories_title') }}</p>
-                <p class="mt-1 text-sm text-text-secondary">{{ __('storefront.home.no_categories_body') }}</p>
+            <div class="mt-4 rounded-md border border-border-strong">
+                <x-empty-state variant="empty" :title="__('storefront.home.no_categories_title')" :description="__('storefront.home.no_categories_body')" />
             </div>
         @else
-            <div class="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+            <div class="mt-4 grid grid-cols-2 gap-3 md:gap-4 {{ $categories->count() % 3 === 0 && $categories->count() % 4 !== 0 ? 'md:grid-cols-3' : 'md:grid-cols-4' }}">
                 @foreach ($categories as $category)
-                    <a
-                        href="{{ route('storefront.catalog.show', ['categorySlug' => $category->slug[$locale] ?? '']) }}"
-                        wire:navigate
-                        class="group flex flex-col items-center gap-2.5 rounded-xl border border-border bg-surface-raised p-5 text-center shadow-xs transition-all hover:-translate-y-0.5 hover:border-accent-200 hover:shadow-sm"
-                    >
-                        @if ($category->image_path)
-                            <span class="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-surface-subtle ring-1 ring-border transition-colors group-hover:ring-accent-200">
-                                <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($category->image_path) }}" alt="" class="h-full w-full object-cover">
-                            </span>
-                        @else
-                            <span class="flex h-16 w-16 items-center justify-center rounded-full bg-surface-subtle text-text-muted ring-1 ring-border transition-colors group-hover:ring-accent-200">
-                                <svg class="h-6 w-6" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                                    <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="1.3" />
-                                </svg>
-                            </span>
-                        @endif
-                        <span class="line-clamp-2 text-sm font-semibold text-text-primary">{{ $category->name[$locale] ?? ($category->name[$defaultLocale] ?? '') }}</span>
-                    </a>
+                    <x-storefront.tile
+                        :href="route('storefront.catalog.show', ['categorySlug' => $category->slug[$locale] ?? ''])"
+                        :name="$category->name[$locale] ?? ($category->name[$defaultLocale] ?? '')"
+                        :count="$category->approved_products_count ?? 0"
+                        :image="$category->image_path ? \Illuminate\Support\Facades\Storage::disk('public')->url($category->image_path) : null"
+                    />
                 @endforeach
             </div>
         @endif
     </section>
 
-    {{-- Secondary banners (home_secondary placement) --}}
+    {{-- How it works (GEO): plain factual process, answers "how does Ribbon work / can I buy online". --}}
+    <section aria-labelledby="home-how-heading" class="max-w-3xl">
+        <h2 id="home-how-heading" class="text-lg font-semibold text-text-primary md:text-xl">{{ __('storefront.home.how_heading') }}</h2>
+        <ol class="mt-3 list-decimal space-y-1 pl-5 text-base text-text-secondary">
+            <li>{{ __('storefront.home.how_1') }}</li>
+            <li>{{ __('storefront.home.how_2') }}</li>
+            <li>{{ __('storefront.home.how_3') }}</li>
+        </ol>
+    </section>
+
+    {{-- Hero banners (home_hero): one block, carousel when 2+ --}}
+    @if ($heroBanners->isNotEmpty())
+        <section aria-label="{{ __('storefront.home.hero_carousel_label') }}">
+            <x-storefront.hero-carousel :banners="$heroBanners" :locale="$locale" :default-locale="$defaultLocale" />
+        </section>
+    @endif
+
+    {{-- Secondary banners (home_secondary) --}}
     @if ($secondaryBanners->isNotEmpty())
         <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             @foreach ($secondaryBanners as $banner)
                 @php $bannerTitle = $banner->title[$locale] ?? ($banner->title[$defaultLocale] ?? ''); @endphp
-                <x-storefront.banner-frame :href="$banner->link_url" class="group relative block overflow-hidden rounded-xl bg-surface-subtle">
+                <x-storefront.banner-frame :href="$banner->link_url" class="block overflow-hidden rounded-lg border border-border bg-surface-subtle hover:border-accent-700">
                     <img
                         src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($banner->image_path) }}"
                         alt="{{ $bannerTitle }}"
@@ -86,39 +76,36 @@
                         loading="lazy"
                     >
                     @if ($bannerTitle !== '')
-                        <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-900/70 to-transparent p-3">
-                            <p class="text-sm font-semibold text-white">{{ $bannerTitle }}</p>
-                        </div>
+                        <p class="border-t border-border bg-surface-band px-3 py-2 text-sm font-semibold text-text-primary">{{ $bannerTitle }}</p>
                     @endif
                 </x-storefront.banner-frame>
             @endforeach
         </section>
     @endif
 
-    {{-- Recently added products --}}
+    {{-- Recently added: the same rows as catalog (max 8) --}}
     @if ($recentProducts->isNotEmpty())
         <section aria-labelledby="home-products-heading">
-            <h2 id="home-products-heading" class="text-xl font-bold tracking-tight text-text-primary">{{ __('storefront.home.products_heading') }}</h2>
-            <div class="mt-4">
-                <x-storefront.product-rail :products="$recentProducts" />
+            <x-storefront.section-heading id="home-products-heading" :title="__('storefront.home.products_heading')" />
+            <div class="mt-4 overflow-hidden rounded-md border border-border-strong bg-surface">
+                <x-storefront.product-list-header />
+                <ul aria-label="{{ __('storefront.home.products_heading') }}">
+                    @foreach ($recentProducts as $product)
+                        <x-storefront.product-row :product="$product" :show-category="true" wire:key="home-product-{{ $product->id }}" />
+                    @endforeach
+                </ul>
             </div>
         </section>
     @endif
 
-    {{-- "From Ribbon" — educational content teaser (history, ribbon types,
-         use cases, technical explainers), the content-marketing section a
-         normal e-commerce home page has. Hidden entirely when nothing's
-         published yet, rather than showing an empty state on the home
-         page — see Storefront\Home::render(). --}}
+    {{-- "From Ribbon" articles teaser --}}
     @if ($recentArticles->isNotEmpty())
         <section aria-labelledby="home-articles-heading">
-            <div class="flex items-baseline justify-between">
-                <h2 id="home-articles-heading" class="text-xl font-bold tracking-tight text-text-primary">{{ __('storefront.home.articles_heading') }}</h2>
-                <a href="{{ route('storefront.articles.index') }}" wire:navigate class="text-sm font-medium text-accent-700 hover:underline">
-                    {{ __('storefront.home.articles_view_all') }}
-                </a>
-            </div>
-            <div class="mt-4 grid grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-3">
+            <x-storefront.section-heading id="home-articles-heading" :title="__('storefront.home.articles_heading')" :href="route('storefront.articles.index')" :link-label="__('storefront.home.articles_view_all')" />
+            <p class="mt-2 text-sm">
+                <a href="{{ route('storefront.news.index') }}" wire:navigate class="inline-flex h-11 items-center font-medium text-accent-700 hover:underline">{{ __('storefront.nav.news') }}</a>
+            </p>
+            <div class="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-3">
                 @foreach ($recentArticles as $article)
                     <x-storefront.article-card :article="$article" />
                 @endforeach

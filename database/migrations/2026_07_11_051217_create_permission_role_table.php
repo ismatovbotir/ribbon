@@ -18,6 +18,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->unique(['role_id', 'permission_id']);
+            $table->index('permission_id');
         });
     }
 

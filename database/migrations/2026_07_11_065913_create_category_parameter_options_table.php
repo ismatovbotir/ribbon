@@ -20,6 +20,8 @@ return new class extends Migration
             $table->json('value');
             $table->unsignedInteger('sort_order')->default(0);
             $table->timestamps();
+
+            $table->index(['category_parameter_id', 'sort_order'], 'cpo_parameter_sort_index');
         });
     }
 

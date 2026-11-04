@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin\Settings;
 
+use App\Livewire\Concerns\AuthorizesAdmin;
 use App\Models\Setting;
 use App\Services\SitemapGeneratorService;
 use App\Services\TelegramBotService;
@@ -17,6 +18,13 @@ use Livewire\WithFileUploads;
  */
 class Show extends Component
 {
+    use AuthorizesAdmin;
+
+    protected function adminAccess(): ?string
+    {
+        return 'super-admin';
+    }
+
     use WithFileUploads;
 
     public Setting $setting;
@@ -41,10 +49,18 @@ class Show extends Component
 
     public ?string $telegramBotToken = null;
 
+    public ?string $subscriptionPrice = null;
+
+    public ?string $graceDays = null;
+
+    public ?string $reminderDays = null;
+
     public ?Carbon $sitemapGeneratedAt = null;
 
     public function mount(): void
     {
+        $this->authorizeSuperAdmin();
+
         $this->setting = Setting::current();
         $this->resetForm();
     }
@@ -61,11 +77,16 @@ class Show extends Component
         $this->ogImageUpload = null;
         $this->existingOgImagePath = $this->setting->default_og_image_path;
         $this->telegramBotToken = $this->setting->telegram_bot_token;
+        $this->subscriptionPrice = $this->setting->subscription_price_uzs !== null ? (string) $this->setting->subscription_price_uzs : null;
+        $this->graceDays = (string) $this->setting->graceDays();
+        $this->reminderDays = (string) $this->setting->reminderDays();
         $this->sitemapGeneratedAt = $this->setting->sitemap_generated_at;
     }
 
     public function removeOgImage(): void
     {
+        $this->authorizeSuperAdmin();
+
         $this->ogImageUpload = null;
         $this->existingOgImagePath = null;
     }
@@ -80,6 +101,8 @@ class Show extends Component
      */
     public function connectTelegramBot(TelegramBotService $telegram): void
     {
+        $this->authorizeSuperAdmin();
+
         $this->validate([
             'telegramBotToken' => ['required', 'string', 'max:255'],
         ]);
@@ -111,6 +134,8 @@ class Show extends Component
 
     public function disconnectTelegramBot(TelegramBotService $telegram): void
     {
+        $this->authorizeSuperAdmin();
+
         if ($token = $this->setting->telegram_bot_token) {
             $telegram->deleteWebhook($token);
         }
@@ -128,6 +153,8 @@ class Show extends Component
 
     public function regenerateSitemap(SitemapGeneratorService $sitemap): void
     {
+        $this->authorizeSuperAdmin();
+
         $urlCount = $sitemap->generateAndStore();
 
         $this->sitemapGeneratedAt = $this->setting->fresh()->sitemap_generated_at;
@@ -137,6 +164,8 @@ class Show extends Component
 
     public function save(): void
     {
+        $this->authorizeSuperAdmin();
+
         $this->validate([
             'googleAnalyticsId' => ['nullable', 'string', 'max:64'],
             'yandexMetricaId' => ['nullable', 'string', 'max:32'],
@@ -146,6 +175,9 @@ class Show extends Component
             'adminEmail' => ['nullable', 'email', 'max:255'],
             'defaultMetaDescription' => ['nullable', 'string', 'max:300'],
             'ogImageUpload' => ['nullable', 'image', 'max:4096'],
+            'subscriptionPrice' => ['nullable', 'integer', 'min:0', 'max:2000000000'],
+            'graceDays' => ['required', 'integer', 'min:0', 'max:60'],
+            'reminderDays' => ['required', 'integer', 'min:0', 'max:30'],
         ]);
 
         $ogImagePath = $this->ogImageUpload
@@ -161,6 +193,9 @@ class Show extends Component
             'admin_email' => $this->adminEmail,
             'default_meta_description' => $this->defaultMetaDescription,
             'default_og_image_path' => $ogImagePath,
+            'subscription_price_uzs' => filled($this->subscriptionPrice) ? (int) $this->subscriptionPrice : null,
+            'subscription_grace_days' => (int) $this->graceDays,
+            'subscription_reminder_days' => (int) $this->reminderDays,
         ]);
 
         $this->resetForm();

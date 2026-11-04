@@ -22,6 +22,8 @@ return new class extends Migration
             $table->timestamps();
 
             $table->unique(['article_id', 'category_id']);
+            // Category page "related articles" (reverse of the unique above).
+            $table->index(['category_id', 'article_id']);
         });
     }
 

@@ -2,7 +2,7 @@
     <x-page-header title="Brands" subtitle="Sellers pick a brand when creating a product. &quot;No Brand&quot; is the default and can't be removed.">
         <x-slot:actions>
             <x-button variant="primary" wire:click="toggleCreateForm">
-                <svg class="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" /></svg>
+                <x-icon name="add" class="size-4" />
                 Add Brand
             </x-button>
         </x-slot:actions>
@@ -72,7 +72,7 @@
     <div class="overflow-hidden rounded-md border border-border-strong bg-surface-raised">
         <div class="overflow-x-auto">
             <table class="w-full min-w-[560px] border-collapse">
-                <thead class="sticky top-0 z-sticky bg-surface-subtle">
+                <thead class="sticky top-0 z-(--z-sticky) bg-surface-subtle">
                     <tr class="border-b border-border text-left text-xs font-medium text-text-muted uppercase">
                         <th class="px-4 py-2.5"><span class="sr-only">Logo</span></th>
                         <th class="px-4 py-2.5">
@@ -202,9 +202,9 @@
 
     {{-- Delete confirmation modal --}}
     @if ($showDeleteConfirm)
-        <div class="fixed inset-0 z-modal-backdrop bg-slate-900/40" wire:click="cancelDelete"></div>
-        <div class="fixed inset-0 z-modal flex items-center justify-center p-4">
-            <div class="w-full max-w-md rounded-lg border border-border bg-surface-overlay p-5 shadow-lg">
+        <div class="fixed inset-0 z-(--z-modal-backdrop) bg-scrim" wire:click="cancelDelete"></div>
+        <div class="fixed inset-0 z-(--z-modal) flex items-center justify-center p-4">
+            <div class="w-full max-w-md rounded-lg border border-border bg-surface-overlay p-5">
                 <h2 class="text-lg font-semibold text-text-primary">
                     Delete brand "{{ $this->deletingBrand?->name }}"?
                 </h2>

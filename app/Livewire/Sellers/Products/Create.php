@@ -2,25 +2,38 @@
 
 namespace App\Livewire\Sellers\Products;
 
+use App\Livewire\Concerns\AuthorizesSeller;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\CategoryParameter;
 use App\Models\Product;
 use App\Models\ProductParameterValue;
 use App\Models\Seller;
+use App\Services\SubscriptionService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
 class Create extends Component
 {
+    use AuthorizesSeller;
     use WithFileUploads;
 
     public ?int $categoryId = null;
+
+    /**
+     * True when the form was opened from a category's own Add button
+     * (?category=ID). The picker is hidden and the form shows only that
+     * category's fields. Locked, so the client can't unfix it. The server
+     * still validates categoryId on save either way.
+     */
+    #[Locked]
+    public bool $categoryFixed = false;
 
     public int $brandId = 1;
 
@@ -61,6 +74,50 @@ class Create extends Component
     public function seller(): Seller
     {
         return Auth::user()->sellerOrFail();
+    }
+
+    public function mount(SubscriptionService $subscriptions): void
+    {
+        $requested = request()->integer('category');
+
+        if (! $requested) {
+            return;
+        }
+
+        $category = Category::where('is_active', true)->find($requested);
+
+        if (! $category) {
+            return;
+        }
+
+        if (! $subscriptions->canListIn($this->seller(), $category)) {
+            // Fall back to the picker with an explanation, not a dead end.
+            $this->addError('categoryId', __('sellers.products.create.category_requires_subscription'));
+
+            return;
+        }
+
+        $this->categoryId = $category->id;
+        $this->categoryFixed = true;
+        $this->updatedCategoryId();
+    }
+
+    /**
+     * Category ids this seller can't add to right now (paid category, lapsed
+     * subscription). Shown disabled in the picker.
+     *
+     * @return array<int, int>
+     */
+    #[Computed]
+    public function lockedCategoryIds(): array
+    {
+        $seller = $this->seller();
+        $subscriptions = app(SubscriptionService::class);
+
+        return $this->categories
+            ->reject(fn (Category $category) => $subscriptions->canListIn($seller, $category))
+            ->pluck('id')
+            ->all();
     }
 
     #[Computed]
@@ -108,8 +165,18 @@ class Create extends Component
      * category changes (different parameter ids entirely) — reset the form
      * rather than carrying stale keys forward.
      */
+    /** A fixed form's category can't be swapped from the client. */
+    public function updatingCategoryId(): void
+    {
+        if ($this->categoryFixed) {
+            abort(403);
+        }
+    }
+
     public function updatedCategoryId(): void
     {
+        $this->authorizeSeller();
+
         $this->parameterValues = [];
         $this->resetErrorBag();
 
@@ -129,6 +196,8 @@ class Create extends Component
      */
     public function updatedNewImageUpload(): void
     {
+        $this->authorizeSeller();
+
         $this->validateOnly('newImageUpload', [
             'newImageUpload' => ['image', 'mimes:jpg,jpeg,png', 'max:1024'],
         ]);
@@ -145,6 +214,8 @@ class Create extends Component
 
     public function removeStagedImage(string $key): void
     {
+        $this->authorizeSeller();
+
         $this->stagedImages = array_values(array_filter(
             $this->stagedImages,
             fn (array $image) => $image['key'] !== $key,
@@ -185,8 +256,22 @@ class Create extends Component
 
     public function save(): void
     {
+        $this->authorizeSeller();
+
         $rules = [
-            'categoryId' => ['required', Rule::exists('categories', 'id')->where('is_active', true)],
+            'categoryId' => [
+                'required',
+                Rule::exists('categories', 'id')->where('is_active', true),
+                // Server-side lock: paid categories need an active (or grace)
+                // subscription, whatever the UI showed.
+                function (string $attribute, mixed $value, \Closure $fail) {
+                    $category = Category::find($value);
+
+                    if ($category && ! app(SubscriptionService::class)->canListIn($this->seller(), $category)) {
+                        $fail(__('sellers.products.create.category_requires_subscription'));
+                    }
+                },
+            ],
             'brandId' => ['required', 'exists:brands,id'],
             'nameExtra' => ['nullable', 'string', 'max:255'],
         ];

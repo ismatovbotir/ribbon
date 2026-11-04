@@ -2,7 +2,10 @@
 
 namespace App\Livewire\Sellers;
 
+use App\Livewire\Concerns\AuthorizesSeller;
 use App\Models\Seller;
+use App\Models\Setting;
+use App\Services\SubscriptionService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
@@ -15,6 +18,8 @@ use Livewire\Component;
  */
 class Dashboard extends Component
 {
+    use AuthorizesSeller;
+
     /**
      * Reached only via the `seller.auth` middleware, which already
      * guarantees the authenticated user is linked to an `approved` Seller
@@ -43,6 +48,10 @@ class Dashboard extends Component
         return view('livewire.sellers.dashboard', [
             'seller' => $this->seller(),
             'productsCount' => $this->productsCount(),
+            // Read-only for Owner and Employee alike; scoped to the
+            // authenticated user's own seller.
+            'subscription' => app(SubscriptionService::class)->statusFor($this->seller()),
+            'reminderDays' => Setting::current()->reminderDays(),
         ])->layout('layouts.seller', [
             'title' => __('sellers.dashboard.title'),
         ]);

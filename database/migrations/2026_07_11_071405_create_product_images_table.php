@@ -23,6 +23,9 @@ return new class extends Migration
             // ProductImage::bootProductImage()).
             $table->unsignedInteger('sort_order')->default(0);
             $table->timestamps();
+
+            // Cover image = lowest sort_order per product.
+            $table->index(['product_id', 'sort_order']);
         });
     }
 

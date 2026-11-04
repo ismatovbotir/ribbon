@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\FlushesNavMenu;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,6 +11,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable(['category_id', 'name', 'type', 'unit', 'is_required', 'is_filterable', 'sort_order'])]
 class CategoryParameter extends Model
 {
+    use FlushesNavMenu;
+
     /**
      * Get the attributes that should be cast.
      *

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin\Products;
 
+use App\Livewire\Concerns\AuthorizesAdmin;
 use App\Models\Product;
 use App\Models\ProductParameterValue;
 use App\Models\ProductPrice;
@@ -12,6 +13,13 @@ use Livewire\Component;
 
 class Show extends Component
 {
+    use AuthorizesAdmin;
+
+    protected function adminAccess(): ?string
+    {
+        return 'products.moderate';
+    }
+
     public Product $product;
 
     public bool $showRejectForm = false;
@@ -24,6 +32,8 @@ class Show extends Component
 
     public function mount(Product $product): void
     {
+        $this->authorizeAdmin('products.moderate');
+
         $this->product = $product;
     }
 
@@ -105,6 +115,8 @@ class Show extends Component
 
     public function approve(): void
     {
+        $this->authorizeAdmin('products.moderate');
+
         $this->product->approve($this->actingAdmin());
 
         session()->flash('status', 'Product approved.');
@@ -112,11 +124,15 @@ class Show extends Component
 
     public function openRejectForm(): void
     {
+        $this->authorizeAdmin('products.moderate');
+
         $this->showRejectForm = true;
     }
 
     public function cancelReject(): void
     {
+        $this->authorizeAdmin('products.moderate');
+
         $this->showRejectForm = false;
         $this->rejectReason = '';
         $this->resetErrorBag('rejectReason');
@@ -124,6 +140,8 @@ class Show extends Component
 
     public function reject(): void
     {
+        $this->authorizeAdmin('products.moderate');
+
         $this->validate([
             'rejectReason' => ['required', 'string', 'max:1000'],
         ]);
@@ -138,11 +156,15 @@ class Show extends Component
 
     public function openSuspendForm(): void
     {
+        $this->authorizeAdmin('products.moderate');
+
         $this->showSuspendForm = true;
     }
 
     public function cancelSuspend(): void
     {
+        $this->authorizeAdmin('products.moderate');
+
         $this->showSuspendForm = false;
         $this->suspendReason = '';
         $this->resetErrorBag('suspendReason');
@@ -155,6 +177,8 @@ class Show extends Component
      */
     public function suspend(): void
     {
+        $this->authorizeAdmin('products.moderate');
+
         $this->validate([
             'suspendReason' => ['required', 'string', 'max:1000'],
         ]);

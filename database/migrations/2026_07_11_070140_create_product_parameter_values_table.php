@@ -24,6 +24,9 @@ return new class extends Migration
             $table->timestamps();
 
             $table->unique(['product_id', 'category_parameter_id']);
+            // Catalog filters: number range / text match within one parameter.
+            $table->index(['category_parameter_id', 'value_number', 'product_id'], 'ppv_param_number_index');
+            $table->index(['category_parameter_id', 'value_text'], 'ppv_param_text_index');
         });
     }
 

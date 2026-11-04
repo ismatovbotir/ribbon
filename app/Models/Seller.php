@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
 
-#[Fillable(['name', 'address', 'country_id', 'region_id', 'city_id', 'vat_number', 'phone', 'logo_path', 'status', 'approved_by', 'approved_at', 'rejected_reason'])]
+#[Fillable(['name', 'address', 'country_id', 'region_id', 'city_id', 'vat_number', 'phone', 'logo_path', 'status', 'approved_by', 'approved_at', 'rejected_reason', 'subscription_paid_until'])]
 class Seller extends Model
 {
     /**
@@ -23,6 +23,7 @@ class Seller extends Model
     {
         return [
             'approved_at' => 'datetime',
+            'subscription_paid_until' => 'date:Y-m-d',
         ];
     }
 
@@ -77,6 +78,22 @@ class Seller extends Model
     public function products(): HasMany
     {
         return $this->hasMany(Product::class);
+    }
+
+    /**
+     * Manual subscription payments / free grants, newest first.
+     */
+    public function subscriptionPayments(): HasMany
+    {
+        return $this->hasMany(SellerSubscriptionPayment::class)->latest('id');
+    }
+
+    /**
+     * Audit trail of paid_until changes, newest first.
+     */
+    public function subscriptionAudits(): HasMany
+    {
+        return $this->hasMany(SellerSubscriptionAudit::class)->latest('id');
     }
 
     /**

@@ -25,6 +25,9 @@ return new class extends Migration
             $table->unsignedInteger('results_count')->default(0);
             $table->timestamp('occurred_at');
             $table->index(['query', 'occurred_at']);
+            $table->index('occurred_at');
+            // Zero-result search report.
+            $table->index(['results_count', 'occurred_at']);
         });
     }
 

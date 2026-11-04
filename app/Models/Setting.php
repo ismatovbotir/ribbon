@@ -24,6 +24,14 @@ use Illuminate\Database\Eloquent\Model;
     'telegram_bot_username',
     'telegram_webhook_secret',
     'sitemap_generated_at',
+    'subscription_price_uzs',
+    'subscription_grace_days',
+    'subscription_reminder_days',
+    'working_hours',
+    'office_address',
+    'legal_name',
+    'legal_inn',
+    'telegram_channel_url',
 ])]
 class Setting extends Model
 {
@@ -36,6 +44,12 @@ class Setting extends Model
     {
         return [
             'sitemap_generated_at' => 'datetime',
+            'subscription_price_uzs' => 'integer',
+            'subscription_grace_days' => 'integer',
+            'subscription_reminder_days' => 'integer',
+            // JSON keyed by locale, multiline strings.
+            'working_hours' => 'array',
+            'office_address' => 'array',
         ];
     }
 
@@ -59,6 +73,16 @@ class Setting extends Model
     public function effectiveTelegramBotToken(): ?string
     {
         return $this->telegram_bot_token ?: config('services.telegram.bot_token');
+    }
+
+    public function graceDays(): int
+    {
+        return max(0, (int) ($this->subscription_grace_days ?? 7));
+    }
+
+    public function reminderDays(): int
+    {
+        return max(0, (int) ($this->subscription_reminder_days ?? 3));
     }
 
     public function isTelegramBotConnected(): bool

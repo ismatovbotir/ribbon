@@ -8,324 +8,357 @@
     $categorySlug = $product->category?->slug[$locale] ?? ($product->category?->slug[$defaultLocale] ?? null);
 
     $vitrinPrice = $orderedPrices->firstWhere('is_vitrin', true);
+    $selectedPrice = $orderedPrices->firstWhere('unit', $selectedUnit) ?? $vitrinPrice;
     $images = $product->images;
+    $brandName = ($product->brand && $product->brand->id !== 1) ? $product->brand->name : null;
+    $minQty = $selectedPrice ? $product->minQtyForPrice($selectedPrice) : 1;
+    $moq = $product->moqInPcs();
 
-    $territoryParts = collect([
+    $territoryLine = collect([
         $product->seller->city?->name[$locale] ?? $product->seller->city?->name[$defaultLocale] ?? null,
         $product->seller->region?->name[$locale] ?? $product->seller->region?->name[$defaultLocale] ?? null,
         $product->seller->country?->name[$locale] ?? $product->seller->country?->name[$defaultLocale] ?? null,
-    ])->filter(fn ($part) => $part !== null && $part !== '')->values();
-    $territoryLine = $territoryParts->implode(', ');
+    ])->filter(fn ($part) => $part !== null && $part !== '')->implode(', ');
+
+    // Datasheet rows: brand first (when real), then every category parameter in admin order.
+    $datasheet = collect();
+    if ($brandName) {
+        $datasheet->push(['label' => __('storefront.product_detail.brand_label'), 'value' => $brandName]);
+    }
+    $datasheet = $datasheet->concat($specRows);
+
+    // Plain-language summary (GEO): 2-3 self-contained sentences an answer
+    // engine can quote. Built only from data already on the page; the seller
+    // phone is never part of it.
+    $summarySpecs = collect($specRows)
+        ->filter(fn ($row) => ($row['value'] ?? '') !== '')
+        ->take(4)
+        ->map(fn ($row) => $row['label'].': '.$row['value'])
+        ->implode('; ');
+    $summaryParts = [];
+    if ($categoryName !== '') {
+        $summaryParts[] = $territoryLine !== ''
+            ? __('storefront.product_detail.summary', ['name' => $displayName, 'category' => $categoryName, 'seller' => $product->seller->name, 'location' => $territoryLine])
+            : __('storefront.product_detail.summary_no_location', ['name' => $displayName, 'category' => $categoryName, 'seller' => $product->seller->name]);
+    }
+    if ($summarySpecs !== '') {
+        $summaryParts[] = __('storefront.product_detail.summary_specs', ['specs' => $summarySpecs]);
+    }
+    if ($vitrinPrice) {
+        $summaryParts[] = __('storefront.product_detail.summary_price', [
+            'price' => number_format((float) $vitrinPrice->price, 0, '', "\u{00A0}"),
+            'unit' => __('storefront.unit.'.$vitrinPrice->unit),
+            'moq' => $moq,
+        ]);
+    }
 @endphp
 
 {{--
-    Meta description/canonical/hreflang/OG/JSON-LD are NOT pushed here —
-    Storefront\Products\Show::render() already passes `metaDescription`,
-    `canonicalUrl`, `hreflangAlternates`, `ogImage`, `structuredData` etc.
-    straight into ->layout('layouts.storefront', [...]), which renders them
-    centrally (see layouts/storefront.blade.php's generic SEO head block).
-    This mirrors Storefront\Home / Storefront\Catalog\Show's exact
-    established pattern — see this task's final report for the caveat that
-    this was written as a frontend-engineer best-effort placeholder, not a
-    real seo-engineer/geo-engineer pass.
+    Meta description/canonical/hreflang/OG/JSON-LD come from
+    Storefront\Products\Show::render() via ->layout(...), rendered centrally
+    by layouts/storefront.blade.php. Nothing in this view touches them.
+    DOM order (crawlers + phone): breadcrumb, header/H1, gallery, action
+    panel, datasheet, seller block, bottom bar (<lg). lg re-places the panel
+    to column 2 with grid placement only. The seller phone is NOT in the
+    initial HTML: it only renders from $revealedPhone after revealPhone().
 --}}
-
-<div x-data="{ galleryActive: 0, galleryTotal: {{ max($images->count(), 1) }} }">
-    {{-- Breadcrumb --}}
-    <nav aria-label="Breadcrumb" class="mb-3 flex flex-wrap items-center gap-1.5 text-sm">
-        <a href="{{ route('storefront.home') }}" wire:navigate class="text-text-secondary hover:text-text-primary">{{ __('storefront.catalog.breadcrumb_home') }}</a>
+<div x-data="{ galleryActive: 0 }">
+    {{-- Breadcrumb (scroll strip on phones) --}}
+    <nav aria-label="{{ __('storefront.catalog.breadcrumb_label') }}" class="no-scrollbar -mx-4 mb-3 flex items-center gap-1.5 overflow-x-auto px-4 text-sm whitespace-nowrap md:mx-0 md:px-0">
+        <a href="{{ route('storefront.home') }}" wire:navigate class="hit text-text-secondary hover:text-text-primary hover:underline">{{ __('storefront.catalog.breadcrumb_home') }}</a>
         <span class="text-text-muted" aria-hidden="true">/</span>
         @if ($categorySlug)
-            <a href="{{ route('storefront.catalog.show', ['categorySlug' => $categorySlug]) }}" wire:navigate class="text-text-secondary hover:text-text-primary">{{ $categoryName }}</a>
+            <a href="{{ route('storefront.catalog.show', ['categorySlug' => $categorySlug]) }}" wire:navigate class="hit text-text-secondary hover:text-text-primary hover:underline">{{ $categoryName }}</a>
         @else
             <span class="text-text-secondary">{{ $categoryName }}</span>
         @endif
         <span class="text-text-muted" aria-hidden="true">/</span>
-        <span class="line-clamp-1 font-medium text-text-primary">{{ $displayName }}</span>
+        <span class="font-medium text-text-primary" aria-current="page">{{ $displayName }}</span>
     </nav>
 
-    <div class="lg:grid lg:grid-cols-2 lg:gap-10">
-        {{-- Gallery (left column) --}}
-        <div>
-            <div class="relative aspect-square overflow-hidden rounded-xl bg-surface-subtle">
-                @forelse ($images as $image)
-                    <img
-                        src="{{ Storage::disk('public')->url($image->path) }}"
-                        alt="{{ $displayName }}"
-                        class="absolute inset-0 h-full w-full object-contain p-3"
-                        x-show="galleryActive === {{ $loop->index }}"
-                        loading="{{ $loop->first ? 'eager' : 'lazy' }}"
-                    >
-                @empty
-                    {{-- 0-image state: a valid, expected state per doc 12 — never a broken-image icon or empty frame. --}}
-                    <div class="flex h-full w-full flex-col items-center justify-center gap-2">
-                        <svg class="h-16 w-16 text-text-muted" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                            <rect x="3.5" y="7" width="17" height="13" rx="1.5" stroke="currentColor" stroke-width="1.4" />
-                            <path d="M3.5 7 12 3l8.5 4" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" />
-                            <path d="M8 11.5h8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
-                        </svg>
-                        <span class="text-sm text-text-muted">{{ __('storefront.product_detail.gallery_no_image') }}</span>
-                    </div>
-                @endforelse
+    <header class="mt-1">
+        @if ($categoryName !== '')
+            <p class="text-sm font-medium">
+                @if ($categorySlug)
+                    <a href="{{ route('storefront.catalog.show', ['categorySlug' => $categorySlug]) }}" wire:navigate class="text-accent-700 hover:underline">{{ $categoryName }}</a>
+                @else
+                    <span class="text-text-secondary">{{ $categoryName }}</span>
+                @endif
+            </p>
+        @endif
+        <h1 class="mt-1 text-xl font-semibold text-balance text-text-primary lg:text-2xl">{{ $displayName }}</h1>
+        <div class="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-text-secondary">
+            @if ($brandName)
+                <span>{{ $brandName }}</span>
+                <span aria-hidden="true">&middot;</span>
+            @endif
+            {{-- Partner badge stays off until approved brand-authorization data exists (CLAUDE.md: self-claims are never shown). --}}
+            <x-storefront.seller-line :seller="$product->seller" :labelled="true" />
+        </div>
+        @if ($summaryParts !== [])
+            <p class="mt-3 max-w-3xl text-base text-text-secondary">{{ implode(' ', $summaryParts) }}</p>
+        @endif
+    </header>
+
+    <div class="mt-4 lg:mt-6 lg:grid lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-x-10">
+        {{-- Gallery: every image is in the DOM (no JS-only reveal) --}}
+        <div class="lg:col-start-1 lg:row-start-1">
+            <div class="relative overflow-hidden rounded-lg border border-border bg-surface-subtle">
+                <div x-ref="strip" class="no-scrollbar flex snap-x snap-mandatory overflow-x-auto" x-on:scroll.throttle.100ms="galleryActive = Math.round($refs.strip.scrollLeft / $refs.strip.clientWidth)">
+                    @forelse ($images as $image)
+                        <div class="aspect-square w-full shrink-0 snap-center">
+                            <img
+                                src="{{ Storage::disk('public')->url($image->path) }}"
+                                alt="{{ $displayName }}{{ $images->count() > 1 ? ' ('.$loop->iteration.')' : '' }}"
+                                width="800"
+                                height="800"
+                                class="size-full object-contain p-4"
+                                loading="{{ $loop->first ? 'eager' : 'lazy' }}"
+                            >
+                        </div>
+                    @empty
+                        <div class="flex aspect-square w-full flex-col items-center justify-center gap-2">
+                            <x-storefront.icon name="cube" class="size-12 text-text-muted" />
+                            <span class="text-sm text-text-muted">{{ __('storefront.product_detail.gallery_no_image') }}</span>
+                        </div>
+                    @endforelse
+                </div>
 
                 @if ($images->count() > 1)
-                    <button
-                        type="button"
-                        x-on:click="galleryActive = (galleryActive - 1 + galleryTotal) % galleryTotal"
-                        aria-label="{{ __('storefront.product_detail.gallery_prev') }}"
-                        class="absolute top-1/2 left-2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-surface/90 text-text-secondary hover:text-text-primary"
-                    >
-                        <svg class="h-4 w-4" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 5l-5 5 5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                    <button type="button" x-on:click="$refs.strip.scrollBy({ left: -$refs.strip.clientWidth, behavior: 'smooth' })" aria-label="{{ __('storefront.product_detail.gallery_prev') }}" class="absolute top-1/2 left-2 hidden size-11 -translate-y-1/2 items-center justify-center rounded-sm border border-border-input bg-surface text-text-primary hover:bg-surface-hover lg:flex">
+                        <x-storefront.icon name="chevron-left" class="size-4" stroke="2" />
                     </button>
-                    <button
-                        type="button"
-                        x-on:click="galleryActive = (galleryActive + 1) % galleryTotal"
-                        aria-label="{{ __('storefront.product_detail.gallery_next') }}"
-                        class="absolute top-1/2 right-2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-surface/90 text-text-secondary hover:text-text-primary"
-                    >
-                        <svg class="h-4 w-4" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M8 5l5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                    <button type="button" x-on:click="$refs.strip.scrollBy({ left: $refs.strip.clientWidth, behavior: 'smooth' })" aria-label="{{ __('storefront.product_detail.gallery_next') }}" class="absolute top-1/2 right-2 hidden size-11 -translate-y-1/2 items-center justify-center rounded-sm border border-border-input bg-surface text-text-primary hover:bg-surface-hover lg:flex">
+                        <x-storefront.icon name="chevron-right" class="size-4" stroke="2" />
                     </button>
                 @endif
             </div>
 
             @if ($images->count() > 1)
-                <div class="mt-3 flex gap-2 overflow-x-auto">
+                <p class="mt-2 text-xs text-text-muted tabular-nums"><span x-text="galleryActive + 1">1</span> / {{ $images->count() }}</p>
+                <div class="mt-2 hidden gap-2 md:flex">
                     @foreach ($images as $image)
                         <button
                             type="button"
-                            x-on:click="galleryActive = {{ $loop->index }}"
-                            class="h-16 w-16 shrink-0 overflow-hidden rounded-md border p-1"
-                            x-bind:class="galleryActive === {{ $loop->index }} ? 'border-accent-600 ring-1 ring-accent-600' : 'border-border'"
+                            x-on:click="$refs.strip.scrollTo({ left: $refs.strip.clientWidth * {{ $loop->index }}, behavior: 'smooth' })"
+                            x-bind:class="galleryActive === {{ $loop->index }} ? 'border-accent-700 outline outline-1 outline-accent-700' : 'border-border'"
                             aria-label="{{ __('storefront.product_detail.gallery_thumbnail', ['n' => $loop->iteration]) }}"
+                            class="size-16 shrink-0 overflow-hidden rounded-sm border bg-surface p-1"
                         >
-                            <img src="{{ Storage::disk('public')->url($image->path) }}" alt="" class="h-full w-full object-contain">
+                            <img src="{{ Storage::disk('public')->url($image->path) }}" alt="" width="64" height="64" class="size-full object-contain" loading="lazy">
                         </button>
                     @endforeach
                 </div>
             @endif
         </div>
 
-        {{-- Info column (right) --}}
-        <div class="mt-6 lg:mt-0">
-            <h1 class="text-2xl font-bold tracking-tight text-text-primary">{{ $displayName }}</h1>
+        {{-- Action panel (sticky at lg) --}}
+        <aside class="mt-6 lg:sticky lg:top-[calc(var(--spacing-storefront-header)+1rem)] lg:col-start-2 lg:row-span-3 lg:row-start-1 lg:mt-0 lg:self-start">
+            <div class="overflow-hidden rounded-md border border-border-strong bg-surface">
+                {{-- Quiet price strip (decision 9): regular weight, secondary colour, never louder than the title or the CTA --}}
+                @if ($selectedPrice)
+                    <div class="border-b border-border bg-surface-band px-4 py-3 md:px-5">
+                        <p class="text-xs font-semibold text-text-secondary">{{ __('storefront.product_detail.price_per_unit_strip') }}</p>
+                        <p class="font-mono text-base font-normal text-text-secondary tabular-nums">{{ number_format((float) $selectedPrice->price, 0, '', "\u{00A0}") }} UZS <span class="text-text-muted">/ {{ __('storefront.unit.'.$selectedPrice->unit) }}</span></p>
+                        <p class="mt-0.5 font-mono text-sm text-text-secondary tabular-nums">{{ __('storefront.moq') }} {{ $moq }} {{ __('storefront.unit.pcs') }}</p>
+                    </div>
+                @endif
 
-            @if ($product->brand && $product->brand->id !== 1)
-                <div class="mt-2 flex items-center gap-2">
-                    @if ($product->brand->logo_path)
-                        <img src="{{ Storage::disk('public')->url($product->brand->logo_path) }}" alt="" class="h-6 w-6 rounded-lg border border-border object-contain">
-                    @endif
-                    <span class="text-sm text-text-secondary">{{ $product->brand->name }}</span>
-                </div>
-            @endif
-
-            @if ($categoryName !== '')
-                <p class="mt-1 text-sm text-text-secondary">
-                    {{ __('storefront.product_detail.in_category_prefix') }}
-                    @if ($categorySlug)
-                        <a href="{{ route('storefront.catalog.show', ['categorySlug' => $categorySlug]) }}" wire:navigate class="font-medium text-accent-700 hover:underline">{{ $categoryName }}</a>
-                    @else
-                        {{ $categoryName }}
-                    @endif
-                </p>
-            @endif
-
-            {{--
-                Price comparison — every enabled unit, not just the vitrin
-                one (CLAUDE.md: serious B2B buyers compare units). Real
-                `<table>` markup (not a div grid) so an answer engine can
-                extract unit/qty/price/per-unit-price as unambiguous
-                name-value facts without inferring structure from layout —
-                every cell is always filled (qty_in_pcs is 1 for the `pcs`
-                row itself, so "price per pc" there is just the row's own
-                price restated, not blank/dashed) so nothing requires visual
-                inference to read correctly out of context.
-            --}}
-            <div class="mt-8 overflow-hidden rounded-xl border border-border bg-surface-raised">
-                <div class="overflow-x-auto">
-                    <table class="w-full min-w-[420px] text-sm">
+                <div class="p-4 md:p-5">
+                {{-- Price comparison: every enabled unit, real <table> (data-table recipe, spec 20 section 9) --}}
+                <div class="overflow-hidden rounded-md border border-border-strong bg-surface">
+                    <table class="w-full border-collapse text-sm">
                         <caption class="sr-only">{{ __('storefront.product_detail.price_table_caption') }}</caption>
                         <thead>
-                            <tr class="border-b border-border bg-surface-subtle text-left text-xs font-medium text-text-secondary">
-                                <th scope="col" class="p-4">{{ __('storefront.product_detail.price_col_unit') }}</th>
-                                <th scope="col" class="p-4">{{ __('storefront.product_detail.price_col_qty') }}</th>
-                                <th scope="col" class="p-4 text-right">{{ __('storefront.product_detail.price_col_price') }}</th>
-                                <th scope="col" class="p-4 text-right">{{ __('storefront.product_detail.price_col_per_unit') }}</th>
+                            <tr class="bg-surface-band">
+                                <th scope="col" class="h-10 border-b border-border-strong px-3 text-left text-xs font-semibold text-text-secondary md:px-4">{{ __('storefront.product_detail.price_col_unit') }}</th>
+                                <th scope="col" class="h-10 border-b border-border-strong px-3 text-right text-xs font-semibold text-text-secondary md:px-4">{{ __('storefront.product_detail.price_col_qty') }}</th>
+                                <th scope="col" class="h-10 border-b border-border-strong px-3 text-right text-xs font-semibold text-text-secondary md:px-4">{{ __('storefront.product_detail.price_col_price') }}</th>
+                                <th scope="col" class="h-10 border-b border-border-strong px-3 text-right text-xs font-semibold text-text-secondary md:px-4">{{ __('storefront.product_detail.price_col_per_unit') }}</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach ($orderedPrices as $price)
                                 <tr class="border-b border-border last:border-b-0 {{ $price->is_vitrin ? 'bg-accent-50' : '' }}">
-                                    <th scope="row" class="p-4 text-left font-medium text-text-primary">
-                                        <span class="inline-flex items-center gap-2">
-                                            {{ __('storefront.unit.'.$price->unit) }}
-                                            @if ($price->is_vitrin)
-                                                <span class="rounded-full bg-accent-50 px-2 py-0.5 text-xs font-medium text-accent-700">{{ __('storefront.product_detail.default_unit_tag') }}</span>
-                                            @endif
-                                        </span>
+                                    <th scope="row" class="h-12 px-3 text-left font-sans font-medium text-text-primary md:px-4 {{ $price->is_vitrin ? 'border-l-2 border-l-accent-700' : '' }}">
+                                        {{ __('storefront.unit.'.$price->unit) }}
+                                        @if ($price->is_vitrin)
+                                            <span class="ml-2 inline-flex h-5 items-center rounded-xs border border-accent-200 bg-surface px-1.5 text-xs font-medium text-accent-800">{{ __('storefront.product_detail.default_unit_tag') }}</span>
+                                        @endif
                                     </th>
-                                    <td class="p-4 whitespace-nowrap text-text-secondary">{{ number_format($price->qty_in_pcs) }} {{ __('storefront.unit.pcs') }}</td>
-                                    <td class="p-4 text-right font-bold tabular-nums whitespace-nowrap text-text-primary {{ $price->is_vitrin ? 'text-xl' : 'text-base' }}">{{ number_format((float) $price->price) }} UZS</td>
-                                    <td class="p-4 text-right tabular-nums whitespace-nowrap text-text-secondary">{{ number_format((float) $price->price / max($price->qty_in_pcs, 1)) }} UZS/{{ __('storefront.unit.pcs') }}</td>
+                                    <td class="h-12 px-3 text-right font-mono text-text-secondary tabular-nums md:px-4">{{ number_format($price->qty_in_pcs) }}</td>
+                                    <td class="h-12 px-3 text-right font-mono text-text-secondary tabular-nums md:px-4">{{ number_format((float) $price->price, 0, '', "\u{00A0}") }}</td>
+                                    <td class="h-12 px-3 text-right font-mono text-text-secondary tabular-nums md:px-4">{{ number_format((float) $price->price / max($price->qty_in_pcs, 1), 0, '', "\u{00A0}") }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
                     </table>
                 </div>
-            </div>
 
-            {{-- Unit selector --}}
-            <div class="mt-6">
-                <p class="text-sm font-medium text-text-secondary">{{ __('storefront.product_detail.unit_selector_label') }}</p>
-                <div class="mt-2 inline-flex rounded-full border border-border p-1" role="radiogroup" aria-label="{{ __('storefront.product_detail.unit_selector_label') }}">
+                {{-- Unit switch --}}
+                <p id="unit-switch-label" class="mt-4 mb-1.5 text-sm font-medium text-text-primary">{{ __('storefront.product_detail.unit_selector_label') }}</p>
+                <div role="radiogroup" aria-labelledby="unit-switch-label" class="inline-grid auto-cols-fr grid-flow-col divide-x divide-border-input overflow-hidden rounded-sm border border-border-input">
                     @foreach ($orderedPrices as $price)
                         <button
                             type="button"
                             wire:click="selectUnit('{{ $price->unit }}')"
                             role="radio"
                             aria-checked="{{ $selectedUnit === $price->unit ? 'true' : 'false' }}"
-                            class="rounded-full px-4 py-1.5 text-sm font-medium transition-colors {{ $selectedUnit === $price->unit ? 'bg-accent-600 text-white' : 'text-text-secondary hover:text-text-primary' }}"
+                            class="flex h-11 min-w-20 items-center justify-center gap-1.5 px-4 text-sm font-medium {{ $selectedUnit === $price->unit ? 'bg-accent-700 text-white' : 'bg-surface text-text-secondary hover:bg-surface-hover' }}"
                         >
+                            @if ($selectedUnit === $price->unit)
+                                <x-storefront.icon name="check" class="size-4" stroke="2" />
+                            @endif
                             {{ __('storefront.unit.'.$price->unit) }}
                         </button>
                     @endforeach
                 </div>
-            </div>
 
-            {{-- Quantity stepper --}}
-            <div class="mt-5 flex items-center gap-3">
-                <label for="product-qty" class="text-sm font-medium text-text-secondary">{{ __('storefront.product_detail.qty_label') }}</label>
-                <div class="flex items-center rounded-lg border border-border">
-                    <button type="button" wire:click="decrementQty" aria-label="{{ __('storefront.product_detail.qty_decrease') }}" class="flex h-10 w-10 items-center justify-center text-lg text-text-secondary hover:text-text-primary">&minus;</button>
-                    <input id="product-qty" type="number" min="1" step="1" wire:model.live="qty" class="h-10 w-16 border-x border-border bg-surface text-center text-sm tabular-nums text-text-primary focus:outline-none">
-                    <button type="button" wire:click="incrementQty" aria-label="{{ __('storefront.product_detail.qty_increase') }}" class="flex h-10 w-10 items-center justify-center text-lg text-text-secondary hover:text-text-primary">&plus;</button>
+                {{-- Quantity --}}
+                <p class="mt-4 mb-1.5 text-sm font-medium text-text-primary"><label for="product-qty">{{ __('storefront.product_detail.qty_label') }}</label></p>
+                <x-storefront.qty-stepper :value="$qty" :min="1">
+                    <input id="product-qty" type="text" inputmode="numeric" wire:model.live="qty" class="h-11 w-16 rounded-none border-0 bg-surface text-center font-mono text-field text-text-primary tabular-nums">
+                </x-storefront.qty-stepper>
+                <p class="mt-1.5 font-mono text-xs text-text-muted tabular-nums">{{ __('storefront.product_detail.min_order', ['qty' => $minQty, 'unit' => __('storefront.unit.'.($selectedPrice->unit ?? 'pcs')), 'pcs' => $moq]) }}</p>
+
+                {{-- Actions (lg+; under lg the fixed bottom bar carries them) --}}
+                <div class="mt-5 hidden lg:block">
+                    <x-button variant="cta" size="lg" wire:click="requestOffer" wire:loading.attr="disabled" wire:target="requestOffer" class="w-full">{{ __('storefront.product_detail.request_offer') }}</x-button>
+
+                    @if ($phoneRevealed && $revealedPhone)
+                        <x-button tag="a" variant="secondary" href="tel:{{ $revealedPhone }}" class="mt-2 w-full font-mono" aria-live="polite">{{ $revealedPhone }}</x-button>
+                    @else
+                        <x-button variant="secondary" wire:click="revealPhone" wire:loading.attr="disabled" wire:target="revealPhone" class="mt-2 w-full">{{ __('storefront.product_detail.show_phone') }}</x-button>
+                    @endif
+                    @error('phone')
+                        <p class="mt-1.5 text-xs font-medium text-danger-700" role="alert">{{ $message }}</p>
+                    @enderror
+                    @error('selection')
+                        <p class="mt-1.5 text-xs font-medium text-danger-700" role="alert">{{ $message }}</p>
+                    @enderror
+
+                    <x-button
+                        variant="ghost"
+                        wire:click="addToRequest"
+                        wire:target="addToRequest"
+                        x-data="{ added: false }"
+                        x-on:added-to-request.window="added = true; setTimeout(() => added = false, 1500)"
+                        class="mt-1 w-full"
+                    >
+                        <span x-show="!added">{{ __('storefront.product_detail.keep_browsing') }}</span>
+                        <span x-show="added" x-cloak>{{ __('storefront.product_detail.added') }}</span>
+                    </x-button>
+                </div>
+
+                {{-- Under lg: keep-browsing as the third row of the panel --}}
+                <div class="mt-4 lg:hidden">
+                    <x-button
+                        variant="secondary"
+                        wire:click="addToRequest"
+                        wire:target="addToRequest"
+                        x-data="{ added: false }"
+                        x-on:added-to-request.window="added = true; setTimeout(() => added = false, 1500)"
+                        class="w-full"
+                    >
+                        <span x-show="!added">{{ __('storefront.product_detail.keep_browsing') }}</span>
+                        <span x-show="added" x-cloak>{{ __('storefront.product_detail.added') }}</span>
+                    </x-button>
+                    @error('phone')
+                        <p class="mt-1.5 text-xs font-medium text-danger-700" role="alert">{{ $message }}</p>
+                    @enderror
+                    @error('selection')
+                        <p class="mt-1.5 text-xs font-medium text-danger-700" role="alert">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                {{-- Explicit statement of the actual mechanism (GEO): a request for an offer, no checkout. --}}
+                <p class="mt-3 text-sm text-text-secondary">{{ __('storefront.product_detail.request_note', ['seller' => $product->seller->name]) }}</p>
                 </div>
             </div>
+        </aside>
 
-            {{--
-                Add to request — the single most prominent action on the
-                page. See addToRequest()'s docblock for the placeholder-shape
-                rationale. `x-ref` deliberately lives on this plain wrapper
-                (not the same element as `x-data` below) so it registers on
-                the page-root Alpine scope (declared on this view's outermost
-                element) rather than this button's own isolated scope — the
-                mobile sticky bar further down needs to read this ref from a
-                sibling scope, which only works if it's attached to a shared
-                ancestor.
-            --}}
-            <div class="mt-6" x-ref="addToRequestAnchor">
-                <button
-                    type="button"
-                    wire:click="addToRequest"
-                    wire:loading.attr="disabled"
-                    wire:target="addToRequest"
-                    x-data="{ added: false }"
-                    x-on:added-to-request.window="added = true; setTimeout(() => added = false, 1500)"
-                    class="flex h-12 w-full items-center justify-center rounded-lg bg-accent-600 px-8 text-lg font-semibold text-white transition-colors hover:bg-accent-700 disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto"
-                >
-                    <span x-show="!added">{{ __('storefront.product_detail.add_to_request') }}</span>
-                    <span x-show="added" x-cloak>{{ __('storefront.product_detail.added') }}</span>
-                </button>
-            </div>
+        {{-- Datasheet: always server-rendered, never collapsed --}}
+        <section class="mt-8 lg:col-start-1 lg:row-start-2" aria-labelledby="product-specifications-heading">
+            <x-storefront.section-heading id="product-specifications-heading" :title="__('storefront.product_detail.specifications_heading')" />
 
-            {{--
-                Explicit, unambiguous statement of the actual buying
-                mechanism (CLAUDE.md: no on-platform purchase/checkout — a
-                phone-only Commercial Offer request, or calling the seller
-                directly). Without this sentence in the page's own text, an
-                answer engine reading "Add to request" + a price table has
-                nothing ruling out it describing this as a normal
-                add-to-cart/instant-checkout flow.
-            --}}
-            <p class="mt-2 text-sm text-text-secondary">{{ __('storefront.product_detail.request_note', ['seller' => $product->seller->name]) }}</p>
+            @if ($datasheet->isEmpty())
+                <p class="mt-3 text-sm text-text-secondary">{{ __('storefront.product_detail.no_specifications') }}</p>
+            @else
+                <div class="mt-4 overflow-hidden rounded-md border border-border-strong bg-surface">
+                    <table class="w-full border-collapse text-sm">
+                        <caption class="sr-only">{{ __('storefront.product_detail.specifications_caption', ['name' => $displayName]) }}</caption>
+                        <tbody>
+                            @foreach ($datasheet as $row)
+                                <tr class="border-b border-border last:border-b-0">
+                                    <th scope="row" class="w-2/5 border-r border-border bg-surface-band px-3 py-3 text-left align-top text-sm font-normal text-text-secondary md:w-1/3 md:px-4">{{ $row['label'] }}</th>
+                                    <td class="px-3 py-3 font-mono text-sm break-words text-text-primary tabular-nums md:px-4">
+                                        {{ $row['value'] }}
+                                        @if (! empty($row['copy']))
+                                            {{-- Part-number copy (spec 20 8.5): only rows flagged `copy`; hidden when the Clipboard API is unavailable. --}}
+                                            <button
+                                                type="button"
+                                                x-data="{ copied: false }"
+                                                x-show="navigator.clipboard"
+                                                x-cloak
+                                                x-on:click="navigator.clipboard.writeText(@js($row['value'])); copied = true; setTimeout(() => copied = false, 1500)"
+                                                aria-label="{{ __('storefront.product_detail.copy_part_number') }}"
+                                                class="hit ml-1 inline-flex size-8 items-center justify-center rounded-sm align-middle text-text-muted hover:bg-surface-hover hover:text-text-primary"
+                                            >
+                                                <x-storefront.icon name="copy" x-show="!copied" class="size-4" stroke="2" />
+                                                <x-storefront.icon name="check" x-show="copied" x-cloak class="size-4" stroke="2" />
+                                                <span class="sr-only" aria-live="polite" x-text="copied ? @js(__('storefront.product_detail.copied')) : ''"></span>
+                                            </button>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+        </section>
 
-            {{-- Seller info block — the literal implementation of CLAUDE.md's "or call the seller directly" alternative path. --}}
-            <div class="mt-8 rounded-lg border border-accent-100 bg-accent-50/50 p-4">
-                <div class="flex items-center gap-3">
+        {{-- Seller trust block. Only data the platform holds is shown; empty values are omitted. --}}
+        <section class="mt-8 lg:col-start-1 lg:row-start-3" aria-labelledby="product-seller-heading">
+            <x-storefront.section-heading id="product-seller-heading" :title="__('storefront.product_detail.seller_label')" />
+            <div class="mt-4 overflow-hidden rounded-md border border-border-strong bg-surface">
+                <div class="flex items-center gap-3 border-b border-border bg-surface-band p-4">
                     @if ($product->seller->logo_path)
-                        <img src="{{ Storage::disk('public')->url($product->seller->logo_path) }}" alt="" class="h-10 w-10 rounded-md border border-border object-contain">
+                        <img src="{{ Storage::disk('public')->url($product->seller->logo_path) }}" alt="" width="48" height="48" loading="lazy" class="size-12 shrink-0 rounded-sm border border-border bg-surface object-contain">
                     @else
-                        <span class="flex h-10 w-10 items-center justify-center rounded-md bg-surface-sunken text-text-muted">
-                            <svg class="h-5 w-5" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                                <path d="M3.5 17V6.5l6-3 7 3V17" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" />
-                                <path d="M8.5 17v-4h3v4" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" />
-                            </svg>
+                        <span class="flex size-12 shrink-0 items-center justify-center rounded-sm border border-border bg-surface text-text-muted">
+                            <x-storefront.icon name="cube" class="size-6" />
                         </span>
                     @endif
-                    <div>
-                        {{-- Explicit "Sold by" label, not just a bare name —
-                             so this block reads as a complete, citable fact
-                             ("sold by X") even when an answer engine pulls
-                             just this fragment out of the surrounding page. --}}
-                        <p class="text-xs font-medium text-text-muted">{{ __('storefront.product_detail.seller_label') }}</p>
-                        <p class="text-base font-semibold text-text-primary">{{ $product->seller->name }}</p>
+                    <div class="min-w-0">
+                        <h3 class="truncate text-base font-semibold text-text-primary">{{ $product->seller->name }}</h3>
+                        <div class="mt-1 flex flex-wrap items-center gap-1.5">
+                            <x-storefront.verified :labelled="true" />
+                        </div>
                     </div>
                 </div>
-
+                <p class="px-4 pt-3 text-xs text-text-muted">{{ __('storefront.seller.verified_explainer') }}</p>
                 @if ($territoryLine !== '')
-                    <p class="mt-2 text-sm text-text-secondary">{{ __('storefront.product_detail.ships_from', ['location' => $territoryLine]) }}</p>
-                @endif
-
-                @if ($product->seller->phone)
-                    <p class="mt-3 text-xs font-medium text-text-muted">{{ __('storefront.product_detail.call_seller_label') }}</p>
-                    <a href="tel:{{ $product->seller->phone }}" class="mt-1 inline-flex items-center gap-2 text-sm font-medium text-accent-700 hover:underline">
-                        <svg class="h-4 w-4" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                            <path d="M4.5 4h3l1.2 3.5-1.7 1.3a10 10 0 0 0 4.2 4.2l1.3-1.7L16 12.5v3a1.5 1.5 0 0 1-1.6 1.5A12.5 12.5 0 0 1 3 5.6 1.5 1.5 0 0 1 4.5 4Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" />
-                        </svg>
-                        {{ $product->seller->phone }}
-                    </a>
+                    <dl class="mt-3 text-sm">
+                        <div class="grid grid-cols-[2fr_3fr] gap-3 border-t border-border px-4 py-3">
+                            <dt class="text-text-secondary">{{ __('storefront.seller.location') }}</dt>
+                            <dd class="text-text-primary">{{ $territoryLine }}</dd>
+                        </div>
+                    </dl>
                 @endif
             </div>
-        </div>
+        </section>
     </div>
 
-    {{-- Specifications — full-width, server-rendered, ALL parameter values (not just is_filterable ones). --}}
-    <section class="mt-10 lg:mt-12" aria-labelledby="product-specifications-heading">
-        <h2 id="product-specifications-heading" class="text-xl font-semibold text-text-primary">{{ __('storefront.product_detail.specifications_heading') }}</h2>
-
-        @if ($specRows->isEmpty())
-            <p class="mt-3 text-sm text-text-secondary">{{ __('storefront.product_detail.no_specifications') }}</p>
-        @else
-            <dl class="mt-4 divide-y divide-border rounded-xl border border-border bg-surface-raised">
-                @foreach ($specRows as $row)
-                    <div class="flex flex-col gap-1 p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4 {{ $loop->even ? 'bg-surface-subtle/60' : '' }}">
-                        <dt class="text-sm text-text-secondary">{{ $row['label'] }}</dt>
-                        <dd class="text-sm font-medium text-text-primary sm:text-right">{{ $row['value'] }}</dd>
-                    </div>
-                @endforeach
-            </dl>
-        @endif
-    </section>
-
-    {{--
-        Mobile sticky bottom action bar — appears once the buyer scrolls
-        past the main "Add to request" button, per doc 12, so the primary
-        conversion action stays reachable while reading a long spec table.
-        Plain Alpine scroll listener (no intersect plugin is installed in
-        this project — see resources/js/app.js/package.json) against the
-        main CTA's own wrapper ref, throttled to avoid a scroll-jank
-        listener firing on every pixel.
-    --}}
-    <div
-        x-data="{ stickyVisible: false }"
-        x-on:scroll.window.throttle.150ms="stickyVisible = $refs.addToRequestAnchor ? $refs.addToRequestAnchor.getBoundingClientRect().bottom < 0 : false"
-        x-show="stickyVisible"
-        x-cloak
-        x-transition
-        class="fixed inset-x-0 bottom-0 z-sticky flex items-center justify-between gap-3 border-t border-border bg-surface-raised p-3 shadow-md lg:hidden"
-    >
-        <p class="text-lg font-bold tabular-nums text-text-primary">
-            @if ($vitrinPrice)
-                {{ number_format((float) $vitrinPrice->price) }} UZS
+    {{-- Bottom bar, product mode (below lg). The only fixed element on this page; yellow CTA = "Request offer". --}}
+    <div class="elev-up fixed inset-x-0 bottom-0 z-(--z-bar) border-t border-border-strong bg-surface px-3 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] lg:hidden">
+        <div class="mx-auto grid max-w-xl gap-2 {{ $phoneRevealed && $revealedPhone ? 'grid-cols-[auto_minmax(0,1fr)]' : 'grid-cols-2' }}">
+            @if ($phoneRevealed && $revealedPhone)
+                <x-button tag="a" variant="secondary" href="tel:{{ $revealedPhone }}" class="min-h-12 px-3 font-mono" aria-live="polite">{{ $revealedPhone }}</x-button>
+            @else
+                <x-button variant="secondary" wire:click="revealPhone" wire:loading.attr="disabled" wire:target="revealPhone" class="min-h-12 px-3">{{ __('storefront.product_detail.show_phone') }}</x-button>
             @endif
-        </p>
-        <button
-            type="button"
-            wire:click="addToRequest"
-            wire:loading.attr="disabled"
-            wire:target="addToRequest"
-            class="flex h-10 shrink-0 items-center justify-center rounded-lg bg-accent-600 px-5 text-sm font-semibold text-white hover:bg-accent-700 disabled:opacity-70"
-        >
-            {{ __('storefront.product_detail.add_to_request') }}
-        </button>
+            <x-button variant="cta" wire:click="requestOffer" wire:loading.attr="disabled" wire:target="requestOffer" class="min-h-12 px-3 font-semibold">{{ __('storefront.product_detail.request_offer') }}</x-button>
+        </div>
     </div>
 </div>

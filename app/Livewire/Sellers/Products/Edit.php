@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Sellers\Products;
 
+use App\Livewire\Concerns\AuthorizesSeller;
 use App\Models\Brand;
 use App\Models\CategoryParameter;
 use App\Models\Product;
@@ -14,20 +15,23 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
 /**
  * The seller product edit screen: four logically distinct sections on one
  * page (Category & Details, Specifications, Pricing, Images), per
- * docs/design/05-form-patterns.md's "titled bordered sections" guidance.
- * The Pricing section follows docs/design/07-product-pricing-editor.md
+ * .claude/docs/design/05-form-patterns.md's "titled bordered sections" guidance.
+ * The Pricing section follows .claude/docs/design/07-product-pricing-editor.md
  * closely.
  */
 class Edit extends Component
 {
+    use AuthorizesSeller;
     use WithFileUploads;
 
+    #[Locked]
     public Product $product;
 
     // ---- Category & Details ----
@@ -93,7 +97,7 @@ class Edit extends Component
      */
     public function mount(Product $product): void
     {
-        $seller = $this->seller();
+        $seller = $this->authorizeSeller();
 
         abort_unless($product->seller_id === $seller->id, 404);
 
@@ -193,6 +197,8 @@ class Edit extends Component
 
     public function saveDetails(): void
     {
+        $this->authorizeOwnProduct($this->product);
+
         $this->validate([
             'brandId' => ['required', 'exists:brands,id'],
             'nameExtra' => ['nullable', 'string', 'max:255'],
@@ -252,6 +258,8 @@ class Edit extends Component
 
     public function saveSpecifications(): void
     {
+        $this->authorizeOwnProduct($this->product);
+
         $this->validate($this->parameterRules());
 
         DB::transaction(function () {
@@ -316,7 +324,7 @@ class Edit extends Component
     }
 
     // ------------------------------------------------------------------
-    // Pricing — docs/design/07-product-pricing-editor.md
+    // Pricing — .claude/docs/design/07-product-pricing-editor.md
     // ------------------------------------------------------------------
 
     /**
@@ -343,6 +351,8 @@ class Edit extends Component
      */
     public function updated($name, $value): void
     {
+        $this->authorizeOwnProduct($this->product);
+
         if (preg_match('/^priceForm\.(pcs|pack|box)\.(qty_in_pcs|price)$/', (string) $name, $matches)) {
             $this->savePriceField($matches[1], $matches[2]);
         }
@@ -370,6 +380,8 @@ class Edit extends Component
 
     public function setVitrin(string $unit): void
     {
+        $this->authorizeOwnProduct($this->product);
+
         $row = $this->product->prices()->where('unit', $unit)->first();
 
         // Defensive no-op — the UI already hides/disables this action for
@@ -384,6 +396,8 @@ class Edit extends Component
 
     public function startEnable(string $unit): void
     {
+        $this->authorizeOwnProduct($this->product);
+
         if (! in_array($unit, ['pack', 'box'], true)) {
             return;
         }
@@ -395,11 +409,13 @@ class Edit extends Component
 
     /**
      * Collapses back to the ghost row without ever creating a price
-     * record — see docs/design/07's explicit "Cancel must not create a
+     * record — see .claude/docs/design/07's explicit "Cancel must not create a
      * stray row" requirement.
      */
     public function cancelEnable(string $unit): void
     {
+        $this->authorizeOwnProduct($this->product);
+
         $this->addingUnit[$unit] = false;
         $this->newRowForm[$unit] = ['qty_in_pcs' => null, 'price' => null];
         $this->resetErrorBag();
@@ -407,6 +423,8 @@ class Edit extends Component
 
     public function saveEnable(string $unit): void
     {
+        $this->authorizeOwnProduct($this->product);
+
         if (! in_array($unit, ['pack', 'box'], true)) {
             return;
         }
@@ -434,10 +452,12 @@ class Edit extends Component
 
     public function confirmRemove(string $unit): void
     {
+        $this->authorizeOwnProduct($this->product);
+
         $row = $this->product->prices()->where('unit', $unit)->first();
 
         // pcs is never removable (hidden, not disabled, in the view — its
-        // undeletability is structural, see docs/design/07). A vitrin row
+        // undeletability is structural, see .claude/docs/design/07). A vitrin row
         // is UI-guarded here too, even though the model now auto-reassigns
         // is_vitrin to pcs on delete as a belt-and-braces backstop.
         if (! $row || $unit === 'pcs' || $row->is_vitrin) {
@@ -450,12 +470,16 @@ class Edit extends Component
 
     public function cancelRemove(): void
     {
+        $this->authorizeOwnProduct($this->product);
+
         $this->removingUnit = null;
         $this->showRemoveConfirm = false;
     }
 
     public function removeUnit(): void
     {
+        $this->authorizeOwnProduct($this->product);
+
         if (! $this->removingUnit) {
             return;
         }
@@ -495,6 +519,8 @@ class Edit extends Component
      */
     public function updatedNewImageUpload(): void
     {
+        $this->authorizeOwnProduct($this->product);
+
         $this->validateOnly('newImageUpload', [
             'newImageUpload' => ['image', 'mimes:jpg,jpeg,png', 'max:1024'],
         ]);
@@ -518,6 +544,8 @@ class Edit extends Component
 
     public function removeImage(int $imageId): void
     {
+        $this->authorizeOwnProduct($this->product);
+
         $image = $this->product->images()->where('id', $imageId)->first();
 
         if (! $image) {
@@ -542,6 +570,8 @@ class Edit extends Component
      */
     public function moveImageUp(int $imageId): void
     {
+        $this->authorizeOwnProduct($this->product);
+
         $images = $this->product->images()->get();
         $index = $images->search(fn (ProductImage $image) => $image->id === $imageId);
 
@@ -558,6 +588,8 @@ class Edit extends Component
      */
     public function moveImageDown(int $imageId): void
     {
+        $this->authorizeOwnProduct($this->product);
+
         $images = $this->product->images()->get();
         $index = $images->search(fn (ProductImage $image) => $image->id === $imageId);
 

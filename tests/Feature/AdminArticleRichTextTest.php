@@ -35,6 +35,7 @@ class AdminArticleRichTextTest extends TestCase
             'name' => array_fill_keys($locales, $name),
             'slug' => array_fill_keys($locales, $slug),
             'is_active' => true,
+            'requires_subscription' => false,
         ]);
     }
 

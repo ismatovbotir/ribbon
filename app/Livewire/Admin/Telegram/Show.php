@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin\Telegram;
 
+use App\Livewire\Concerns\AuthorizesAdmin;
 use App\Models\Setting;
 use App\Models\TelegramContact;
 use App\Models\TelegramMessage;
@@ -20,6 +21,13 @@ use Livewire\Component;
  */
 class Show extends Component
 {
+    use AuthorizesAdmin;
+
+    protected function adminAccess(): ?string
+    {
+        return 'super-admin';
+    }
+
     #[Url(as: 'contact')]
     public ?int $selectedContactId = null;
 
@@ -60,12 +68,16 @@ class Show extends Component
 
     public function selectContact(int $contactId): void
     {
+        $this->authorizeSuperAdmin();
+
         $this->selectedContactId = $contactId;
         $this->replyText = '';
     }
 
     public function send(TelegramBotService $telegram): void
     {
+        $this->authorizeSuperAdmin();
+
         $this->validate([
             'replyText' => ['required', 'string', 'max:4096'],
         ]);

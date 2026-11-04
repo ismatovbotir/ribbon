@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin\Offers;
 
+use App\Livewire\Concerns\AuthorizesAdmin;
 use App\Models\OfferRequest;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -9,6 +10,13 @@ use Livewire\WithPagination;
 
 class Index extends Component
 {
+    use AuthorizesAdmin;
+
+    protected function adminAccess(): ?string
+    {
+        return 'super-admin';
+    }
+
     use WithPagination;
 
     #[Url(history: true)]
@@ -21,6 +29,8 @@ class Index extends Component
 
     public function updatedSearch(): void
     {
+        $this->authorizeSuperAdmin();
+
         $this->resetPage();
     }
 
@@ -31,12 +41,16 @@ class Index extends Component
      */
     public function filterByStatus(string $status): void
     {
+        $this->authorizeSuperAdmin();
+
         $this->status = $this->status === $status ? '' : $status;
         $this->resetPage();
     }
 
     public function clearFilters(): void
     {
+        $this->authorizeSuperAdmin();
+
         $this->search = '';
         $this->status = '';
         $this->resetPage();

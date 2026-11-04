@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Storefront;
 
+use App\Livewire\Storefront\Concerns\QuickAddsToSelection;
 use App\Models\Article;
 use App\Models\Banner;
 use App\Models\Category;
@@ -12,6 +13,8 @@ use Livewire\Component;
 
 class Home extends Component
 {
+    use QuickAddsToSelection;
+
     public function render()
     {
         $navCategories = Category::navList();
@@ -34,7 +37,7 @@ class Home extends Component
         // recently approved products are the closest stand-in for a home
         // page "what's new" section without inventing a new model concept.
         $recentProducts = Product::query()
-            ->where('status', 'approved')
+            ->visibleOnStorefront()
             ->with([
                 'category',
                 'brand',
@@ -118,11 +121,8 @@ class Home extends Component
                 'name' => __('storefront.nav.brand'),
                 'url' => url('/'),
                 'inLanguage' => config('ribbon.locales'),
-                // `/search` is the same target the header search form
-                // already posts to (layouts/storefront.blade.php) — no
-                // /search route is registered yet (routes/web.php), a
-                // pre-existing gap this schema inherits rather than
-                // introduces; flagged as a follow-up.
+                // `/search` (route storefront.search, Storefront\Search)
+                // takes `?q=`, the same param the search forms submit.
                 'potentialAction' => [
                     '@type' => 'SearchAction',
                     'target' => [
@@ -155,6 +155,9 @@ class Home extends Component
             'ogImage' => $ogImage,
             'structuredData' => $structuredData,
             'navCategories' => $navCategories,
+            'bottomBar' => 'selection',
+            'hideHeaderSearch' => true,
+            'hideCategoryNav' => true,
         ]);
     }
 }

@@ -81,9 +81,9 @@
                         class="flex flex-wrap items-center gap-1.5 rounded-sm border border-border bg-surface p-2 focus-within:border-accent-500 focus-within:ring-2 focus-within:ring-accent-100"
                     >
                         <template x-for="category in selected" :key="category.id">
-                            <span class="inline-flex items-center gap-1 rounded-full bg-accent-50 py-0.5 pr-1 pl-2.5 text-xs font-medium whitespace-nowrap text-accent-700">
+                            <span class="inline-flex items-center gap-1 rounded-pill bg-accent-50 py-0.5 pr-1 pl-2.5 text-xs font-medium whitespace-nowrap text-accent-700">
                                 <span x-text="category.name"></span>
-                                <button type="button" @click.stop="remove(category.id)" class="rounded-full p-0.5 text-accent-500 hover:bg-accent-100 hover:text-accent-700">
+                                <button type="button" @click.stop="remove(category.id)" class="rounded-pill p-0.5 text-accent-500 hover:bg-accent-100 hover:text-accent-700">
                                     <span class="sr-only">Remove</span>
                                     <span aria-hidden="true">&times;</span>
                                 </button>
@@ -98,7 +98,7 @@
                             @keydown.enter.prevent="if (filtered.length) add(filtered[0].id)"
                             @keydown.backspace="if (query === '' && selectedIds.length) remove(selectedIds[selectedIds.length - 1])"
                             :placeholder="selected.length ? '' : 'Type to search categories…'"
-                            class="min-w-[10rem] flex-1 border-none bg-transparent p-0.5 text-sm text-text-primary placeholder:text-text-muted focus:ring-0 focus:outline-none"
+                            class="min-w-[10rem] flex-1 border-0 bg-transparent p-0.5 text-sm text-text-primary placeholder:text-text-muted"
                             autocomplete="off"
                         >
                     </div>
@@ -107,7 +107,7 @@
                         x-show="open && filtered.length > 0"
                         x-cloak
                         @click.outside="open = false"
-                        class="absolute z-dropdown mt-1 max-h-48 w-full overflow-y-auto rounded-sm border border-border-strong bg-surface-raised shadow-lg"
+                        class="absolute z-(--z-dropdown) mt-1 max-h-48 w-full overflow-y-auto rounded-sm border border-border-strong bg-surface-raised"
                     >
                         <template x-for="category in filtered" :key="category.id">
                             <button
@@ -155,7 +155,7 @@
                                     wire:model.blur="excerpt.{{ $locale }}"
                                     rows="2"
                                     placeholder="Short teaser shown on the home page and articles list"
-                                    class="block w-full rounded-sm border bg-surface px-3 py-2 text-base text-text-primary placeholder:text-text-muted focus:border-accent-500 focus:ring-2 focus:ring-accent-100 focus:outline-none {{ $errors->has('excerpt.'.$locale) ? 'border-danger-600' : 'border-border' }}"
+                                    class="block w-full rounded-sm border bg-surface px-3 py-2 text-base text-text-primary placeholder:text-text-muted focus:border-accent-500 {{ $errors->has('excerpt.'.$locale) ? 'border-danger-600' : 'border-border' }}"
                                 ></textarea>
                                 @error('excerpt.'.$locale)
                                     <p class="mt-1 text-xs text-danger-600">{{ $message }}</p>

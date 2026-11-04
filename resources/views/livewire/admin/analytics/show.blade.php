@@ -3,9 +3,7 @@
 
     @if ($totalViews === 0 && $totalSearches === 0)
         <div class="rounded-md border border-dashed border-border-strong bg-surface-subtle p-10 text-center">
-            <svg class="mx-auto h-8 w-8 text-text-muted" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                <path d="M3 16.5V7l4.5 3.5L12 5l5 5.5v6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
+            <x-icon name="catalog" class="mx-auto size-8 text-text-muted" />
             <p class="mt-3 text-sm font-medium text-text-primary">No activity yet</p>
             <p class="mx-auto mt-1 max-w-sm text-sm text-text-secondary">Traffic and search data will show up here once buyers start browsing the storefront.</p>
         </div>
@@ -32,11 +30,11 @@
                 {{-- Legend — required for 2 series; line-key + label, never color-only --}}
                 <div class="flex items-center gap-4 text-xs text-text-secondary">
                     <span class="flex items-center gap-1.5">
-                        <span class="inline-block h-0.5 w-4 rounded-full bg-accent-600"></span>
+                        <span class="inline-block h-0.5 w-4 rounded-pill bg-accent-600"></span>
                         Product views
                     </span>
                     <span class="flex items-center gap-1.5">
-                        <span class="inline-block h-0.5 w-4 rounded-full bg-info-600"></span>
+                        <span class="inline-block h-0.5 w-4 rounded-pill bg-info-600"></span>
                         Searches
                     </span>
                 </div>
@@ -71,7 +69,7 @@
                             x-on:focus="tooltip = { x: {{ $point['x'] }}, label: '{{ $point['label'] }}', views: {{ $point['views'] }}, searches: {{ $point['searches'] }} }"
                             x-on:blur="tooltip = null"
                             tabindex="0"
-                            class="cursor-pointer outline-none"
+                            class="cursor-pointer focus-visible:outline-2 focus-visible:outline-focus-ring"
                         >
                             <rect x="{{ $point['x'] - 12 }}" y="0" width="24" height="{{ $chart['height'] }}" fill="transparent" />
                             <circle cx="{{ $point['x'] }}" cy="{{ $point['yViews'] }}" r="3" class="fill-accent-600" stroke="var(--color-surface-raised)" stroke-width="2" />
@@ -85,16 +83,16 @@
                     x-show="tooltip"
                     x-cloak
                     x-bind:style="tooltip ? `left: ${(tooltip.x / {{ $chart['width'] }}) * 100}%` : ''"
-                    class="pointer-events-none absolute top-0 -translate-x-1/2 rounded-sm border border-border bg-surface-overlay px-2.5 py-2 text-xs shadow-md"
+                    class="pointer-events-none absolute top-0 -translate-x-1/2 rounded-sm border border-border bg-surface-overlay px-2.5 py-2 text-xs"
                 >
                     <p class="font-medium text-text-primary" x-text="tooltip?.label"></p>
                     <p class="mt-1 flex items-center gap-1.5">
-                        <span class="inline-block h-0.5 w-3 rounded-full bg-accent-600"></span>
+                        <span class="inline-block h-0.5 w-3 rounded-pill bg-accent-600"></span>
                         <span class="font-semibold text-text-primary" x-text="tooltip?.views"></span>
                         <span class="text-text-secondary">views</span>
                     </p>
                     <p class="mt-0.5 flex items-center gap-1.5">
-                        <span class="inline-block h-0.5 w-3 rounded-full bg-info-600"></span>
+                        <span class="inline-block h-0.5 w-3 rounded-pill bg-info-600"></span>
                         <span class="font-semibold text-text-primary" x-text="tooltip?.searches"></span>
                         <span class="text-text-secondary">searches</span>
                     </p>
@@ -132,13 +130,13 @@
                         <div>
                             <div class="mb-1 flex items-center justify-between text-xs">
                                 <span class="flex items-center gap-1.5 text-text-secondary">
-                                    <span class="inline-block h-2 w-2 rounded-full {{ $sourceColors[$source] }}"></span>
+                                    <span class="inline-block h-2 w-2 rounded-pill {{ $sourceColors[$source] }}"></span>
                                     {{ $sourceLabels[$source] }}
                                 </span>
                                 <span class="font-medium text-text-primary tabular-nums">{{ number_format($sourceBreakdown[$source]) }}</span>
                             </div>
-                            <div class="h-2 overflow-hidden rounded-full bg-surface-sunken">
-                                <div class="h-full rounded-full {{ $sourceColors[$source] }}" style="width: {{ $maxSourceCount > 0 ? round($sourceBreakdown[$source] / $maxSourceCount * 100) : 0 }}%"></div>
+                            <div class="h-2 overflow-hidden rounded-pill bg-surface-sunken">
+                                <div class="h-full rounded-pill {{ $sourceColors[$source] }}" style="width: {{ $maxSourceCount > 0 ? round($sourceBreakdown[$source] / $maxSourceCount * 100) : 0 }}%"></div>
                             </div>
                         </div>
                     @endforeach
@@ -160,8 +158,8 @@
                                     <span class="truncate text-text-secondary">"{{ $row['query'] }}"</span>
                                     <span class="shrink-0 pl-2 font-medium text-text-primary tabular-nums">{{ number_format($row['count']) }}</span>
                                 </div>
-                                <div class="h-2 overflow-hidden rounded-full bg-surface-sunken">
-                                    <div class="h-full rounded-full bg-accent-600" style="width: {{ round($row['count'] / $maxQueryCount * 100) }}%"></div>
+                                <div class="h-2 overflow-hidden rounded-pill bg-surface-sunken">
+                                    <div class="h-full rounded-pill bg-accent-600" style="width: {{ round($row['count'] / $maxQueryCount * 100) }}%"></div>
                                 </div>
                             </div>
                         @endforeach

@@ -2,7 +2,10 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+        <link rel="icon" href="/favicon.ico" sizes="any">
 
         <title>{{ isset($title) ? $title.' · Ribbon' : 'Ribbon' }}</title>
 
@@ -83,7 +86,7 @@
 
         @isset($structuredData)
             @foreach ($structuredData as $schema)
-                <script type="application/ld+json">{!! json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}</script>
+                <script type="application/ld+json">{!! json_encode($schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) !!}</script>
             @endforeach
         @endisset
 
@@ -138,351 +141,332 @@
         @livewireStyles
     </head>
     {{--
-        Buyer storefront shell — no authenticated actor, no sidebar (buyers
-        never register/log in, see CLAUDE.md). Conventional public-site
-        header + content + footer, scoped `.storefront` (orange accent,
-        roomier type scale) per docs/design/08 & 09. This is NOT
-        layouts/public.blade.php (which stays the minimal seller
-        auth-flow shell) — the storefront needs real marketplace chrome.
+        Buyer storefront shell (specs 18, 19, 20): enterprise look (slight radius, borders first, elev-* only on
+        header-after-scroll / mega panel / drawer / bottom bars). 56/64px sticky header with the lg+ Catalog mega
+        trigger, non-sticky content strip (lg+), search row + category chips below lg, left drawer below lg,
+        exactly one fixed bottom bar per page chosen by $bottomBar ('selection' | 'product' | 'none').
+        Layout variables: $hideCategoryNav (chip row), $hideContentNav (lg+ strip; request page), $hideHeaderSearch.
     --}}
-    <body class="storefront bg-surface text-base text-text-primary antialiased" x-data="{ mobileMenuOpen: false, catalogMenuOpen: false, mobileSearchOpen: false }">
-        {{--
-            Header — sticky, spacing-storefront-header (72px) desktop/tablet,
-            h-topbar (56px) mobile. See docs/design/09-storefront-layout-shell.md.
-        --}}
-        <header class="sticky top-0 z-sticky border-b border-border bg-surface">
-            <div class="mx-auto flex h-topbar max-w-7xl items-center gap-3 px-4 md:h-storefront-header md:px-6">
-                {{-- Mobile: hamburger --}}
+    @php
+        $bottomBar = $bottomBar ?? 'selection';
+        $hideHeaderSearch = $hideHeaderSearch ?? false;
+        $hideCategoryNav = $hideCategoryNav ?? false;
+        $hideContentNav = $hideContentNav ?? false;
+        $selectionCount = \App\Services\OfferSelectionService::count();
+        $navCategories = $navCategories ?? \App\Models\Category::navList();
+        $currentLocale = app()->getLocale();
+        $defaultLocale = config('ribbon.locales')[0];
+        $activeCategorySlug = request()->route('categorySlug');
+        $searchQuery = request()->routeIs('storefront.search') && is_string(request('q')) ? request('q') : '';
+        $catalogActive = request()->routeIs('storefront.catalog.show', 'storefront.products.show');
+
+        // Content menu (spec 19 3.3): Articles, News, header-flagged CMS pages (max 3), Contact. Home is added by the strip / drawer.
+        $currentPath = '/'.ltrim(request()->path(), '/');
+        $contentLinks = [
+            ['label' => __('storefront.articles.title'), 'url' => route('storefront.articles.index'), 'active' => request()->routeIs('storefront.articles.*'), 'icon' => 'book'],
+            ['label' => __('storefront.nav.news'), 'url' => route('storefront.news.index'), 'active' => request()->routeIs('storefront.news.*'), 'icon' => 'article'],
+        ];
+        foreach ($menuPages['header'] as $headerPage) {
+            if ($headerPage['key'] === 'for-sellers') {
+                continue;
+            }
+            $contentLinks[] = [
+                'label' => $headerPage['title'],
+                'url' => $headerPage['url'],
+                'active' => '/'.ltrim((string) parse_url($headerPage['url'], PHP_URL_PATH), '/') === $currentPath,
+                'icon' => 'document',
+            ];
+        }
+        $contentLinks[] = ['label' => __('storefront.nav.contact'), 'url' => route('storefront.contact'), 'active' => request()->routeIs('storefront.contact'), 'icon' => 'email'];
+        $stripLinks = [['label' => __('storefront.nav.home'), 'url' => route('storefront.home'), 'active' => request()->routeIs('storefront.home')], ...$contentLinks];
+
+        $forSellersPublished = \App\Models\Page::query()->isPublished()->where('key', 'for-sellers')->exists();
+        $forSellersUrl = $forSellersPublished ? route('storefront.pages.for-sellers') : route('sellers.register');
+        $forSellersActive = request()->routeIs('storefront.pages.for-sellers');
+
+        $legalAddress = $settings->office_address[$currentLocale] ?? ($settings->office_address[$defaultLocale] ?? '');
+        $legalAddress = implode(' · ', array_filter(array_map('trim', preg_split('/\R/', (string) $legalAddress) ?: [])));
+        $footerLink = 'inline-flex min-h-11 items-center text-sm text-text-secondary hover:text-accent-700 hover:underline lg:min-h-8';
+        $footerHeading = 'text-sm font-semibold text-text-primary';
+        $hasContactInfo = $settings->admin_phone || $settings->admin_email || $settings->isTelegramBotConnected() || $settings->telegram_channel_url;
+    @endphp
+    <body
+        class="storefront bg-surface text-base text-text-primary antialiased {{ $bottomBar === 'selection' && $selectionCount > 0 ? 'pb-[calc(var(--spacing-bar-slim)+env(safe-area-inset-bottom))] lg:pb-0' : '' }} {{ $bottomBar === 'product' ? 'pb-[calc(var(--spacing-bar-action)+env(safe-area-inset-bottom))] lg:pb-0' : '' }}"
+        x-data="{ drawerOpen: false, filtersOpen: false, scrolled: false, selectionCount: {{ $selectionCount }} }"
+        x-on:scroll.window.passive="scrolled = window.scrollY > 8"
+        x-on:keydown.escape.window="drawerOpen = false"
+        x-on:selection-changed.window="selectionCount = $event.detail.count"
+        x-on:livewire:navigated.window="drawerOpen = false"
+    >
+        <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-(--z-toast) focus:rounded-sm focus:border focus:border-accent-700 focus:bg-surface focus:px-4 focus:py-3">{{ __('storefront.nav.skip') }}</a>
+
+        <header
+            class="sticky top-0 z-(--z-sticky) border-b border-border bg-surface transition-shadow motion-reduce:transition-none"
+            x-bind:class="scrolled ? 'elev-1 border-border-strong!' : ''"
+        >
+            <div class="mx-auto flex h-storefront-header max-w-7xl items-center gap-1 px-2 md:gap-4 md:px-6">
                 <button
                     type="button"
-                    class="text-text-secondary md:hidden"
-                    x-on:click="mobileMenuOpen = true"
+                    class="flex size-11 shrink-0 items-center justify-center rounded-sm text-text-primary lg:hidden"
+                    x-ref="drawerOpener"
+                    x-on:click="drawerOpen = true"
                     aria-label="{{ __('storefront.nav.open_menu') }}"
+                    aria-controls="storefront-drawer"
+                    x-bind:aria-expanded="drawerOpen"
                 >
-                    <svg class="h-6 w-6" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                        <path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-                    </svg>
+                    <x-storefront.icon name="menu" class="size-6" />
                 </button>
 
-                {{-- Logo --}}
-                <a href="{{ route('storefront.home') }}" wire:navigate class="flex shrink-0 items-center gap-2">
-                    <span class="flex h-8 w-8 items-center justify-center rounded-md bg-accent-600 text-lg font-semibold text-white">R</span>
-                    <span class="hidden text-xl font-semibold text-text-primary sm:inline">{{ __('storefront.nav.brand') }}</span>
+                <a href="{{ route('storefront.home') }}" wire:navigate class="flex h-11 shrink-0 items-center px-2 md:px-0">
+                    <x-logo size="md" />
                 </a>
 
-                {{--
-                    Catalog trigger (desktop/tablet) — toggles the
-                    full-width mega-menu panel anchored to the header's
-                    bottom edge (see the panel markup just before
-                    </header> below; it lives outside this flex row so it
-                    can span the full viewport width).
-                --}}
-                <button
-                    type="button"
-                    data-catalog-trigger
-                    x-on:click="catalogMenuOpen = !catalogMenuOpen"
-                    x-bind:aria-expanded="catalogMenuOpen"
-                    aria-controls="storefront-catalog-menu"
-                    class="hidden h-9 shrink-0 items-center gap-1.5 rounded-lg border border-border px-3 text-sm font-medium text-text-primary hover:bg-surface-hover md:flex"
-                >
-                    <svg class="h-4 w-4 text-text-secondary" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                        <path d="M3 4.5h14M3 10h14M3 15.5h14" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
-                    </svg>
-                    {{ __('storefront.nav.catalog_trigger') }}
-                    <svg class="h-3.5 w-3.5 text-text-muted transition-transform" x-bind:class="catalogMenuOpen && 'rotate-180'" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                        <path d="M5 8l5 5 5-5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
-                </button>
+                <x-storefront.mega-panel :mega="$mega" :catalog-active="$catalogActive" />
 
-                {{-- Search (desktop/tablet inline, mobile icon-triggered overlay) --}}
-                <form action="/search" method="GET" class="hidden max-w-xl flex-1 md:flex">
-                    <label for="storefront-search" class="sr-only">{{ __('storefront.nav.search_submit') }}</label>
-                    <div class="relative w-full">
-                        <svg class="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-text-muted" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                            <circle cx="9" cy="9" r="5.5" stroke="currentColor" stroke-width="1.4" />
-                            <path d="M17 17l-3.5-3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
-                        </svg>
-                        <input
-                            id="storefront-search"
-                            type="search"
-                            name="q"
-                            placeholder="{{ __('storefront.nav.search_placeholder') }}"
-                            class="h-9 w-full rounded-lg border border-border bg-surface pr-3 pl-9 text-sm text-text-primary focus:border-accent-500 focus:ring-2 focus:ring-accent-100 focus:outline-none"
-                        >
-                    </div>
-                </form>
+                @unless ($hideHeaderSearch)
+                    <x-storefront.search-form id="sf-search-d" :value="$searchQuery" class="hidden min-w-0 flex-1 md:block md:max-w-2xl" />
+                @endunless
 
-                {{-- Mobile: search icon --}}
-                <button
-                    type="button"
-                    class="ml-auto text-text-secondary md:hidden"
-                    x-on:click="mobileSearchOpen = true"
-                    aria-label="{{ __('storefront.nav.search_submit') }}"
-                >
-                    <svg class="h-5 w-5" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                        <circle cx="9" cy="9" r="5.5" stroke="currentColor" stroke-width="1.4" />
-                        <path d="M17 17l-3.5-3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
-                    </svg>
-                </button>
+                <div class="flex-1 {{ $hideHeaderSearch ? '' : 'md:hidden' }}"></div>
 
-                {{-- Locale switcher (desktop/tablet) — same ?lang= mechanism as layouts/public.blade.php --}}
-                <nav aria-label="{{ __('storefront.nav.language') }}" class="hidden shrink-0 items-center gap-1 text-sm md:flex">
-                    @foreach (['uz' => 'UZ', 'ru' => 'RU', 'en' => 'EN'] as $locale => $label)
-                        <a
-                            href="{{ request()->fullUrlWithQuery(['lang' => $locale]) }}"
-                            class="rounded-sm px-1.5 py-1 {{ app()->getLocale() === $locale ? 'font-semibold text-accent-600' : 'text-text-muted hover:text-text-secondary' }}"
-                        >{{ $label }}</a>
-                    @endforeach
+                <nav aria-label="{{ __('storefront.nav.language') }}" class="hidden lg:block">
+                    <x-storefront.locale-switch />
                 </nav>
 
-                {{--
-                    Selection indicator — clipboard/list glyph, never a cart
-                    icon (see doc 09). Links to the review/submit page (see
-                    App\Livewire\Storefront\OfferRequest\Show); count comes
-                    from OfferSelectionService so this stays in sync with
-                    whatever that class considers a valid line.
-                --}}
-                @php
-                    $selectionCount = \App\Services\OfferSelectionService::count();
-                @endphp
                 <a
                     href="{{ route('storefront.offer-request.show') }}"
                     wire:navigate
-                    class="relative ml-1 shrink-0 text-text-secondary hover:text-text-primary"
-                    aria-label="{{ __('storefront.nav.selection_aria', ['count' => $selectionCount]) }}"
-                    title="{{ __('storefront.nav.selection_label') }}"
+                    class="relative flex size-11 shrink-0 items-center justify-center rounded-sm text-text-primary hover:bg-surface-hover md:w-auto md:gap-2 md:border md:border-border-input md:px-3"
+                    aria-label="{{ trans_choice('storefront.nav.selection_aria', $selectionCount) }}"
                 >
-                    <svg class="h-6 w-6" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                        <rect x="4.5" y="3.5" width="11" height="14" rx="1.5" stroke="currentColor" stroke-width="1.4" />
-                        <path d="M7.5 3.5h5a1 1 0 0 1 1 1v1h-7v-1a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.4" />
-                        <path d="M7 9.5h6M7 12.5h6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
-                    </svg>
-                    @if ($selectionCount > 0)
-                        <span class="absolute -top-1.5 -right-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent-600 px-1 text-[10px] font-semibold text-white">
-                            {{ $selectionCount }}
-                        </span>
-                    @endif
+                    <x-storefront.icon name="list-checked" class="size-6" />
+                    <span class="hidden text-sm font-medium md:inline">{{ __('storefront.nav.selection_label') }}</span>
+                    <span
+                        x-show="selectionCount > 0"
+                        x-text="selectionCount"
+                        @if ($selectionCount < 1) x-cloak @endif
+                        class="absolute top-0.5 right-0.5 flex h-5 min-w-5 items-center justify-center rounded-xs bg-accent-700 px-1 text-xs font-medium text-white tabular-nums md:static"
+                    >{{ $selectionCount }}</span>
                 </a>
-            </div>
-
-            {{--
-                Catalog mega-menu (desktop/tablet) — full-width panel
-                anchored to the sticky header's bottom edge. Categories are
-                a deliberately flat list (no nesting, see CLAUDE.md), so
-                this is a single-level grid of category cards — icon, name,
-                approved-product count (see Category::navList()) — not a
-                two-level category→subcategory flyout. Capped to the
-                viewport space below the header and scrollable past that.
-
-                click.outside guard: the panel sits outside the trigger
-                button's subtree, so a plain `catalogMenuOpen = false`
-                would also fire on the trigger click itself and fight the
-                toggle — hence the [data-catalog-trigger] check.
-            --}}
-            <div
-                id="storefront-catalog-menu"
-                x-show="catalogMenuOpen"
-                x-cloak
-                x-transition.opacity.duration.150ms
-                x-on:keydown.escape.window="catalogMenuOpen = false"
-                x-on:click.outside="$event.target.closest('[data-catalog-trigger]') || (catalogMenuOpen = false)"
-                class="absolute inset-x-0 top-full z-dropdown hidden max-h-[calc(100vh-var(--spacing-storefront-header))] overflow-y-auto border-b border-border bg-surface-overlay shadow-sm md:block"
-            >
-                <div class="mx-auto max-w-7xl px-4 py-5 md:px-6">
-                    @if (($navCategories ?? collect())->isEmpty())
-                        <p class="text-sm text-text-muted">{{ __('storefront.nav.no_categories') }}</p>
-                    @else
-                        <p class="mb-3 text-xs font-medium tracking-wide text-text-muted uppercase">{{ __('storefront.nav.catalog_menu_label') }}</p>
-                        <div class="grid grid-cols-2 gap-x-4 gap-y-1 lg:grid-cols-3 xl:grid-cols-4">
-                            @foreach ($navCategories as $navCategory)
-                                <a
-                                    href="{{ route('storefront.catalog.show', ['categorySlug' => $navCategory->slug[app()->getLocale()] ?? '']) }}"
-                                    wire:navigate
-                                    x-on:click="catalogMenuOpen = false"
-                                    class="group flex items-center gap-3 rounded-lg px-2.5 py-2.5 hover:bg-surface-hover"
-                                >
-                                    @if ($navCategory->image_path)
-                                        <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($navCategory->image_path) }}" alt="" class="h-9 w-9 shrink-0 rounded-md border border-border object-cover">
-                                    @else
-                                        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-surface-subtle text-text-muted">
-                                            <svg class="h-4.5 w-4.5" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                                                <rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="1.3" />
-                                            </svg>
-                                        </span>
-                                    @endif
-                                    <span class="min-w-0 text-sm text-text-secondary group-hover:text-text-primary">
-                                        <span class="truncate font-medium">{{ $navCategory->name[app()->getLocale()] ?? '' }}</span>
-                                        <span class="ml-1 text-xs text-text-muted">({{ $navCategory->approved_products_count ?? 0 }})</span>
-                                    </span>
-                                </a>
-                            @endforeach
-                        </div>
-                    @endif
-                </div>
             </div>
         </header>
 
-        {{-- Mobile off-canvas menu --}}
-        <div
-            x-show="mobileMenuOpen"
-            x-cloak
-            class="fixed inset-0 z-modal-backdrop bg-slate-900/40 md:hidden"
-            x-on:click="mobileMenuOpen = false"
-        ></div>
-        <aside
-            x-show="mobileMenuOpen"
-            x-cloak
-            x-transition
-            class="fixed inset-y-0 left-0 z-modal flex w-80 max-w-[85vw] flex-col overflow-y-auto border-r border-border bg-surface md:hidden"
-        >
-            <div class="flex h-topbar shrink-0 items-center justify-between border-b border-border px-4">
-                <span class="text-lg font-semibold text-text-primary">{{ __('storefront.nav.brand') }}</span>
-                <button type="button" x-on:click="mobileMenuOpen = false" class="text-text-muted" aria-label="{{ __('storefront.nav.close_menu') }}">✕</button>
+        @unless ($hideContentNav)
+            <x-storefront.content-strip :links="$stripLinks" :for-sellers-url="$forSellersUrl" :for-sellers-active="$forSellersActive" />
+        @endunless
+
+        @unless ($hideHeaderSearch)
+            <div class="border-b border-border bg-surface px-4 py-2 md:hidden">
+                <x-storefront.search-form id="sf-search-m" :value="$searchQuery" compact />
             </div>
-            <nav class="flex-1 px-3 py-4">
-                <p class="mb-2 px-1 text-xs font-medium tracking-wide text-text-muted uppercase">{{ __('storefront.nav.catalog_menu_label') }}</p>
-                @forelse (($navCategories ?? collect()) as $navCategory)
-                    <a
-                        href="{{ route('storefront.catalog.show', ['categorySlug' => $navCategory->slug[app()->getLocale()] ?? '']) }}"
-                        wire:navigate
-                        x-on:click="mobileMenuOpen = false"
-                        class="block rounded-lg px-3 py-2.5 text-sm text-text-secondary hover:bg-surface-hover hover:text-text-primary"
-                    >{{ $navCategory->name[app()->getLocale()] ?? '' }} <span class="text-xs text-text-muted">({{ $navCategory->approved_products_count ?? 0 }})</span></a>
-                @empty
-                    <p class="px-3 text-sm text-text-muted">{{ __('storefront.nav.no_categories') }}</p>
-                @endforelse
+        @endunless
 
-                <div class="mt-4 border-t border-border pt-4">
-                    <nav aria-label="{{ __('storefront.nav.language') }}" class="flex items-center gap-2 px-3 text-sm">
-                        @foreach (['uz' => 'UZ', 'ru' => 'RU', 'en' => 'EN'] as $locale => $label)
-                            <a
-                                href="{{ request()->fullUrlWithQuery(['lang' => $locale]) }}"
-                                class="rounded-sm px-2 py-1 {{ app()->getLocale() === $locale ? 'font-semibold text-accent-600' : 'text-text-muted' }}"
-                            >{{ $label }}</a>
-                        @endforeach
-                    </nav>
-                </div>
-
-                <div class="mt-4 border-t border-border pt-4">
-                    <a href="{{ route('sellers.register') }}" wire:navigate class="block rounded-lg px-3 py-2.5 text-sm font-medium text-accent-700 hover:bg-surface-hover">{{ __('storefront.nav.become_seller') }}</a>
+        {{-- Category chip row: phones and tablets only (below lg); the mega panel carries categories at lg+. --}}
+        @if (! $hideCategoryNav && $navCategories->isNotEmpty())
+            <nav aria-label="{{ __('storefront.nav.catalog_menu_label') }}" class="border-b border-border bg-surface-band lg:hidden">
+                <div
+                    class="no-scrollbar mx-auto flex max-w-7xl snap-x gap-2 overflow-x-auto px-4 py-2 md:px-6"
+                    x-init="$el.querySelector('[aria-current]')?.scrollIntoView({ inline: 'center', block: 'nearest' })"
+                >
+                    @foreach ($navCategories as $navCategory)
+                        @php
+                            $navSlug = $navCategory->slug[$currentLocale] ?? '';
+                            $navActive = $activeCategorySlug !== null && $activeCategorySlug === $navSlug;
+                        @endphp
+                        <a
+                            href="{{ route('storefront.catalog.show', ['categorySlug' => $navSlug]) }}"
+                            wire:navigate
+                            @if ($navActive) aria-current="page" @endif
+                            class="hit inline-flex h-11 shrink-0 snap-start items-center rounded-sm border px-3 text-sm font-medium whitespace-nowrap {{ $navActive ? 'border-accent-700 bg-accent-700 text-white' : 'border-border-input bg-surface text-text-primary hover:bg-surface-hover' }}"
+                        >{{ $navCategory->name[$currentLocale] ?? '' }}</a>
+                    @endforeach
                 </div>
             </nav>
+        @endif
+
+        {{-- Drawer (below lg) --}}
+        <div x-show="drawerOpen" x-cloak x-transition.opacity class="fixed inset-0 z-(--z-nav-backdrop) bg-scrim lg:hidden" x-on:click="drawerOpen = false"></div>
+        <aside
+            id="storefront-drawer"
+            x-show="drawerOpen"
+            x-cloak
+            x-trap.noscroll="drawerOpen"
+            {{-- Return focus to the opener only on an open→closed change.
+                 x-effect also ran on init and after each wire:navigate, which
+                 stole focus from the skip link on every page (QA N-03). --}}
+            x-init="$watch('drawerOpen', (open, wasOpen) => { if (! open && wasOpen) $nextTick(() => $refs.drawerOpener?.focus({ preventScroll: true })) })"
+            role="dialog"
+            aria-modal="true"
+            aria-label="{{ __('storefront.nav.menu') }}"
+            x-transition:enter="transition duration-200 ease-out"
+            x-transition:enter-start="-translate-x-full"
+            x-transition:enter-end="translate-x-0"
+            x-transition:leave="transition duration-150 ease-in"
+            x-transition:leave-start="translate-x-0"
+            x-transition:leave-end="-translate-x-full"
+            class="elev-3 fixed inset-y-0 left-0 z-(--z-nav) flex w-drawer flex-col border-r border-border-strong bg-surface pb-[env(safe-area-inset-bottom)] motion-reduce:transition-none lg:hidden"
+        >
+            <div class="flex h-14 shrink-0 items-center justify-between border-b border-border-strong pr-1 pl-4">
+                <x-logo size="md" />
+                <button type="button" x-on:click="drawerOpen = false" class="flex size-11 items-center justify-center rounded-sm text-text-primary" aria-label="{{ __('storefront.nav.close_menu') }}">
+                    <x-storefront.icon name="close" class="size-5" />
+                </button>
+            </div>
+
+            @php
+                $drawerRow = 'flex min-h-11 items-center justify-between gap-2 rounded-sm px-3 py-2 text-sm';
+                $drawerOn = 'bg-accent-50 font-semibold text-accent-800';
+                $drawerOff = 'text-text-primary hover:bg-surface-hover';
+            @endphp
+            <div class="flex-1 overflow-y-auto overscroll-contain py-2">
+                <div class="px-2">
+                    <a href="{{ route('storefront.home') }}" wire:navigate x-on:click="drawerOpen = false" @if (request()->routeIs('storefront.home')) aria-current="page" @endif class="{{ $drawerRow }} {{ request()->routeIs('storefront.home') ? $drawerOn : $drawerOff }}"><span class="flex min-w-0 items-center gap-3"><x-storefront.icon name="home" class="size-5 shrink-0 text-text-muted" /><span>{{ __('storefront.nav.home') }}</span></span></a>
+                </div>
+
+                <p class="px-4 pt-4 pb-1 text-xs font-semibold text-text-muted uppercase tracking-[0.04em]">{{ __('storefront.nav.catalog') }}</p>
+                @if ($mega['categories'])
+                    <x-storefront.drawer-catalog :mega="$mega" />
+                @else
+                    <p class="px-4 text-sm text-text-muted">{{ __('storefront.nav.no_categories') }}</p>
+                @endif
+
+                <hr class="my-2 border-border">
+
+                <div class="px-2">
+                    @foreach ($contentLinks as $l)
+                        <a href="{{ $l['url'] }}" wire:navigate x-on:click="drawerOpen = false" @if ($l['active']) aria-current="page" @endif class="{{ $drawerRow }} {{ $l['active'] ? $drawerOn : $drawerOff }}"><span class="flex min-w-0 items-center gap-3"><x-storefront.icon :name="$l['icon'] ?? 'document-text'" class="size-5 shrink-0 text-text-muted" /><span>{{ $l['label'] }}</span></span></a>
+                    @endforeach
+                </div>
+
+                <hr class="my-2 border-border">
+
+                <p class="px-4 pt-2 pb-1 text-xs font-semibold text-text-muted uppercase tracking-[0.04em]">{{ __('storefront.footer.sellers_heading') }}</p>
+                <div class="px-2">
+                    <a href="{{ $forSellersUrl }}" wire:navigate x-on:click="drawerOpen = false" @if ($forSellersActive) aria-current="page" @endif class="{{ $drawerRow }} {{ $forSellersActive ? $drawerOn : $drawerOff }}"><span class="flex min-w-0 items-center gap-3"><x-storefront.icon name="store" class="size-5 shrink-0 text-text-muted" /><span>{{ __('storefront.nav.for_sellers') }}</span></span></a>
+                    <a href="{{ route('sellers.register') }}" wire:navigate x-on:click="drawerOpen = false" class="{{ $drawerRow }} {{ $drawerOff }}"><span class="flex min-w-0 items-center gap-3"><x-storefront.icon name="user-add" class="size-5 shrink-0 text-text-muted" /><span>{{ __('storefront.nav.become_seller') }}</span></span></a>
+                    <a href="{{ route('login') }}" wire:navigate x-on:click="drawerOpen = false" class="{{ $drawerRow }} {{ $drawerOff }}"><span class="flex min-w-0 items-center gap-3"><x-storefront.icon name="login" class="size-5 shrink-0 text-text-muted" /><span>{{ __('storefront.nav.seller_login') }}</span></span></a>
+                </div>
+            </div>
+
+            <div class="shrink-0 space-y-3 border-t border-border-strong p-4">
+                <nav aria-label="{{ __('storefront.nav.language') }}"><x-storefront.locale-switch full /></nav>
+                @if ($settings->admin_phone)
+                    <a href="tel:{{ $settings->admin_phone }}" class="flex h-11 items-center font-mono text-sm text-text-primary tabular-nums hover:text-accent-700">{{ $settings->admin_phone }}</a>
+                @endif
+                @if ($settings->isTelegramBotConnected())
+                    <a href="https://t.me/{{ $settings->telegram_bot_username }}" target="_blank" rel="noopener" class="flex h-11 items-center text-sm text-text-primary hover:text-accent-700">{{ __('storefront.footer.chat_telegram') }}</a>
+                @endif
+            </div>
         </aside>
 
-        {{-- Mobile search overlay --}}
-        <div
-            x-show="mobileSearchOpen"
-            x-cloak
-            x-transition
-            class="fixed inset-x-0 top-0 z-modal border-b border-border bg-surface p-3 md:hidden"
-        >
-            <form action="/search" method="GET" class="flex items-center gap-2">
-                <div class="relative flex-1">
-                    <svg class="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-text-muted" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                        <circle cx="9" cy="9" r="5.5" stroke="currentColor" stroke-width="1.4" />
-                        <path d="M17 17l-3.5-3.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
-                    </svg>
-                    <input
-                        type="search"
-                        name="q"
-                        autofocus
-                        placeholder="{{ __('storefront.nav.search_placeholder') }}"
-                        class="h-9 w-full rounded-lg border border-border bg-surface pr-3 pl-9 text-sm text-text-primary focus:border-accent-500 focus:ring-2 focus:ring-accent-100 focus:outline-none"
-                    >
-                </div>
-                <button type="button" x-on:click="mobileSearchOpen = false" class="shrink-0 text-sm text-text-secondary" aria-label="{{ __('storefront.nav.close_menu') }}">✕</button>
-            </form>
-        </div>
-
-        {{-- Page content --}}
-        <main class="mx-auto max-w-7xl px-4 py-8 md:px-6 md:py-10">
+        <main id="main" class="mx-auto max-w-7xl px-4 py-6 md:px-6 md:py-12">
             {{ $slot }}
         </main>
 
-        {{-- Footer — deliberately minimal, no account/order-history links (buyers never register). See doc 09. --}}
-        <footer class="border-t border-border bg-surface-subtle">
-            <div class="mx-auto max-w-7xl px-4 py-10 md:px-6">
-                @php
-                    $hasContactInfo = $settings->admin_phone || $settings->admin_email || $settings->isTelegramBotConnected();
-                @endphp
-                <div class="grid grid-cols-1 gap-8 {{ $hasContactInfo ? 'sm:grid-cols-4' : 'sm:grid-cols-3' }}">
-                    <div>
-                        <a href="{{ route('storefront.home') }}" wire:navigate class="flex items-center gap-2">
-                            <span class="flex h-7 w-7 items-center justify-center rounded-md bg-accent-600 text-sm font-semibold text-white">R</span>
-                            <span class="text-lg font-semibold text-text-primary">{{ __('storefront.nav.brand') }}</span>
+        {{-- Footer (spec 19 section 6 + spec 20 8.4) - no account/order links (buyers never register). --}}
+        <footer class="mt-16 border-t border-border bg-surface-band">
+            <div class="mx-auto max-w-7xl px-4 py-10 md:px-6 md:py-12">
+                <div class="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-3 lg:grid-cols-[1.3fr_1.4fr_1fr_1fr_1.2fr]">
+                    <div class="col-span-2 sm:col-span-3 lg:col-span-1">
+                        <a href="{{ route('storefront.home') }}" wire:navigate class="inline-flex min-h-11 items-center">
+                            <x-logo size="md" />
                         </a>
-                        <p class="mt-3 max-w-xs text-sm text-text-secondary">{{ __('storefront.footer.tagline') }}</p>
-                        <nav aria-label="{{ __('storefront.nav.language') }}" class="mt-4 flex items-center gap-2 text-sm">
-                            @foreach (['uz' => 'UZ', 'ru' => 'RU', 'en' => 'EN'] as $locale => $label)
-                                <a
-                                    href="{{ request()->fullUrlWithQuery(['lang' => $locale]) }}"
-                                    class="rounded-sm px-1.5 py-1 {{ app()->getLocale() === $locale ? 'font-semibold text-accent-600' : 'text-text-muted hover:text-text-secondary' }}"
-                                >{{ $label }}</a>
-                            @endforeach
-                        </nav>
+                        <p class="mt-2 max-w-xs text-sm text-text-secondary">{{ __('storefront.footer.tagline') }}</p>
+                        <nav aria-label="{{ __('storefront.nav.language') }}" class="mt-4 inline-block"><x-storefront.locale-switch /></nav>
                     </div>
 
-                    <div>
-                        <p class="text-sm font-semibold text-text-primary">{{ __('storefront.footer.catalog_heading') }}</p>
-                        <ul class="mt-3 space-y-2">
-                            @forelse (($navCategories ?? collect()) as $navCategory)
+                    <div class="col-span-2 sm:col-span-1">
+                        <p class="{{ $footerHeading }}">{{ __('storefront.footer.catalog_heading') }}</p>
+                        <ul class="mt-2 grid grid-cols-2 gap-x-4 sm:block">
+                            @forelse ($navCategories as $navCategory)
                                 <li>
                                     <a
-                                        href="{{ route('storefront.catalog.show', ['categorySlug' => $navCategory->slug[app()->getLocale()] ?? '']) }}"
+                                        href="{{ route('storefront.catalog.show', ['categorySlug' => $navCategory->slug[$currentLocale] ?? '']) }}"
                                         wire:navigate
-                                        class="text-sm text-text-secondary hover:text-accent-700"
-                                    >{{ $navCategory->name[app()->getLocale()] ?? '' }}</a>
+                                        class="{{ $footerLink }}"
+                                    >{{ $navCategory->name[$currentLocale] ?? '' }}</a>
                                 </li>
                             @empty
                                 <li class="text-sm text-text-muted">{{ __('storefront.nav.no_categories') }}</li>
                             @endforelse
-                            <li><a href="{{ route('storefront.articles.index') }}" wire:navigate class="text-sm text-text-secondary hover:text-accent-700">{{ __('storefront.articles.title') }}</a></li>
                         </ul>
                     </div>
 
                     <div>
-                        <p class="text-sm font-semibold text-text-primary">{{ __('storefront.footer.sellers_heading') }}</p>
-                        <ul class="mt-3 space-y-2">
-                            <li><a href="{{ route('sellers.register') }}" wire:navigate class="text-sm text-text-secondary hover:text-accent-700">{{ __('storefront.nav.become_seller') }}</a></li>
-                            <li><a href="{{ route('login') }}" wire:navigate class="text-sm text-text-secondary hover:text-accent-700">{{ __('storefront.nav.seller_login') }}</a></li>
+                        <p class="{{ $footerHeading }}">{{ __('storefront.footer.company_heading') }}</p>
+                        <ul class="mt-2">
+                            @foreach ($menuPages['footer']['company'] as $footerPage)
+                                <li><a href="{{ $footerPage['url'] }}" wire:navigate class="{{ $footerLink }}">{{ $footerPage['title'] }}</a></li>
+                            @endforeach
+                            <li><a href="{{ route('storefront.contact') }}" wire:navigate class="{{ $footerLink }}">{{ __('storefront.nav.contact') }}</a></li>
+                            <li><a href="{{ route('storefront.articles.index') }}" wire:navigate class="{{ $footerLink }}">{{ __('storefront.articles.title') }}</a></li>
+                            <li><a href="{{ route('storefront.news.index') }}" wire:navigate class="{{ $footerLink }}">{{ __('storefront.nav.news') }}</a></li>
+                            @unless (collect($menuPages['footer']['company'])->contains('key', 'for-sellers'))
+                                <li><a href="{{ $forSellersUrl }}" wire:navigate class="{{ $footerLink }}">{{ __('storefront.nav.for_sellers') }}</a></li>
+                            @endunless
+                            <li><a href="{{ route('sellers.register') }}" wire:navigate class="{{ $footerLink }}">{{ __('storefront.nav.become_seller') }}</a></li>
+                            <li><a href="{{ route('login') }}" wire:navigate class="{{ $footerLink }}">{{ __('storefront.nav.seller_login') }}</a></li>
                         </ul>
                     </div>
 
-                    @if ($hasContactInfo)
+                    @if ($menuPages['footer']['legal'])
                         <div>
-                            <p class="text-sm font-semibold text-text-primary">{{ __('storefront.footer.contact_heading') }}</p>
-                            <ul class="mt-3 space-y-2">
+                            <p class="{{ $footerHeading }}">{{ __('storefront.footer.legal_heading') }}</p>
+                            <ul class="mt-2">
+                                @foreach ($menuPages['footer']['legal'] as $footerPage)
+                                    <li><a href="{{ $footerPage['url'] }}" wire:navigate class="{{ $footerLink }}">{{ $footerPage['title'] }}</a></li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
+                    @if ($hasContactInfo)
+                        <div class="col-span-2 sm:col-span-1">
+                            <p class="{{ $footerHeading }}">{{ __('storefront.footer.contact_heading') }}</p>
+                            <ul class="mt-2">
                                 @if ($settings->admin_phone)
-                                    <li><a href="tel:{{ $settings->admin_phone }}" class="text-sm text-text-secondary hover:text-accent-700">{{ $settings->admin_phone }}</a></li>
+                                    <li><a href="tel:{{ $settings->admin_phone }}" class="{{ $footerLink }} font-mono tabular-nums">{{ $settings->admin_phone }}</a></li>
                                 @endif
                                 @if ($settings->admin_email)
-                                    <li><a href="mailto:{{ $settings->admin_email }}" class="text-sm text-text-secondary hover:text-accent-700">{{ $settings->admin_email }}</a></li>
+                                    <li><a href="mailto:{{ $settings->admin_email }}" class="{{ $footerLink }}">{{ $settings->admin_email }}</a></li>
                                 @endif
                                 @if ($settings->isTelegramBotConnected())
-                                    <li>
-                                        <a
-                                            href="https://t.me/{{ $settings->telegram_bot_username }}"
-                                            target="_blank"
-                                            rel="noopener"
-                                            class="inline-flex items-center gap-1.5 text-sm text-text-secondary hover:text-accent-700"
-                                        >
-                                            <svg class="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                                                <path d="M10 1.667a8.333 8.333 0 1 0 0 16.666 8.333 8.333 0 0 0 0-16.666Zm3.827 5.694-1.4 6.6c-.105.472-.38.588-.771.366l-2.13-1.57-1.028 0.99c-.114.114-.209.209-.428.209l.153-2.169 3.949-3.569c.172-.153-.038-.238-.267-.086l-4.881 3.074-2.103-.658c-.457-.143-.466-.457.096-.676l8.222-3.169c.381-.14.714.09.588.658Z" />
-                                            </svg>
-                                            {{ __('storefront.footer.chat_telegram') }}
-                                        </a>
-                                    </li>
+                                    <li><a href="https://t.me/{{ $settings->telegram_bot_username }}" target="_blank" rel="noopener" class="{{ $footerLink }}">{{ __('storefront.footer.chat_telegram') }}</a></li>
+                                @endif
+                                @if ($settings->telegram_channel_url)
+                                    <li><a href="{{ $settings->telegram_channel_url }}" target="_blank" rel="noopener" class="{{ $footerLink }}">{{ __('storefront.contact.channel') }}</a></li>
                                 @endif
                             </ul>
                         </div>
                     @endif
                 </div>
+            </div>
 
-                <div class="mt-8 border-t border-border pt-6">
-                    <p class="text-xs text-text-muted">{{ __('storefront.footer.copyright', ['year' => now()->year]) }}</p>
+            {{-- Legal identity + marketplace disclaimer (spec 20 8.4). Never prints empty labels. --}}
+            <div class="border-t border-border bg-surface">
+                <div class="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-4 md:px-6">
+                    <p class="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-xs text-text-secondary">
+                        @if ($settings->legal_name)
+                            <span class="font-medium text-text-primary">© {{ now()->year }} {{ $settings->legal_name }}</span>
+                        @else
+                            <span class="font-medium text-text-primary">{{ __('storefront.footer.copyright', ['year' => now()->year]) }}</span>
+                        @endif
+                        @if ($settings->legal_inn)
+                            <span>{{ __('storefront.footer.inn') }} <span class="font-mono tabular-nums">{{ $settings->legal_inn }}</span></span>
+                        @endif
+                        @if ($legalAddress !== '')
+                            <span>{{ $legalAddress }}</span>
+                        @endif
+                    </p>
+                    <p class="max-w-3xl text-xs text-text-muted">{{ __('storefront.footer.disclaimer') }}</p>
                 </div>
             </div>
         </footer>
+
+        {{-- The single fixed bottom bar: selection mode here; product mode is rendered by the product page. --}}
+        @if ($bottomBar === 'selection')
+            <x-storefront.selection-bar :count="$selectionCount" />
+        @endif
 
         @livewireScripts
     </body>

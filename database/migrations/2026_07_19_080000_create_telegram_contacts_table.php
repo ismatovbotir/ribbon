@@ -28,6 +28,9 @@ return new class extends Migration
             $table->string('last_name')->nullable();
             $table->timestamp('last_message_at')->nullable();
             $table->timestamps();
+
+            // Admin inbox ordering.
+            $table->index('last_message_at');
         });
     }
 

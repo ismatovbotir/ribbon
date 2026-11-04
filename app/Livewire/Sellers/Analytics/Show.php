@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Sellers\Analytics;
 
+use App\Livewire\Concerns\AuthorizesSeller;
 use App\Models\Seller;
 use App\Services\ProductAnalyticsService;
 use App\Support\LocalizedDate;
@@ -18,6 +19,8 @@ use Livewire\Component;
  */
 class Show extends Component
 {
+    use AuthorizesSeller;
+
     private const DAYS = 30;
 
     /**

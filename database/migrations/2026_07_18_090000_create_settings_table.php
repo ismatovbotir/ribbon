@@ -55,6 +55,20 @@ return new class extends Migration
             // page show "last generated" next to the regenerate button.
             // Null until the first generation.
             $table->timestamp('sitemap_generated_at')->nullable();
+            // Subscription config (Super Admin). Monthly price in UZS is
+            // informational for invoices (null = not set yet); grace days
+            // keep paid-category products visible after expiry; reminder
+            // days = how long before expiry the reminder is sent.
+            $table->unsignedBigInteger('subscription_price_uzs')->nullable();
+            $table->unsignedSmallInteger('subscription_grace_days')->default(7);
+            $table->unsignedSmallInteger('subscription_reminder_days')->default(3);
+            // Contact page / footer details (spec 19 section 9.3). Hours and
+            // address are per-locale JSON (multiline strings).
+            $table->json('working_hours')->nullable();
+            $table->json('office_address')->nullable();
+            $table->string('legal_name')->nullable();
+            $table->string('legal_inn')->nullable();
+            $table->string('telegram_channel_url')->nullable();
             $table->timestamps();
         });
     }

@@ -20,6 +20,8 @@ return new class extends Migration
             $table->timestamps();
 
             $table->unique(['role_id', 'user_id']);
+            // Reverse lookup ("which admin roles does this user have") on every request.
+            $table->index('user_id');
         });
     }
 
