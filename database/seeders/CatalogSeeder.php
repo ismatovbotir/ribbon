@@ -91,10 +91,11 @@ class CatalogSeeder extends Seeder
                 'free' => true,
                 'parameters' => [
                     [['Type', 'Тип', 'Turi'], 'select_single', true, true, ['Wax', 'Wax-resin', 'Resin']],
-                    [['Width', 'Ширина', 'Kengligi'], 'number', true, true, 'mm'],
+                    [['Width', 'Ширина', 'Kengligi'], 'number', true, true, 'mm', CategoryParameter::CODE_RIBBON_WIDTH],
                     [['Length', 'Длина', 'Uzunligi'], 'number', true, true, 'm'],
                     [['Ink side', 'Сторона краски', "Bo'yoq tomoni"], 'select_single', true, true, ['IN', 'OUT']],
                     [['Core', 'Втулка', 'Vtulka'], 'select_single', true, true, ['0.5"', '1"']],
+                    [['Core width', 'Ширина втулки', 'Vtulka kengligi'], 'number', false, false, 'mm', CategoryParameter::CODE_RIBBON_CORE_WIDTH],
                     [['Notch', 'Насечка', 'Kesik'], 'select_single', true, true, [['Notched', 'С насечкой', 'Kesikli'], ['No notch', 'Без насечки', 'Kesiksiz']]],
                     ['TTO', 'select_single', true, true, self::YES_NO],
                     [['Colour', 'Цвет', 'Rangi'], 'select_single', true, true, [
@@ -300,6 +301,7 @@ class CatalogSeeder extends Seeder
         $parameter = CategoryParameter::firstOrCreate(
             ['category_id' => $category->id, 'name->en' => $name['en']],
             [
+                'code' => $definition[5] ?? null,
                 'name' => $name,
                 'type' => $type,
                 'unit' => $type === 'number' ? $extra : null,

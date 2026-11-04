@@ -11,6 +11,7 @@
     $errorKey = 'parameterValues.'.$parameter->id;
     $fieldId = 'param-'.$parameter->id;
     $isGroup = $parameter->type === 'select_multiple';
+    $hint = $parameter->code === \App\Models\CategoryParameter::CODE_RIBBON_CORE_WIDTH ? __('sellers.products.core_width_hint') : null;
 @endphp
 
 <div>
@@ -29,7 +30,10 @@
     @if ($parameter->type === 'text')
         <x-input id="{{ $fieldId }}" type="text" wire:model.blur="parameterValues.{{ $parameter->id }}" :error="$errors->has($errorKey)" />
     @elseif ($parameter->type === 'number')
-        <x-input id="{{ $fieldId }}" type="number" step="any" wire:model.blur="parameterValues.{{ $parameter->id }}" :error="$errors->has($errorKey)" />
+        <x-input id="{{ $fieldId }}" type="number" step="any" wire:model.blur="parameterValues.{{ $parameter->id }}" :error="$errors->has($errorKey)" :aria-describedby="$hint ? $fieldId.'-hint' : null" />
+        @if ($hint)
+            <p id="{{ $fieldId }}-hint" class="mt-1 text-xs text-text-muted">{{ $hint }}</p>
+        @endif
     @elseif ($parameter->type === 'select_single')
         <x-select id="{{ $fieldId }}" wire:model="parameterValues.{{ $parameter->id }}" :error="$errors->has($errorKey)">
             <option value="">{{ __('sellers.products.select_placeholder') }}</option>

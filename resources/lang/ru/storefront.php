@@ -309,4 +309,5 @@ return [
     'product_detail.price_per_unit_strip' => 'Цена за единицу',
     'catalog.filter_brand' => 'Бренд',
     'validation.phone_invalid' => 'Введите корректный номер телефона, например +998 90 123 45 67.',
+    'product_title.core_width' => 'втулка :value',
 ];

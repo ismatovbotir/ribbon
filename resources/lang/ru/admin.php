@@ -131,4 +131,5 @@ return [
     'cms.contact.source_contact' => 'Форма контактов',
     'cms.contact.source_cant_find' => 'Не нашли?',
     'cms.contact.direct' => 'Напрямую',
+    'banners.link_url_invalid' => 'Укажите ссылку, начинающуюся с http://, https:// или /.',
 ];

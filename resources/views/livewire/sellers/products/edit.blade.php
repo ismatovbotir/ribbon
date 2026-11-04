@@ -171,7 +171,7 @@
 
                                     <div>
                                         <div class="flex items-center gap-2">
-                                            <label for="price-{{ $unit }}" class="text-sm text-text-secondary">{{ __('sellers.products.edit.pricing.price_label') }}<span class="sr-only"> {{ __('sellers.products.unit.'.$unit) }}</span></label>
+                                            <label for="price-{{ $unit }}" class="relative text-sm text-text-secondary">{{ __('sellers.products.edit.pricing.price_label') }}<span class="sr-only"> {{ __('sellers.products.unit.'.$unit) }}</span></label>
                                             <x-input id="price-{{ $unit }}" type="number" min="0" step="0.01" wire:model.blur="priceForm.{{ $unit }}.price" class="h-9 w-36 text-right text-base" :error="$errors->has('priceForm.'.$unit.'.price')" />
                                             <span class="text-sm text-text-secondary">UZS</span>
                                         </div>
@@ -225,7 +225,7 @@
 
                                     <div>
                                         <div class="flex items-center gap-2">
-                                            <label for="new-price-{{ $unit }}" class="text-sm text-text-secondary">{{ __('sellers.products.edit.pricing.price_label') }}<span class="sr-only"> {{ __('sellers.products.unit.'.$unit) }}</span></label>
+                                            <label for="new-price-{{ $unit }}" class="relative text-sm text-text-secondary">{{ __('sellers.products.edit.pricing.price_label') }}<span class="sr-only"> {{ __('sellers.products.unit.'.$unit) }}</span></label>
                                             <x-input id="new-price-{{ $unit }}" type="number" min="0" step="0.01" wire:model="newRowForm.{{ $unit }}.price" class="h-9 w-36 text-right text-base" :error="$errors->has('newRowForm.'.$unit.'.price')" />
                                             <span class="text-sm text-text-secondary">UZS</span>
                                         </div>
@@ -296,7 +296,7 @@
                     @endforeach
 
                     @if ($this->images->count() < 4)
-                        <label wire:key="product-image-upload-slot" class="flex h-24 w-24 cursor-pointer flex-col items-center justify-center gap-1 rounded-md border border-dashed border-border-strong text-xs text-text-secondary hover:border-accent-300 hover:text-text-primary focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent-700">
+                        <label wire:key="product-image-upload-slot" class="relative flex h-24 w-24 cursor-pointer flex-col items-center justify-center gap-1 rounded-md border border-dashed border-border-strong text-xs text-text-secondary hover:border-accent-300 hover:text-text-primary focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent-700">
                             <span class="text-lg leading-none" aria-hidden="true">+</span>
                             <span>{{ __('sellers.products.images.add') }}<span class="sr-only"> {{ __('sellers.products.images.section_title') }}</span></span>
                             <input type="file" wire:model="newImageUpload" accept="image/jpeg,image/png" class="sr-only">

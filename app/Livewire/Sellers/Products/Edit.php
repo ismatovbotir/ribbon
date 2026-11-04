@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Sellers\Products;
 
+use App\Rules\CoreWidthFitsRibbon;
 use App\Livewire\Concerns\AuthorizesSeller;
 use App\Models\Brand;
 use App\Models\CategoryParameter;
@@ -245,6 +246,10 @@ class Edit extends Component
                 'select_multiple' => [$parameter->is_required ? 'required' : 'nullable', 'array'],
                 default => ['nullable'],
             };
+
+            if ($parameter->code === CategoryParameter::CODE_RIBBON_CORE_WIDTH) {
+                $rules[$key][] = CoreWidthFitsRibbon::for($this->product->category->parameters, $this->parameterValues);
+            }
 
             if ($parameter->type === 'select_multiple') {
                 $rules["{$key}.*"] = [

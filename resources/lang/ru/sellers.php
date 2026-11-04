@@ -252,4 +252,6 @@ return [
     'products.create.category_requires_subscription' => 'Для этой категории нужна активная подписка. Бесплатные категории открыты.',
     'products.create.category_locked_suffix' => 'нужна подписка',
     'products.create.category_change' => 'Сменить категорию',
+    'products.core_width_hint' => 'Оставьте пустым, если втулка той же ширины, что и риббон.',
+    'products.core_width_too_narrow' => 'Втулка не может быть уже риббона.',
 ];

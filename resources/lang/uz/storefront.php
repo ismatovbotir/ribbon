@@ -309,4 +309,5 @@ return [
     'product_detail.price_per_unit_strip' => 'Birlik narxi',
     'catalog.filter_brand' => 'Brend',
     'validation.phone_invalid' => 'Telefon raqamini to\'g\'ri kiriting, masalan +998 90 123 45 67.',
+    'product_title.core_width' => 'vtulka :value',
 ];

@@ -131,4 +131,5 @@ return [
     'cms.contact.source_contact' => 'Contact form',
     'cms.contact.source_cant_find' => 'Can\'t find it?',
     'cms.contact.direct' => 'Direct',
+    'banners.link_url_invalid' => 'Enter a link starting with http://, https:// or /.',
 ];

@@ -6,7 +6,7 @@
     anchor with a dummy `href="#"` would be a focusable no-op tab stop for
     keyboard/screen-reader users, not just a cosmetic concern.
 --}}
-@if ($href)
+@if ($href && \App\Rules\SafeLinkUrl::isValid($href))
     <a href="{{ $href }}" {{ $attributes }}>
         {{ $slot }}
     </a>

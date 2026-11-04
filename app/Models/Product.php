@@ -163,6 +163,9 @@ class Product extends Model
             $segments[] = $brand->name;
         }
 
+        $ribbonWidthParameter = collect($categoryParameters)->firstWhere('code', CategoryParameter::CODE_RIBBON_WIDTH);
+        $ribbonWidth = $ribbonWidthParameter ? ($parameterValues[$ribbonWidthParameter->id] ?? null) : null;
+
         foreach ($categoryParameters as $parameter) {
             $raw = $parameterValues[$parameter->id] ?? null;
             $isBlank = $raw === null || $raw === '' || (is_array($raw) && $raw === []);
@@ -177,7 +180,9 @@ class Product extends Model
                 'text' => (string) $raw,
                 // No space between the number and its unit, e.g. "110mm".
                 // +0 strips trailing zeros/decimal noise from form input.
-                'number' => ((string) ((float) $raw + 0)).($parameter->unit ?? ''),
+                'number' => $parameter->code === CategoryParameter::CODE_RIBBON_CORE_WIDTH
+                    ? static::coreWidthTitleSegment($raw, $ribbonWidth, $parameter->unit, $locale)
+                    : ((string) ((float) $raw + 0)).($parameter->unit ?? ''),
                 'select_single' => static::optionLabel($parameter, $raw, $locale, $fallbackLocale),
                 'select_multiple' => collect($raw)
                     ->map(fn ($optionId) => static::optionLabel($parameter, $optionId, $locale, $fallbackLocale))
@@ -196,6 +201,19 @@ class Product extends Model
         }
 
         return trim(implode(' ', $segments));
+    }
+
+    /**
+     * A ribbon's core width only belongs in the title when it differs from the
+     * ribbon's own width, and needs a word to tell the two numbers apart.
+     */
+    protected static function coreWidthTitleSegment(mixed $coreWidth, mixed $ribbonWidth, ?string $unit, string $locale): string
+    {
+        if (is_numeric($ribbonWidth) && (float) $coreWidth === (float) $ribbonWidth) {
+            return '';
+        }
+
+        return __('storefront.product_title.core_width', ['value' => ((string) ((float) $coreWidth + 0)).($unit ?? '')], $locale);
     }
 
     /**
@@ -294,14 +312,18 @@ class Product extends Model
             ->filter(fn (ProductParameterValue $value) => $value->categoryParameter !== null)
             ->sortBy(fn (ProductParameterValue $value) => $value->categoryParameter->sort_order);
 
+        $ribbonWidth = $values->first(fn (ProductParameterValue $value) => $value->categoryParameter->code === CategoryParameter::CODE_RIBBON_WIDTH)?->value_number;
+
         foreach ($values as $value) {
             $parameter = $value->categoryParameter;
 
             $display = match ($parameter->type) {
                 'text' => (string) $value->value_text,
-                'number' => $value->value_number !== null
-                    ? ((string) ((float) $value->value_number + 0)).($parameter->unit ?? '')
-                    : '',
+                'number' => match (true) {
+                    $value->value_number === null => '',
+                    $parameter->code === CategoryParameter::CODE_RIBBON_CORE_WIDTH => static::coreWidthTitleSegment($value->value_number, $ribbonWidth, $parameter->unit, $locale),
+                    default => ((string) ((float) $value->value_number + 0)).($parameter->unit ?? ''),
+                },
                 'select_single', 'select_multiple' => $value->options
                     ->map(fn (ProductParameterValueOption $option) => static::optionValueLabel($option->categoryParameterOption, $locale, $fallbackLocale))
                     ->filter(fn ($label) => $label !== '')

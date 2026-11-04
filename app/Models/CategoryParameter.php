@@ -8,9 +8,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['category_id', 'name', 'type', 'unit', 'is_required', 'is_filterable', 'sort_order'])]
+#[Fillable(['category_id', 'code', 'name', 'type', 'unit', 'is_required', 'is_filterable', 'sort_order'])]
 class CategoryParameter extends Model
 {
+    public const CODE_RIBBON_WIDTH = 'ribbon_width';
+
+    public const CODE_RIBBON_CORE_WIDTH = 'ribbon_core_width';
+
     use FlushesNavMenu;
 
     /**

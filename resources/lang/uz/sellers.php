@@ -252,4 +252,6 @@ return [
     'products.create.category_requires_subscription' => 'Bu kategoriya uchun faol obuna kerak. Bepul kategoriyalar ochiq.',
     'products.create.category_locked_suffix' => 'obuna kerak',
     'products.create.category_change' => 'Kategoriyani o\'zgartirish',
+    'products.core_width_hint' => 'Vtulka lenta bilan bir xil kenglikda bo\'lsa, bo\'sh qoldiring.',
+    'products.core_width_too_narrow' => 'Vtulka lentadan tor bo\'lishi mumkin emas.',
 ];

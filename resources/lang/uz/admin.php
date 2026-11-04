@@ -131,4 +131,5 @@ return [
     'cms.contact.source_contact' => 'Aloqa shakli',
     'cms.contact.source_cant_find' => 'Topa olmadingizmi?',
     'cms.contact.direct' => 'To\'g\'ridan-to\'g\'ri',
+    'banners.link_url_invalid' => 'http://, https:// yoki / bilan boshlanadigan havolani kiriting.',
 ];

@@ -123,7 +123,7 @@
                     @endforeach
 
                     @if (count($stagedImages) < 4)
-                        <label wire:key="staged-image-upload-slot" class="flex h-24 w-24 cursor-pointer flex-col items-center justify-center gap-1 rounded-md border border-dashed border-border-strong text-xs text-text-secondary hover:border-accent-300 hover:text-text-primary focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent-700">
+                        <label wire:key="staged-image-upload-slot" class="relative flex h-24 w-24 cursor-pointer flex-col items-center justify-center gap-1 rounded-md border border-dashed border-border-strong text-xs text-text-secondary hover:border-accent-300 hover:text-text-primary focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent-700">
                             <span class="text-lg leading-none" aria-hidden="true">+</span>
                             <span>{{ __('sellers.products.images.add') }}<span class="sr-only"> {{ __('sellers.products.images.section_title') }}</span></span>
                             <input type="file" wire:model="newImageUpload" accept="image/jpeg,image/png" class="sr-only">

@@ -252,4 +252,6 @@ return [
     'products.create.category_requires_subscription' => 'This category needs an active subscription. Free categories stay open.',
     'products.create.category_locked_suffix' => 'subscription needed',
     'products.create.category_change' => 'Change category',
+    'products.core_width_hint' => 'Leave blank if the core is the same width as the ribbon.',
+    'products.core_width_too_narrow' => 'The core cannot be narrower than the ribbon.',
 ];

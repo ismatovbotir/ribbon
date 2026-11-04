@@ -314,4 +314,5 @@ return [
     'product_detail.price_per_unit_strip' => 'Price per unit',
     'catalog.filter_brand' => 'Brand',
     'validation.phone_invalid' => 'Enter a valid phone number, e.g. +998 90 123 45 67.',
+    'product_title.core_width' => 'core :value',
 ];

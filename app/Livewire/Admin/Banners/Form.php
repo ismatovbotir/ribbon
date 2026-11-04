@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin\Banners;
 
+use App\Rules\SafeLinkUrl;
 use App\Livewire\Concerns\AuthorizesAdmin;
 use App\Models\Banner;
 use App\Models\Category;
@@ -166,7 +167,7 @@ class Form extends Component
         $rules = [
             'imageUpload' => [$this->existingImagePath ? 'nullable' : 'required', 'image', 'max:4096'],
             'mobileImageUpload' => ['nullable', 'image', 'max:4096'],
-            'linkUrl' => ['nullable', 'string', 'max:2048'],
+            'linkUrl' => ['nullable', 'string', 'max:2048', new SafeLinkUrl],
             'placement' => ['required', Rule::in(array_keys(self::PLACEMENTS))],
             'categoryId' => ['nullable', 'integer', Rule::exists('categories', 'id')],
             'sortOrder' => ['required', 'integer', 'min:0'],
