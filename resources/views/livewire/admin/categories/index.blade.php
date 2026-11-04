@@ -38,7 +38,9 @@
                 </x-field>
 
                 <x-toggle wire:model="isActive" label="Active" caption="Inactive categories are hidden from the buyer catalog." />
-                <x-toggle wire:model="isFree" :label="__('admin.categories.free_toggle')" :caption="__('admin.categories.free_caption')" />
+                @can('super-admin')
+                    <x-toggle wire:model="isFree" :label="__('admin.categories.free_toggle')" :caption="__('admin.categories.free_caption')" />
+                @endcan
             </form>
 
             <x-slot:footer>

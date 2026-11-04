@@ -90,7 +90,9 @@
             </x-field>
 
             <x-toggle wire:model="catIsActive" label="Active" caption="Inactive categories are hidden from the buyer catalog." />
-            <x-toggle wire:model="catIsFree" :label="__('admin.categories.free_toggle')" :caption="__('admin.categories.free_caption')" />
+            @can('super-admin')
+                <x-toggle wire:model="catIsFree" :label="__('admin.categories.free_toggle')" :caption="__('admin.categories.free_caption')" />
+            @endcan
 
             <div class="flex">
                 <x-button type="submit" variant="primary" class="w-full md:w-auto" wire:loading.attr="disabled" wire:target="saveCategoryDetails, catImageUpload">Save details</x-button>

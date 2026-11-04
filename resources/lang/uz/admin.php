@@ -132,4 +132,5 @@ return [
     'cms.contact.source_cant_find' => 'Topa olmadingizmi?',
     'cms.contact.direct' => 'To\'g\'ridan-to\'g\'ri',
     'banners.link_url_invalid' => 'http://, https:// yoki / bilan boshlanadigan havolani kiriting.',
+    'products.price_required_to_approve' => 'Bu mahsulotni tasdiqlab bo\'lmaydi: har bir yoqilgan birlik narxi 0 dan katta bo\'lishi kerak. Sotuvchidan narxni kiritishni so\'rang.',
 ];

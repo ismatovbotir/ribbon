@@ -2,6 +2,8 @@
 
 namespace App\Livewire\Admin\Categories;
 
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use App\Livewire\Concerns\AuthorizesAdmin;
 use App\Models\Category;
 use Livewire\Attributes\Computed;
@@ -141,14 +143,20 @@ class Index extends Component
 
         $imagePath = $this->imageUpload ? $this->imageUpload->store('categories', 'public') : null;
 
-        Category::create([
+        // Every new category starts paid. Only a Super Admin can make it free
+        // (QA N4-03); anyone else's client-supplied value is discarded.
+        $category = Category::create([
             'name' => $this->name,
             'slug' => $slug,
             'is_active' => $this->isActive,
-            'requires_subscription' => ! $this->isFree,
+            'requires_subscription' => true,
             'sort_order' => (int) (Category::max('sort_order') ?? 0) + 1,
             'image_path' => $imagePath,
         ]);
+
+        if ($this->isFree && Gate::allows('super-admin')) {
+            $category->setRequiresSubscription(false, Auth::user());
+        }
 
         $this->resetForm();
         $this->showCreateForm = false;

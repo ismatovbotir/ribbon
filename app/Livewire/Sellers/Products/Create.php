@@ -45,6 +45,9 @@ class Create extends Component
      */
     public ?string $nameExtra = null;
 
+    /** Required pcs price in UZS. Pack and box prices are added on the edit page. */
+    public ?string $pcsPrice = null;
+
     /**
      * Keyed by category_parameter_id. text/number values are scalars,
      * select_single is a single option id, select_multiple is an array of
@@ -279,6 +282,7 @@ class Create extends Component
             ],
             'brandId' => ['required', 'exists:brands,id'],
             'nameExtra' => ['nullable', 'string', 'max:255'],
+            'pcsPrice' => ['required', 'numeric', 'min:0.01'],
         ];
 
         $category = $this->selectedCategory;
@@ -311,6 +315,8 @@ class Create extends Component
                 'name_extra' => $this->nameExtra,
                 'slug' => $composed['slug'],
             ]);
+
+            $product->prices()->where('unit', 'pcs')->firstOrFail()->update(['price' => $this->pcsPrice]);
 
             foreach ($category->parameters as $parameter) {
                 $this->persistParameterValue($product, $parameter);

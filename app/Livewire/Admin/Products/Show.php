@@ -117,6 +117,12 @@ class Show extends Component
     {
         $this->authorizeAdmin('products.moderate');
 
+        if (! $this->product->hasCompletePricing()) {
+            $this->addError('approve', __('admin.products.price_required_to_approve'));
+
+            return;
+        }
+
         $this->product->approve($this->actingAdmin());
 
         session()->flash('status', 'Product approved.');

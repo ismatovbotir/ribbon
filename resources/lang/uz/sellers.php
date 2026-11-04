@@ -254,4 +254,7 @@ return [
     'products.create.category_change' => 'Kategoriyani o\'zgartirish',
     'products.core_width_hint' => 'Vtulka lenta bilan bir xil kenglikda bo\'lsa, bo\'sh qoldiring.',
     'products.core_width_too_narrow' => 'Vtulka lentadan tor bo\'lishi mumkin emas.',
+    'products.create.section_price' => 'Narx',
+    'products.create.price_label' => 'Bir dona narxi (dona)',
+    'products.create.price_caption' => 'Qadoq va quti narxlarini saqlagandan keyin qo\'shishingiz mumkin.',
 ];

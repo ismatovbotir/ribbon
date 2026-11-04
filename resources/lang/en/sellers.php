@@ -254,4 +254,7 @@ return [
     'products.create.category_change' => 'Change category',
     'products.core_width_hint' => 'Leave blank if the core is the same width as the ribbon.',
     'products.core_width_too_narrow' => 'The core cannot be narrower than the ribbon.',
+    'products.create.section_price' => 'Price',
+    'products.create.price_label' => 'Price per piece (pcs)',
+    'products.create.price_caption' => 'You can add pack and box prices after saving.',
 ];

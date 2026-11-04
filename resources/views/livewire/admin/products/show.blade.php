@@ -7,6 +7,10 @@
         </x-slot:meta>
     </x-page-header>
 
+    @error('approve')
+        <x-alert variant="danger">{{ $message }}</x-alert>
+    @enderror
+
     @if (session('status'))
         <x-alert variant="success">{{ session('status') }}</x-alert>
     @endif

@@ -132,4 +132,5 @@ return [
     'cms.contact.source_cant_find' => 'Не нашли?',
     'cms.contact.direct' => 'Напрямую',
     'banners.link_url_invalid' => 'Укажите ссылку, начинающуюся с http://, https:// или /.',
+    'products.price_required_to_approve' => 'Этот товар нельзя одобрить: у каждой включённой единицы цена должна быть больше 0. Попросите продавца указать цену.',
 ];

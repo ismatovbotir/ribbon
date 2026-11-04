@@ -254,4 +254,7 @@ return [
     'products.create.category_change' => 'Сменить категорию',
     'products.core_width_hint' => 'Оставьте пустым, если втулка той же ширины, что и риббон.',
     'products.core_width_too_narrow' => 'Втулка не может быть уже риббона.',
+    'products.create.section_price' => 'Цена',
+    'products.create.price_label' => 'Цена за штуку (шт)',
+    'products.create.price_caption' => 'Цены за упаковку и коробку можно добавить после сохранения.',
 ];

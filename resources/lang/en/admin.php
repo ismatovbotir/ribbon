@@ -132,4 +132,5 @@ return [
     'cms.contact.source_cant_find' => 'Can\'t find it?',
     'cms.contact.direct' => 'Direct',
     'banners.link_url_invalid' => 'Enter a link starting with http://, https:// or /.',
+    'products.price_required_to_approve' => 'This product cannot be approved: every enabled unit needs a price above 0. Ask the seller to set the price.',
 ];

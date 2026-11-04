@@ -95,6 +95,25 @@
             </div>
         </div>
 
+        {{-- Required pcs price; pack and box are added on the edit page --}}
+        <div class="rounded-md border border-border bg-surface-raised">
+            <div class="border-b border-border bg-surface-subtle px-5 py-3">
+                <h2 class="text-lg font-semibold text-text-primary">{{ __('sellers.products.create.section_price') }}</h2>
+            </div>
+
+            <div class="p-5">
+                <label for="pcs-price" class="mb-1 block text-sm font-medium text-text-primary">{{ __('sellers.products.create.price_label') }} <span class="text-danger-600">*</span></label>
+                <div class="flex items-center gap-2">
+                    <x-input id="pcs-price" type="number" min="0.01" step="0.01" wire:model="pcsPrice" class="w-44 text-right" :error="$errors->has('pcsPrice')" aria-describedby="pcs-price-hint" />
+                    <span class="text-sm text-text-secondary">UZS</span>
+                </div>
+                <p id="pcs-price-hint" class="mt-1 text-xs text-text-muted">{{ __('sellers.products.create.price_caption') }}</p>
+                @error('pcsPrice')
+                    <p class="mt-1 text-xs text-danger-600">{{ $message }}</p>
+                @enderror
+            </div>
+        </div>
+
         {{-- Images (up to 4, attached once the product is created) --}}
         <div class="rounded-md border border-border bg-surface-raised">
             <div class="border-b border-border bg-surface-subtle px-5 py-3">

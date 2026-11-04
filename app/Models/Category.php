@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Support\Facades\DB;
 use App\Models\Concerns\FlushesNavMenu;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Collection;
@@ -77,6 +78,30 @@ class Category extends Model
      * The category-specific parameters defined for this category (no
      * cross-category reuse — each category defines its own, in full).
      */
+    /**
+     * Changes the free/paid flag and records who did it. Callers must already
+     * have checked the actor is a Super Admin: this flag decides which sellers
+     * must pay and immediately changes storefront visibility.
+     */
+    public function setRequiresSubscription(bool $requiresSubscription, User $by): void
+    {
+        if ($this->requires_subscription === $requiresSubscription) {
+            return;
+        }
+
+        DB::transaction(function () use ($requiresSubscription, $by) {
+            CategorySubscriptionAudit::create([
+                'category_id' => $this->id,
+                'user_id' => $by->id,
+                'old_requires_subscription' => $this->requires_subscription,
+                'new_requires_subscription' => $requiresSubscription,
+                'created_at' => now(),
+            ]);
+
+            $this->update(['requires_subscription' => $requiresSubscription]);
+        });
+    }
+
     public function parameters(): HasMany
     {
         return $this->hasMany(CategoryParameter::class)->orderBy('sort_order');

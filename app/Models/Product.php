@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use LogicException;
 use App\Models\Concerns\FlushesNavMenu;
 use Illuminate\Database\Eloquent\Attributes\Boot;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -470,12 +471,25 @@ class Product extends Model
     }
 
     /**
+     * Price is required on every listing (no "price on request"), so nothing
+     * goes live while any enabled unit, including the mandatory pcs row, is 0.
+     */
+    public function hasCompletePricing(): bool
+    {
+        return $this->prices()->exists() && ! $this->prices()->where('price', '<=', 0)->exists();
+    }
+
+    /**
      * Approve this product, recording which admin acted and when. Mirrors
      * Seller::approve() exactly, but against products' `moderated_*`
      * column naming instead of sellers' `approved_*`.
      */
     public function approve(User $admin): void
     {
+        if (! $this->hasCompletePricing()) {
+            throw new LogicException('A product cannot be approved until every enabled unit has a price above zero.');
+        }
+
         $this->status = 'approved';
         $this->moderated_by = $admin->id;
         $this->moderated_at = now();

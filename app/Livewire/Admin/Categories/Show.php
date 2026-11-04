@@ -2,6 +2,8 @@
 
 namespace App\Livewire\Admin\Categories;
 
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use App\Livewire\Concerns\AuthorizesAdmin;
 use App\Models\Article;
 use App\Models\Category;
@@ -158,11 +160,18 @@ class Show extends Component
         $this->category->update([
             'name' => $this->catName,
             'is_active' => $this->catIsActive,
-            'requires_subscription' => ! $this->catIsFree,
             'image_path' => $imagePath,
             'icon' => $this->catIcon !== '' ? $this->catIcon : null,
             'guide_article_id' => $this->catGuideArticleId ?: null,
         ]);
+
+        // Super Admin only (QA N4-03). Anyone else's value is discarded, since
+        // public properties are client-controlled.
+        if (Gate::allows('super-admin')) {
+            $this->category->setRequiresSubscription(! $this->catIsFree, Auth::user());
+        }
+
+        $this->catIsFree = ! $this->category->requires_subscription;
 
         $this->catImageUpload = null;
         $this->catExistingImagePath = $this->category->image_path;
