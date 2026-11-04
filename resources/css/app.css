@@ -16,7 +16,7 @@
  * --spacing-*, --z-*, ...) also generates matching utility classes.
  *
  * Full rationale, usage guidance and per-screen specs live in
- * docs/design/. This file is the implementation of that spec, not a
+ * .claude/docs/design/. This file is the implementation of that spec, not a
  * substitute for reading it.
  *
  * KEY ARCHITECTURAL DECISION — contextual accent theming:
@@ -35,9 +35,45 @@
     /* ------------------------------------------------------------------ */
     /* Typography                                                          */
     /* ------------------------------------------------------------------ */
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    /* Brand typography (.claude/docs/design/15 section 3). Families are loaded in
+       vite.config.js via Bunny Fonts with latin, latin-ext and cyrillic
+       subsets (Uzbek U+02BB and Cyrillic Uzbek letters). Manrope is for
+       storefront headings only; admin/seller use Inter. */
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
-    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+    --font-display: 'Manrope', 'Inter', ui-sans-serif, system-ui, sans-serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+
+    /* ------------------------------------------------------------------ */
+    /* Palette B "Graphite & Cobalt" (.claude/docs/design/15 section 2.2)          */
+    /* ------------------------------------------------------------------ */
+    --color-graphite-50: #fafafa;
+    --color-graphite-100: #f4f4f5;
+    --color-graphite-200: #e4e4e7;
+    --color-graphite-300: #d4d4d8;
+    --color-graphite-400: #a1a1aa;
+    --color-graphite-500: #71717a;
+    --color-graphite-600: #52525b;
+    --color-graphite-700: #3f3f46;
+    --color-graphite-800: #27272a;
+    --color-graphite-900: #18181b;
+    --color-graphite-950: #09090b;
+
+    --color-cobalt-50: #eff6ff;
+    --color-cobalt-100: #dbeafe;
+    --color-cobalt-200: #bfdbfe;
+    --color-cobalt-300: #93c5fd;
+    --color-cobalt-400: #60a5fa;
+    --color-cobalt-500: #3b82f6;
+    --color-cobalt-600: #2563eb;
+    --color-cobalt-700: #1d4ed8;
+    --color-cobalt-800: #1e40af;
+    --color-cobalt-900: #1e3a8a;
+
+    /* Label yellow: primary CTA fill only (dark text, 11.6:1). */
+    --color-label-400: #facc15;
+    --color-label-300: #fde047;
+    --color-label-500: #eab308;
 
     /*
      * Admin/seller UIs are information-dense working tools, not marketing
@@ -69,34 +105,44 @@
     /* Semantic color roles — the shared structural base both panels sit on */
     /* ------------------------------------------------------------------ */
     --color-surface: var(--color-white); /* page background */
-    --color-surface-subtle: var(--color-slate-50); /* sidebar, table header row, filter bar */
+    --color-surface-subtle: var(--color-graphite-50); /* sidebar, table header row, filter bar */
     --color-surface-raised: var(--color-white); /* cards, panels, table body */
-    --color-surface-sunken: var(--color-slate-100); /* code/ID chips, disabled inputs, well */
+    --color-surface-sunken: var(--color-graphite-100); /* code/ID chips, disabled inputs, well */
     --color-surface-overlay: var(--color-white); /* modals, dropdowns, popovers */
-    --color-surface-hover: var(--color-slate-50); /* row/item hover */
-    --color-surface-selected: var(--color-slate-100); /* selected table rows (checkbox-selected, not active-nav) */
+    --color-surface-hover: var(--color-graphite-50); /* row/item hover */
+    --color-surface-selected: var(--color-graphite-100); /* selected table rows (checkbox-selected, not active-nav) */
 
-    --color-border: var(--color-slate-200); /* default 1px dividers, input borders */
-    --color-border-strong: var(--color-slate-300); /* emphasized dividers, table outer border */
+    --color-border: var(--color-graphite-200); /* default 1px dividers, input borders */
+    --color-border-strong: var(--color-graphite-300); /* emphasized dividers, table outer border */
 
-    --color-text-primary: var(--color-slate-900);
-    --color-text-secondary: var(--color-slate-600);
-    --color-text-muted: var(--color-slate-400);
+    --color-text-primary: var(--color-graphite-900);
+    --color-text-secondary: var(--color-graphite-600);
+    --color-text-muted: #65656e; /* between graphite-500/600: 5.77 white, 5.25 graphite-100, 4.55 graphite-200, AA on every surface */
     --color-text-inverse: var(--color-white);
-    --color-text-disabled: var(--color-slate-300);
+    --color-text-disabled: var(--color-graphite-300);
+
+    /* Storefront primary CTA (label yellow + graphite text, 11.6:1). White on
+       yellow would fail, so the text colour is its own token. */
+    --color-cta: var(--color-label-400);
+    --color-cta-hover: var(--color-label-300);
+    --color-cta-pressed: var(--color-label-500);
+    --color-cta-text: var(--color-graphite-900);
+    --color-focus-ring: var(--color-cobalt-700);
 
     /* ------------------------------------------------------------------ */
     /* Panel accent hues — the two concrete palettes                      */
     /* ------------------------------------------------------------------ */
-    /* Super Admin / CMS — indigo. Reads as "authority / control-room". */
-    --color-admin-50: var(--color-indigo-50);
-    --color-admin-100: var(--color-indigo-100);
-    --color-admin-200: var(--color-indigo-200);
-    --color-admin-300: var(--color-indigo-300);
-    --color-admin-500: var(--color-indigo-500);
-    --color-admin-600: var(--color-indigo-600);
-    --color-admin-700: var(--color-indigo-700);
-    --color-admin-900: var(--color-indigo-900);
+    /* Super Admin / CMS — violet (moved off indigo, which sat too close to
+       the storefront cobalt). Filled buttons use 700 + white = 7.1:1. */
+    --color-admin-50: var(--color-violet-50);
+    --color-admin-100: var(--color-violet-100);
+    --color-admin-200: var(--color-violet-200);
+    --color-admin-300: var(--color-violet-300);
+    --color-admin-500: var(--color-violet-500);
+    --color-admin-600: var(--color-violet-600);
+    --color-admin-700: var(--color-violet-700);
+    --color-admin-800: var(--color-violet-800);
+    --color-admin-900: var(--color-violet-900);
 
     /* Seller dashboard — teal. Reads as "operational / business tool",
        deliberately far from indigo on the hue wheel so the two are never
@@ -109,23 +155,26 @@
     --color-seller-500: var(--color-teal-500);
     --color-seller-600: var(--color-teal-600);
     --color-seller-700: var(--color-teal-700);
+    --color-seller-800: var(--color-teal-800);
     --color-seller-900: var(--color-teal-900);
 
-    /* Buyer storefront — orange. This is the one actual sales-facing
+    /* Buyer storefront — cobalt (was orange; palette B, .claude/docs/design/15).
+       Original rationale follows: This is the one actual sales-facing
        surface real customers browse (admin/seller are internal tools) —
        warm and conversion-oriented on purpose, as far from both indigo
        (cool/authority) and teal (cool/operational) as the other two are
        from each other, so all three panels remain distinguishable at a
        glance and under colorblind simulation. See
-       docs/design/08-storefront-design-tokens.md for the full rationale. */
-    --color-storefront-50: var(--color-orange-50);
-    --color-storefront-100: var(--color-orange-100);
-    --color-storefront-200: var(--color-orange-200);
-    --color-storefront-300: var(--color-orange-300);
-    --color-storefront-500: var(--color-orange-500);
-    --color-storefront-600: var(--color-orange-600);
-    --color-storefront-700: var(--color-orange-700);
-    --color-storefront-900: var(--color-orange-900);
+       .claude/docs/design/08-storefront-design-tokens.md for the full rationale. */
+    --color-storefront-50: var(--color-cobalt-50);
+    --color-storefront-100: var(--color-cobalt-100);
+    --color-storefront-200: var(--color-cobalt-200);
+    --color-storefront-300: var(--color-cobalt-300);
+    --color-storefront-500: var(--color-cobalt-500);
+    --color-storefront-600: var(--color-cobalt-600);
+    --color-storefront-700: var(--color-cobalt-700);
+    --color-storefront-800: var(--color-cobalt-800);
+    --color-storefront-900: var(--color-cobalt-900);
 
     /*
      * Neutral placeholder for `accent-*` when no `.panel-admin` /
@@ -141,6 +190,7 @@
     --color-accent-500: var(--color-admin-500);
     --color-accent-600: var(--color-admin-600);
     --color-accent-700: var(--color-admin-700);
+    --color-accent-800: var(--color-admin-800);
     --color-accent-900: var(--color-admin-900);
 
     /* ------------------------------------------------------------------ */
@@ -165,10 +215,10 @@
     /* "suspended" and other neutral/inactive states — deliberately named
        `muted-*` rather than reusing bare `slate-*` so it reads as a status
        token alongside success/warning/danger/info in component code. */
-    --color-muted-50: var(--color-slate-100);
-    --color-muted-200: var(--color-slate-300);
-    --color-muted-600: var(--color-slate-600);
-    --color-muted-700: var(--color-slate-700);
+    --color-muted-50: var(--color-graphite-100);
+    --color-muted-200: var(--color-graphite-300);
+    --color-muted-600: var(--color-graphite-600);
+    --color-muted-700: var(--color-graphite-700);
 
     /* Informational, non-blocking indicators — the is_vitrin badge, draft
        hints, "new" labels. Sky rather than either panel accent so it never
@@ -182,7 +232,7 @@
     /* Radii — small and businesslike for admin/seller; xs–lg are the only  */
     /* sizes those two panels ever use. xl/2xl exist for the storefront    */
     /* only (product cards, hero panels, primary CTAs) — see               */
-    /* docs/design/08-storefront-design-tokens.md. Admin/seller should     */
+    /* .claude/docs/design/08-storefront-design-tokens.md. Admin/seller should     */
     /* never reach for xl/2xl; storefront should rarely reach for xs/sm.   */
     /* ------------------------------------------------------------------ */
     --radius-xs: 0.1875rem; /* 3px — checkboxes, tiny chips */
@@ -197,10 +247,10 @@
     /* shadow is reserved for things that visually float above content.   */
     /* Overrides Tailwind's default shadow-xs/sm/md/lg values.            */
     /* ------------------------------------------------------------------ */
-    --shadow-xs: 0 1px 2px 0 rgb(15 23 42 / 0.04);
-    --shadow-sm: 0 1px 3px 0 rgb(15 23 42 / 0.08), 0 1px 2px -1px rgb(15 23 42 / 0.06);
-    --shadow-md: 0 4px 8px -2px rgb(15 23 42 / 0.1), 0 2px 4px -2px rgb(15 23 42 / 0.06);
-    --shadow-lg: 0 12px 24px -6px rgb(15 23 42 / 0.14), 0 4px 8px -4px rgb(15 23 42 / 0.08);
+    --shadow-xs: 0 1px 2px 0 rgb(24 24 27 / 0.04);
+    --shadow-sm: 0 1px 3px 0 rgb(24 24 27 / 0.08), 0 1px 2px -1px rgb(24 24 27 / 0.06);
+    --shadow-md: 0 4px 8px -2px rgb(24 24 27 / 0.1), 0 2px 4px -2px rgb(24 24 27 / 0.06);
+    --shadow-lg: 0 12px 24px -6px rgb(24 24 27 / 0.14), 0 4px 8px -4px rgb(24 24 27 / 0.08);
 
     /* ------------------------------------------------------------------ */
     /* Layout dimension tokens — named on the --spacing-* namespace so     */
@@ -219,18 +269,54 @@
        sees, so it gets more breathing room than an internal tool's topbar.
        Mobile collapses to the same 56px as spacing-topbar (reused directly,
        not redefined) since there's less to fit once nav collapses behind a
-       hamburger. See docs/design/09-storefront-layout-shell.md. */
-    --spacing-storefront-header: 4.5rem; /* 72px — desktop/tablet header height */
+       hamburger. See .claude/docs/design/09-storefront-layout-shell.md. */
+    --spacing-storefront-header: 3.5rem; /* 56px phone; 64px md+ via .storefront override (spec 18) */
 
     /* ------------------------------------------------------------------ */
     /* Z-index scale                                                       */
     /* ------------------------------------------------------------------ */
     --z-dropdown: 30;
-    --z-sticky: 40; /* sticky table header, sticky bulk-action bar */
-    --z-modal-backdrop: 50;
-    --z-modal: 51;
+    --z-bar: 35; /* sticky action bar, sticky locale tabs */
+    --z-sticky: 40; /* sticky header / topbar */
+    --z-nav-backdrop: 50;
+    --z-nav: 51;
+    --z-sheet-backdrop: 52; /* bottom sheet + form drawer */
+    --z-sheet: 53;
+    --z-modal-backdrop: 54; /* modals open above sheets/drawers */
+    --z-modal: 55;
     --z-toast: 60;
     --z-tooltip: 70;
+
+    /* --- 16: admin straight / mobile-first role tokens (defaults = today's look) --- */
+    --radius-pill: 9999px; /* badges, chips, toggle, avatars, dots. admin -> 0 */
+    --spacing-hit: 2.75rem; /* 44px minimum touch target */
+    --spacing-control: 2rem; /* button height. admin: 44px, 32px on md+fine */
+    --spacing-control-sm: 1.75rem; /* small button / icon button */
+    --spacing-field: 2.25rem; /* input/select height */
+    --spacing-drawer: min(20rem, 85vw); /* off-canvas nav width */
+    --spacing-panel: 28rem; /* right-side form drawer width (md+) */
+    --text-field: 0.875rem; /* input text. admin <md: 16px. storefront: 16px */
+    --text-field--line-height: 1.25rem;
+    --color-border-input: var(--color-graphite-300);
+    --color-scrim: rgb(24 24 27 / 0.5); /* overlay backdrop */
+    --color-switch-off: var(--color-graphite-600); /* toggle knob, off state */
+
+    /* --- 18: storefront dimension tokens --- */
+    --spacing-cta: 3rem; /* 48px main CTA height (h-cta) */
+    --spacing-bar-slim: 3.5rem; /* 56px selection bottom bar (excl. safe area) */
+    --spacing-bar-action: 4rem; /* 64px product action bottom bar */
+    --spacing-filterbar: 3.5rem; /* 56px sticky mobile filter chip bar */
+    --spacing-filters: 16rem; /* 256px desktop filter sidebar */
+    --spacing-photo: 5.5rem; /* 88px row photo, mobile */
+    --spacing-photo-lg: 6rem; /* 96px row photo, md+ */
+    --color-brand-badge-bg: var(--color-cobalt-50);
+    --color-brand-badge-text: var(--color-cobalt-800);
+    --color-brand-badge-border: var(--color-cobalt-200);
+
+    /* --- 20: storefront enterprise --- */
+    --color-surface-band: #f6f7f9; /* table headers, key columns, intro boxes, trust strip, footer, mega bottom band.
+                                      graphite-600 on it 7.2, text-muted 5.4, accent-700 6.3: AA */
+    --color-cta-border: var(--color-label-400); /* storefront overrides to a darker yellow edge */
 }
 
 /**
@@ -238,7 +324,7 @@
  * these classes (e.g. <body class="panel-admin"> in the admin layout,
  * <body class="panel-seller"> in the seller layout). Every component
  * authored against `accent-*` utilities re-themes automatically — no
- * component-level branching required. See docs/design/01-design-tokens.md.
+ * component-level branching required. See .claude/docs/design/01-design-tokens.md.
  */
 .panel-admin {
     --color-accent-50: var(--color-admin-50);
@@ -248,7 +334,85 @@
     --color-accent-500: var(--color-admin-500);
     --color-accent-600: var(--color-admin-600);
     --color-accent-700: var(--color-admin-700);
+    --color-accent-800: var(--color-admin-800);
     --color-accent-900: var(--color-admin-900);
+}
+
+/* Shared structural tokens: admin and seller panels are both straight + mobile-first (16-admin-straight-mobile-first, extended to seller). */
+.panel-admin,
+.panel-seller {
+    --color-focus-ring: var(--color-accent-700);
+
+    /* Straight: 0 radius except controls at 2px (16-admin-straight-mobile-first 1.2) */
+    --radius-xs: 0;
+    --radius-sm: 2px;
+    --radius-md: 0;
+    --radius-lg: 0;
+    --radius-xl: 0;
+    --radius-2xl: 0;
+    --radius-pill: 0;
+
+    /* Flat: no shadows */
+    --shadow-xs: 0 0 #0000;
+    --shadow-sm: 0 0 #0000;
+    --shadow-md: 0 0 #0000;
+    --shadow-lg: 0 0 #0000;
+
+    /* Input boundary needs 3:1 against white (WCAG 1.4.11) */
+    --color-border-input: #8b8b94;
+
+    /* Phone-first control sizes: 44px */
+    --spacing-control: 2.75rem;
+    --spacing-control-sm: 2.75rem;
+    --spacing-field: 2.75rem;
+
+    /* Phone-first type */
+    --text-xs: 0.75rem;
+    --text-xs--line-height: 1rem;
+    --text-sm: 0.875rem;
+    --text-sm--line-height: 1.25rem;
+    --text-base: 1rem;
+    --text-base--line-height: 1.5rem;
+    --text-lg: 1.125rem;
+    --text-lg--line-height: 1.5rem;
+    --text-xl: 1.25rem;
+    --text-xl--line-height: 1.75rem;
+    --text-2xl: 1.5rem;
+    --text-2xl--line-height: 2rem;
+    --text-field: 1rem;
+    --text-field--line-height: 1.5rem;
+}
+
+/* md+ : dense desktop type scale */
+@media (min-width: 48rem) {
+    .panel-admin,
+    .panel-seller {
+        --text-sm: 0.8125rem;
+        --text-sm--line-height: 1.25rem;
+        --text-base: 0.875rem;
+        --text-base--line-height: 1.5rem;
+        --text-lg: 1rem;
+        --text-lg--line-height: 1.5rem;
+        --text-field: 0.875rem;
+        --text-field--line-height: 1.25rem;
+    }
+}
+
+/* md+ with a mouse/trackpad only: compact controls. Tablets (coarse) keep 44px. */
+@media (min-width: 48rem) and (pointer: fine) {
+    .panel-admin,
+    .panel-seller {
+        --spacing-control: 2rem;
+        --spacing-control-sm: 1.75rem;
+        --spacing-field: 2.25rem;
+    }
+}
+
+/* Admin headings use the display face (brand spec). */
+.panel-admin :is(h1, h2, h3),
+.panel-seller :is(h1, h2, h3) {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
 }
 
 .panel-seller {
@@ -259,6 +423,7 @@
     --color-accent-500: var(--color-seller-500);
     --color-accent-600: var(--color-seller-600);
     --color-accent-700: var(--color-seller-700);
+    --color-accent-800: var(--color-seller-800);
     --color-accent-900: var(--color-seller-900);
 }
 
@@ -279,12 +444,12 @@
  * (1.875rem/30px and 2.25rem/36px) are actually SMALLER than this scope's
  * own --text-2xl override (2rem/32px) — left alone, a `text-2xl md:text-3xl`
  * heading (e.g. the home page H1) would visually SHRINK from mobile to
- * desktop, which is exactly the bug docs/design/13-storefront-visual-polish.md
+ * desktop, which is exactly the bug .claude/docs/design/13-storefront-visual-polish.md
  * identifies and fixes here at the token level (no view-file change needed).
  * admin/seller still never reach for text-3xl+ (their ceiling is text-2xl,
  * reserved for dashboard KPI numbers), so overriding these two tiers only
  * affects the storefront scope — no collision.
- * See docs/design/08-storefront-design-tokens.md for the full rationale.
+ * See .claude/docs/design/08-storefront-design-tokens.md for the full rationale.
  */
 .storefront {
     --color-accent-50: var(--color-storefront-50);
@@ -294,6 +459,7 @@
     --color-accent-500: var(--color-storefront-500);
     --color-accent-600: var(--color-storefront-600);
     --color-accent-700: var(--color-storefront-700);
+    --color-accent-800: var(--color-storefront-800);
     --color-accent-900: var(--color-storefront-900);
 
     --text-xs: 0.75rem; /* 12px — image captions, fine print, meta */
@@ -312,6 +478,199 @@
     --text-3xl--line-height: 3rem;
     --text-4xl: 3rem; /* 48px — reserved: large hero banner overlay headline, if ever needed */
     --text-4xl--line-height: 3.5rem;
+
+    /* Inputs keep 16px here (x-input/x-select read --text-field): no iOS focus zoom. */
+    --text-field: 1rem;
+    --text-field--line-height: 1.5rem;
+
+    /* 20: enterprise - slightly rounded. Shared components read these via rounded-xs/sm/md/lg/pill. */
+    --radius-xs: 3px; /* checkbox, tiny tags ("Default"), count bubbles */
+    --radius-sm: 4px; /* button, input, select, textarea, chip, badge, icon-button, thumbnails <= 112px */
+    --radius-md: 6px; /* cards, tiles, panels, data tables, lists, filter sidebar, seller block, alerts, empty states */
+    --radius-lg: 8px; /* modal, hero/banner frames, gallery frame, article cover */
+    --radius-xl: 8px; /* cap: legacy xl/2xl classes cannot exceed 8px */
+    --radius-2xl: 8px;
+    --radius-pill: 4px; /* no pills: rounded-pill (badges, dots) is a 4px rectangle */
+
+    /* Shadow variables stay neutral because Tailwind 4 inlines shadow-* values and ignores them.
+       The `:is(.storefront) [class*='shadow-']` guard below STAYS: a stray shadow-* class must never
+       render. Real elevation comes only from the elev-* utilities. */
+    --shadow-xs: 0 0 #0000;
+    --shadow-sm: 0 0 #0000;
+    --shadow-md: 0 0 #0000;
+    --shadow-lg: 0 0 #0000;
+
+    /* CTA states, corporate: hover DARKENS. graphite-900 text on each: 11.6 / 9.3 / 6.0 (AA). */
+    --color-cta: #facc15;
+    --color-cta-hover: #eab308;
+    --color-cta-pressed: #ca8a04;
+    --color-cta-border: #eab308;
+
+    /* Partner badge: bordered neutral, not a second cobalt fill (verified is the cobalt one) */
+    --color-brand-badge-bg: var(--color-surface);
+    --color-brand-badge-text: var(--color-graphite-800);
+    --color-brand-badge-border: var(--color-graphite-300);
+
+    --color-border-input: #8b8b94; /* 3.4:1 on white (WCAG 1.4.11) */
+    --color-focus-ring: var(--color-cobalt-700);
+
+    /* Phone-first controls: 44px, fields 48px */
+    --spacing-control: 2.75rem;
+    --spacing-control-sm: 2.75rem;
+    --spacing-field: 3rem;
+
+    --spacing-storefront-header: 3.5rem;
+}
+@media (min-width: 48rem) {
+    .storefront {
+        --spacing-storefront-header: 4rem;
+    }
+}
+/* Fine pointer on md+: compact controls. Touch tablets keep 44px. */
+@media (min-width: 48rem) and (pointer: fine) {
+    .storefront {
+        --spacing-control: 2.5rem;
+        --spacing-control-sm: 2.5rem;
+        --spacing-field: 2.75rem;
+    }
+}
+
+/* Storefront headings: Manrope, calm tracking (.claude/docs/design/20 section 2.4). */
+.storefront :is(h1, h2, h3) {
+    font-family: var(--font-display);
+    text-wrap: balance;
+}
+.storefront h1 {
+    letter-spacing: -0.015em;
+}
+.storefront :is(h2, h3) {
+    letter-spacing: -0.005em;
+}
+.storefront :is(p, li, dd) {
+    text-wrap: pretty;
+}
+
+/* Storefront base rules (18 section 1.3) */
+.storefront :focus-visible {
+    outline: 2px solid var(--color-focus-ring);
+    outline-offset: 2px;
+}
+.storefront :is(input, select, textarea):focus-visible {
+    outline-offset: 0;
+    border-color: var(--color-accent-700);
+}
+.storefront :is(a, button, label, input, select, summary, [role='tab'], [role='button']) {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+.storefront {
+    overscroll-behavior-y: none;
+}
+.storefront summary {
+    list-style: none;
+}
+.storefront summary::-webkit-details-marker {
+    display: none;
+}
+.storefront .no-scrollbar {
+    scrollbar-width: none;
+}
+.storefront .no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+:is(.storefront) [class*='shadow-'] {
+    box-shadow: none;
+}
+@media (prefers-reduced-motion: reduce) {
+    .storefront *,
+    .storefront *::before,
+    .storefront *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* "dense" = md+ and a fine pointer. Use for desktop-only compaction: dense:h-9 */
+@custom-variant dense (@media (min-width: 48rem) and (pointer: fine));
+
+/* 20: explicit shadows (Tailwind inlines shadow-*, so these are real utilities with literal values).
+   Allowed uses are listed in spec 20 section 4; panels never use them. The names deliberately do not
+   contain `shadow-`, so the neutralising guards do not match them. */
+@utility elev-1 {
+    box-shadow: 0 1px 2px 0 rgb(24 24 27 / 0.06), 0 1px 3px 0 rgb(24 24 27 / 0.05); /* sticky header after scroll */
+}
+@utility elev-2 {
+    box-shadow: 0 8px 24px -8px rgb(24 24 27 / 0.16), 0 2px 6px -2px rgb(24 24 27 / 0.08); /* mega panel, dropdowns */
+}
+@utility elev-3 {
+    box-shadow: 0 16px 40px -12px rgb(24 24 27 / 0.24), 0 4px 10px -4px rgb(24 24 27 / 0.1); /* drawer */
+}
+@utility elev-up {
+    box-shadow: 0 -6px 14px -8px rgb(24 24 27 / 0.14); /* fixed bottom bars */
+}
+/* Modal shadow: panels stay shadow-free, so this is scoped to the storefront (same value as elev-3). */
+@media (min-width: 48rem) {
+    .storefront .modal-surface {
+        box-shadow: 0 16px 40px -12px rgb(24 24 27 / 0.24), 0 4px 10px -4px rgb(24 24 27 / 0.1);
+    }
+}
+
+/* 44px invisible hit area for small visuals; only on small screens or touch. */
+@utility hit {
+    position: relative;
+    @media (max-width: 47.99rem), (pointer: coarse) {
+        &::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: max(100%, 2.75rem);
+            height: max(100%, 2.75rem);
+            transform: translate(-50%, -50%);
+        }
+    }
+}
+
+/* Embedded SVG marks so component class strings stay readable */
+@utility field-check-mark {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2' stroke-linecap='square'%3E%3Cpath d='M3.5 8.5l3 3L12.5 5'/%3E%3C/svg%3E");
+}
+@utility field-dash-mark {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' stroke='white' stroke-width='2'%3E%3Cpath d='M4 8h8'/%3E%3C/svg%3E");
+}
+@utility field-chevron {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%2352525b' stroke-width='1.5' stroke-linecap='square'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+}
+
+/* Tailwind inlines shadow values (it does not read --shadow-*), so neutralise explicitly. */
+:is(.panel-admin, .panel-seller) [class*='shadow-'] {
+    box-shadow: none;
+}
+
+/* Panel base rules */
+.panel-admin :focus-visible,
+.panel-seller :focus-visible {
+    outline: 2px solid var(--color-focus-ring);
+    outline-offset: 2px;
+}
+.panel-admin :is(input, select, textarea):focus-visible,
+.panel-seller :is(input, select, textarea):focus-visible {
+    outline-offset: 0;
+    border-color: var(--color-accent-700);
+}
+.panel-admin :is(a, button, label, input, select, summary, [role='tab'], [role='button']),
+.panel-seller :is(a, button, label, input, select, summary, [role='tab'], [role='button']) {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+@media (prefers-reduced-motion: reduce) {
+    :is(.panel-admin, .panel-seller) *,
+    :is(.panel-admin, .panel-seller) *::before,
+    :is(.panel-admin, .panel-seller) *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+    }
 }
 
 /* Standard Alpine.js flash-of-unstyled-content guard: Alpine removes the
@@ -361,13 +720,20 @@ trix-toolbar .trix-button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 2rem;
-    height: 2rem;
+    min-width: 2.5rem;
+    height: 2.5rem;
     border: none;
     background: var(--color-surface);
     color: var(--color-text-secondary);
     font-size: 0.8125rem;
     cursor: pointer;
+}
+
+@media (min-width: 48rem) and (pointer: fine) {
+    trix-toolbar .trix-button {
+        min-width: 2rem;
+        height: 2rem;
+    }
 }
 
 trix-toolbar .trix-button:hover {
@@ -461,7 +827,7 @@ trix-editor figure.attachment img {
     display: none;
     gap: 0.125rem;
     border-radius: var(--radius-sm);
-    background: color-mix(in srgb, var(--color-surface-inverse, #0f172a) 75%, transparent);
+    background: color-mix(in srgb, var(--color-surface-inverse, #18181b) 75%, transparent);
     padding: 0.125rem;
 }
 

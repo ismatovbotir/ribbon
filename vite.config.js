@@ -9,8 +9,17 @@ export default defineConfig({
             input: ['resources/css/app.css', 'resources/js/app.js'],
             refresh: true,
             fonts: [
-                bunny('Instrument Sans', {
-                    weights: [400, 500, 600, 700],
+                bunny('Inter', {
+                    weights: [400, 500, 600],
+                    subsets: ['latin', 'latin-ext', 'cyrillic'],
+                }),
+                bunny('Manrope', {
+                    weights: [600, 700, 800],
+                    subsets: ['latin', 'latin-ext', 'cyrillic'],
+                }),
+                bunny('IBM Plex Mono', {
+                    weights: [400, 500],
+                    subsets: ['latin', 'latin-ext', 'cyrillic'],
                 }),
             ],
         }),
