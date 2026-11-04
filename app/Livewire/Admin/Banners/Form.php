@@ -2,10 +2,10 @@
 
 namespace App\Livewire\Admin\Banners;
 
-use App\Rules\SafeLinkUrl;
 use App\Livewire\Concerns\AuthorizesAdmin;
 use App\Models\Banner;
 use App\Models\Category;
+use App\Rules\SafeLinkUrl;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;

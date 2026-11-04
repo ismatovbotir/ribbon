@@ -6,7 +6,7 @@
     <label for="{{ $for }}" class="mb-1.5 block text-sm font-medium text-text-primary">
         {{ $label }}
         @if ($required)
-            <span class="text-danger-700" aria-hidden="true">*</span><span class="sr-only"> (required)</span>
+            <span class="text-danger-700" aria-hidden="true">*</span><span class="sr-only"> {{ __('validation.required_mark') }}</span>
         @endif
     </label>
     {{ $slot }}

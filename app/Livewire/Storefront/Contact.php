@@ -2,12 +2,12 @@
 
 namespace App\Livewire\Storefront;
 
-use App\Rules\PhoneNumber;
 use App\Jobs\NotifyTelegramOfNewContactMessage;
 use App\Models\Category;
 use App\Models\ContactMessage;
 use App\Models\Page;
 use App\Models\Setting;
+use App\Rules\PhoneNumber;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;

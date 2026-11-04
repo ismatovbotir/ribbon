@@ -5,10 +5,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Storage;
 
 #[Fillable(['title', 'image_path', 'mobile_image_path', 'link_url', 'placement', 'category_id', 'sort_order', 'is_active', 'starts_at', 'ends_at', 'created_by'])]
 class Banner extends Model
 {
+    protected static function booted(): void
+    {
+        static::deleted(function (Banner $banner) {
+            Storage::disk('public')->delete(array_filter([$banner->image_path, $banner->mobile_image_path]));
+        });
+    }
+
     /**
      * Get the attributes that should be cast.
      *

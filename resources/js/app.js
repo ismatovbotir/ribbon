@@ -112,3 +112,34 @@ document.addEventListener(
     },
     true,
 );
+
+// A Livewire action can remove or disable the focused control (row delete,
+// wire:loading.attr="disabled"), which drops keyboard users back to <body>.
+// Put focus back on that control when it survives, else on the open dialog,
+// else on <main> (QA N4-12). The control is tracked by focusin because
+// wire:loading has already blurred it by the time the commit hook runs; a
+// pointer press clears it, so clicking empty space isn't undone by a later commit.
+let lastFocused = null;
+document.addEventListener('focusin', (e) => (lastFocused = e.target));
+document.addEventListener('pointerdown', () => (lastFocused = null), true);
+
+document.addEventListener('livewire:init', () => {
+    window.Livewire.hook('commit', ({ succeed }) => {
+        const before = lastFocused;
+        if (!before) return;
+
+        succeed(() => {
+            // After the morph, wire:loading cleanup and x-modal's own focus return.
+            setTimeout(() => {
+                if (document.activeElement !== document.body) return;
+                // The shell's closed nav drawer is also aria-modal, so require visibility.
+                const dialog = [...document.querySelectorAll('[aria-modal="true"]')].find((d) => d.getClientRects().length);
+                const target =
+                    before.isConnected && !before.disabled
+                        ? before
+                        : (dialog?.querySelector('button, a, input, select, textarea') ?? document.getElementById('main'));
+                target?.focus({ preventScroll: true });
+            }, 50);
+        });
+    });
+});

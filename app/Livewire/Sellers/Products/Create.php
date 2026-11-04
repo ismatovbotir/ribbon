@@ -2,7 +2,6 @@
 
 namespace App\Livewire\Sellers\Products;
 
-use App\Rules\CoreWidthFitsRibbon;
 use App\Livewire\Concerns\AuthorizesSeller;
 use App\Models\Brand;
 use App\Models\Category;
@@ -10,6 +9,7 @@ use App\Models\CategoryParameter;
 use App\Models\Product;
 use App\Models\ProductParameterValue;
 use App\Models\Seller;
+use App\Rules\CoreWidthFitsRibbon;
 use App\Services\SubscriptionService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;

@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use LogicException;
 use App\Models\Concerns\FlushesNavMenu;
 use Illuminate\Database\Eloquent\Attributes\Boot;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -12,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
+use LogicException;
 
 #[Fillable([
     'seller_id',

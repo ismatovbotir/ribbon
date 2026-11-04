@@ -19,6 +19,28 @@ class HtmlSanitizer
 {
     private const DANGEROUS_TAGS = ['script', 'style', 'iframe', 'object', 'embed', 'form', 'link', 'meta'];
 
+    private const URL_ATTRIBUTES = ['href', 'xlink:href', 'src', 'action', 'formaction', 'poster', 'background'];
+
+    /**
+     * Relative URLs and an allow-list of schemes only (QA N4-11). Browsers
+     * ignore tabs, newlines and leading control characters inside a scheme,
+     * so those are removed before the scheme is read.
+     */
+    private static function isSafeUrl(string $attribute, string $value): bool
+    {
+        $url = preg_replace('/[\x00-\x20\x7F]+/', '', $value);
+
+        if (! preg_match('/^([a-z][a-z0-9+.\-]*):/i', $url, $match)) {
+            return true;
+        }
+
+        if (in_array(strtolower($match[1]), ['http', 'https', 'mailto', 'tel'], true)) {
+            return true;
+        }
+
+        return $attribute === 'src' && preg_match('#^data:image/(png|jpe?g|gif|webp);#i', $url) === 1;
+    }
+
     public static function clean(string $html): string
     {
         if (trim($html) === '') {
@@ -52,10 +74,10 @@ class HtmlSanitizer
                 $value = trim($attribute->nodeValue ?? '');
 
                 $isEventHandler = str_starts_with($name, 'on');
-                $isScriptUrl = in_array($name, ['href', 'src', 'action'], true)
-                    && preg_match('/^\s*javascript:/i', $value);
+                $isUnsafeUrl = in_array($name, self::URL_ATTRIBUTES, true)
+                    && ! self::isSafeUrl($name, $value);
 
-                if ($isEventHandler || $isScriptUrl) {
+                if ($isEventHandler || $isUnsafeUrl) {
                     $element->removeAttribute($attribute->nodeName);
                 }
             }

@@ -219,6 +219,9 @@ Route::prefix('seller')->name('seller.')->group(function () {
 // per-permission gating via `permissions`/`permission_role`) is still
 // unbuilt — see CLAUDE.md, the non-Super-Admin role list is unconfirmed.
 Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function () {
+    // Same landing page as after login.
+    Route::redirect('/', '/admin/categories')->name('home');
+
     Route::prefix('categories')->name('categories.')->group(function () {
         Route::get('/', CategoriesIndex::class)->name('index');
         Route::get('/{category}', CategoriesShow::class)->name('show');

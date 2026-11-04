@@ -4,6 +4,8 @@ namespace App\Livewire\Admin\Banners;
 
 use App\Livewire\Concerns\AuthorizesAdmin;
 use App\Models\Banner;
+use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -53,6 +55,43 @@ class Index extends Component
         }
 
         $this->resetPage();
+    }
+
+    /** The banner awaiting delete confirmation. */
+    #[Locked]
+    public ?int $deletingId = null;
+
+    public function confirmDelete(int $id): void
+    {
+        $this->authorizeAdmin('content.manage');
+
+        $this->deletingId = Banner::findOrFail($id)->id;
+    }
+
+    public function cancelDelete(): void
+    {
+        $this->authorizeAdmin('content.manage');
+
+        $this->deletingId = null;
+    }
+
+    #[Computed]
+    public function deletingBanner(): ?Banner
+    {
+        return $this->deletingId ? Banner::find($this->deletingId) : null;
+    }
+
+    public function deleteBanner(): void
+    {
+        $this->authorizeAdmin('content.manage');
+
+        Banner::find($this->deletingId)?->delete();
+
+        $this->deletingId = null;
+        unset($this->deletingBanner);
+        $this->resetPage();
+
+        session()->flash('status', 'Banner deleted.');
     }
 
     public function updatedSearch(): void

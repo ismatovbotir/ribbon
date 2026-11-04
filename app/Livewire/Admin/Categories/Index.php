@@ -2,10 +2,10 @@
 
 namespace App\Livewire\Admin\Categories;
 
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Gate;
 use App\Livewire\Concerns\AuthorizesAdmin;
 use App\Models\Category;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
 use Livewire\Component;

@@ -237,7 +237,7 @@ return [
     'sub.expiring' => 'Подписка истекает через :count дн. (:date).',
     'sub.active' => 'Подписка активна до :date',
     'sub.hidden_badge' => 'Скрыт — подписка',
-    'sub.contact_link' => "Связаться с Ribbon",
+    'sub.contact_link' => 'Связаться с Ribbon',
     'products.index.add_short' => 'Добавить',
     'products.index.add_in_category' => 'Добавить товар в «:category»',
     'products.index.count_label' => ':count товар|:count товара|:count товаров',

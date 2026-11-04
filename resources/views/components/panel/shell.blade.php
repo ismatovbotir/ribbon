@@ -121,7 +121,10 @@
             </div>
         </header>
 
-        <main id="main" class="flex-1 overflow-y-auto overscroll-contain">
+        {{-- `relative` keeps absolutely positioned sr-only text inside this scroller,
+             so it can't stretch the document and scroll the shell away (QA N4-05, N4-06).
+             tabindex: the fallback for focus after an action removes the focused control. --}}
+        <main id="main" tabindex="-1" class="relative flex-1 overflow-y-auto overscroll-contain outline-none">
             <div class="px-4 py-4 md:px-6 md:py-6">
                 {{ $slot }}
             </div>

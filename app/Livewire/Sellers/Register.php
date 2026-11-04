@@ -2,11 +2,11 @@
 
 namespace App\Livewire\Sellers;
 
-use App\Rules\PhoneNumber;
 use App\Models\City;
 use App\Models\Country;
 use App\Models\Region;
 use App\Models\Seller;
+use App\Rules\PhoneNumber;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;

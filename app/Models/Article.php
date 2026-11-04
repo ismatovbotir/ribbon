@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 #[Fillable(['type', 'title', 'slug', 'excerpt', 'body', 'cover_image_path', 'published_at', 'created_by'])]
@@ -30,6 +31,10 @@ class Article extends Model
     {
         static::deleted(function (Article $article) {
             Category::where('guide_article_id', $article->id)->update(['guide_article_id' => null]);
+
+            if ($article->cover_image_path) {
+                Storage::disk('public')->delete($article->cover_image_path);
+            }
         });
     }
 

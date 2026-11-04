@@ -4,14 +4,16 @@
 @props(['title' => null, 'label' => 'Actions'])
 
 <div
-    x-data="{ open: false, desktop: window.matchMedia('(min-width: 48rem)').matches }"
-    x-init="window.matchMedia('(min-width: 48rem)').addEventListener('change', e => { desktop = e.matches; open = false })"
-    x-on:keydown.escape.window="if (open) { open = false; ($refs.trigger.querySelector('button, a, [tabindex]') ?? $refs.trigger).focus() }"
+    x-data="{ open: false, desktop: window.matchMedia('(min-width: 48rem)').matches, triggerEl: null }"
+    x-init="triggerEl = $refs.trigger; window.matchMedia('(min-width: 48rem)').addEventListener('change', e => { desktop = e.matches; open = false })"
+    x-on:keydown.escape.window="if (open) { open = false; (triggerEl.querySelector('button, a, [tabindex]') ?? triggerEl).focus() }"
     x-on:livewire:navigated.window="open = false"
     {{-- click.outside lives on the always-present wrapper, not on the
          x-if panel. A panel inserted by the opening click would otherwise
-         catch that same click as "outside" and close at once (QA N-02). --}}
-    x-on:click.outside="if (desktop) open = false"
+         catch that same click as "outside" and close at once (QA N-02).
+         The teleported panel counts as outside this wrapper, so its own
+         clicks are skipped: its handler closes it after the click is done. --}}
+    x-on:click.outside="if (desktop && ! $event.target.closest('[data-menu-panel]')) open = false"
     class="relative inline-block text-left"
 >
     <div
@@ -30,8 +32,11 @@
     </div>
 
     <template x-if="open && desktop">
+        {{-- Teleported to <body> so a table's overflow wrapper can't clip it. --}}
+        <template x-teleport="body">
         <div
-            x-anchor.bottom-end.offset.4="$refs.trigger"
+            data-menu-panel
+            x-anchor.bottom-end.offset.4="triggerEl"
             {{-- Close on the next macrotask. Removing the x-if panel during the
                  click would drop a form inside it (e.g. Log out) before it
                  submits (QA N3-01). --}}
@@ -40,13 +45,14 @@
             x-on:keydown.arrow-up.prevent="$focus.wrap().previous()"
             x-on:keydown.home.prevent="$focus.first()"
             x-on:keydown.end.prevent="$focus.last()"
-            x-on:keydown.tab="open = false"
+            x-on:keydown.tab.prevent="open = false; (triggerEl.querySelector('button, a, [tabindex]') ?? triggerEl).focus()"
             x-init="$nextTick(() => $focus.first())"
             role="menu"
             class="z-(--z-dropdown) min-w-48 max-w-72 border border-border-strong bg-surface-overlay py-1"
         >
             {{ $slot }}
         </div>
+        </template>
     </template>
 
     <template x-if="open && ! desktop">

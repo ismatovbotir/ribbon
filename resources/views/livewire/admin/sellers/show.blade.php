@@ -92,9 +92,9 @@
                         <tbody role="rowgroup" class="block divide-y divide-border md:table-row-group">
                             @foreach ($this->subscriptionPayments as $payment)
                                 <x-table.row wire:key="sub-payment-{{ $payment->id }}">
-                                    <x-table.cell role="primary" :mono="true">{{ $payment->created_at->format('d M Y') }}</x-table.cell>
-                                    <x-table.cell role="meta" :label="__('admin.subscription.col_period')" :mono="true">{{ $payment->period_start->format('d M Y') }} – {{ $payment->period_end->format('d M Y') }}</x-table.cell>
-                                    <x-table.cell role="meta" :label="__('admin.subscription.col_amount')" :mono="true" align="right">
+                                    <x-table.cell role="meta" :label="__('admin.subscription.col_date')" :mono="true" class="md:whitespace-nowrap">{{ $payment->created_at->format('d M Y') }}</x-table.cell>
+                                    <x-table.cell role="meta" :label="__('admin.subscription.col_period')" :mono="true" class="md:whitespace-nowrap">{{ $payment->period_start->format('d M Y') }} – {{ $payment->period_end->format('d M Y') }}</x-table.cell>
+                                    <x-table.cell role="meta" :label="__('admin.subscription.col_amount')" :mono="true" align="right" class="md:whitespace-nowrap">
                                         {{ number_format($payment->amount, 0, '.', ' ') }}
                                         @if ($payment->amount === 0)<x-badge variant="info">{{ __('admin.subscription.free') }}</x-badge>@endif
                                     </x-table.cell>

@@ -25,8 +25,8 @@
             </div>
             <div class="grid grid-cols-1 gap-5 px-5 py-5 sm:grid-cols-2">
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-text-primary">Google Analytics ID</label>
-                    <x-input type="text" wire:model="googleAnalyticsId" :error="$errors->has('googleAnalyticsId')" placeholder="G-XXXXXXXXXX" />
+                    <label for="field-googleAnalyticsId" class="mb-1 block text-sm font-medium text-text-primary">Google Analytics ID</label>
+                    <x-input id="field-googleAnalyticsId" type="text" wire:model="googleAnalyticsId" :error="$errors->has('googleAnalyticsId')" placeholder="G-XXXXXXXXXX" />
                     @error('googleAnalyticsId')
                         <p class="mt-1 text-xs text-danger-600">{{ $message }}</p>
                     @enderror
@@ -34,8 +34,8 @@
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-text-primary">Yandex Metrica counter ID</label>
-                    <x-input type="text" wire:model="yandexMetricaId" :error="$errors->has('yandexMetricaId')" placeholder="12345678" />
+                    <label for="field-yandexMetricaId" class="mb-1 block text-sm font-medium text-text-primary">Yandex Metrica counter ID</label>
+                    <x-input id="field-yandexMetricaId" type="text" wire:model="yandexMetricaId" :error="$errors->has('yandexMetricaId')" placeholder="12345678" />
                     @error('yandexMetricaId')
                         <p class="mt-1 text-xs text-danger-600">{{ $message }}</p>
                     @enderror
@@ -43,8 +43,8 @@
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-text-primary">Google Search Console verification</label>
-                    <x-input type="text" wire:model="googleSiteVerification" :error="$errors->has('googleSiteVerification')" placeholder="Verification token" />
+                    <label for="field-googleSiteVerification" class="mb-1 block text-sm font-medium text-text-primary">Google Search Console verification</label>
+                    <x-input id="field-googleSiteVerification" type="text" wire:model="googleSiteVerification" :error="$errors->has('googleSiteVerification')" placeholder="Verification token" />
                     @error('googleSiteVerification')
                         <p class="mt-1 text-xs text-danger-600">{{ $message }}</p>
                     @enderror
@@ -52,8 +52,8 @@
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-text-primary">Yandex Webmaster verification</label>
-                    <x-input type="text" wire:model="yandexSiteVerification" :error="$errors->has('yandexSiteVerification')" placeholder="Verification token" />
+                    <label for="field-yandexSiteVerification" class="mb-1 block text-sm font-medium text-text-primary">Yandex Webmaster verification</label>
+                    <x-input id="field-yandexSiteVerification" type="text" wire:model="yandexSiteVerification" :error="$errors->has('yandexSiteVerification')" placeholder="Verification token" />
                     @error('yandexSiteVerification')
                         <p class="mt-1 text-xs text-danger-600">{{ $message }}</p>
                     @enderror
@@ -79,10 +79,10 @@
                         </x-button>
                     </div>
                 @else
-                    <label class="mb-1 block text-sm font-medium text-text-primary">Bot token</label>
+                    <label for="field-telegramBotToken" class="mb-1 block text-sm font-medium text-text-primary">Bot token</label>
                     <div class="flex max-w-lg items-start gap-2">
                         <div class="flex-1">
-                            <x-input type="text" wire:model="telegramBotToken" :error="$errors->has('telegramBotToken')" placeholder="123456789:AAExampleTokenFromBotFather" />
+                            <x-input id="field-telegramBotToken" type="text" wire:model="telegramBotToken" :error="$errors->has('telegramBotToken')" placeholder="123456789:AAExampleTokenFromBotFather" />
                             @error('telegramBotToken')
                                 <p class="mt-1 text-xs text-danger-600">{{ $message }}</p>
                             @enderror
@@ -104,16 +104,16 @@
             </div>
             <div class="grid grid-cols-1 gap-5 px-5 py-5 sm:grid-cols-2">
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-text-primary">Admin phone</label>
-                    <x-input type="text" wire:model="adminPhone" :error="$errors->has('adminPhone')" placeholder="+998 90 123 45 67" />
+                    <label for="field-adminPhone" class="mb-1 block text-sm font-medium text-text-primary">Admin phone</label>
+                    <x-input id="field-adminPhone" type="text" wire:model="adminPhone" :error="$errors->has('adminPhone')" placeholder="+998 90 123 45 67" />
                     @error('adminPhone')
                         <p class="mt-1 text-xs text-danger-600">{{ $message }}</p>
                     @enderror
                 </div>
 
                 <div>
-                    <label class="mb-1 block text-sm font-medium text-text-primary">Admin email</label>
-                    <x-input type="email" wire:model="adminEmail" :error="$errors->has('adminEmail')" placeholder="hello@ribbon.uz" />
+                    <label for="field-adminEmail" class="mb-1 block text-sm font-medium text-text-primary">Admin email</label>
+                    <x-input id="field-adminEmail" type="email" wire:model="adminEmail" :error="$errors->has('adminEmail')" placeholder="hello@ribbon.uz" />
                     @error('adminEmail')
                         <p class="mt-1 text-xs text-danger-600">{{ $message }}</p>
                     @enderror
@@ -171,8 +171,8 @@
                 <h2 class="text-lg font-semibold text-text-primary">SEO defaults</h2>
             </div>
             <div class="px-5 py-5">
-                <label class="mb-1 block text-sm font-medium text-text-primary">Default meta description</label>
-                <textarea
+                <label for="field-defaultMetaDescription" class="mb-1 block text-sm font-medium text-text-primary">Default meta description</label>
+                <textarea id="field-defaultMetaDescription"
                     wire:model="defaultMetaDescription"
                     rows="3"
                     placeholder="Fallback description used when a page doesn't set its own"
@@ -183,14 +183,14 @@
                 @enderror
                 <p class="mt-1 text-xs text-text-muted">Used only when a storefront page doesn't supply its own meta description.</p>
 
-                <label class="mt-5 mb-1 block text-sm font-medium text-text-primary">Default share image</label>
+                <label for="field-ogImageUpload" class="mt-5 mb-1 block text-sm font-medium text-text-primary">Default share image</label>
                 @if ($ogImageUpload)
                     <img src="{{ $ogImageUpload->temporaryUrl() }}" alt="New default share image preview" class="mb-2 h-40 w-full max-w-md rounded-sm border border-border object-cover">
                 @elseif ($existingOgImagePath)
                     <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($existingOgImagePath) }}" alt="Current default share image" class="mb-2 h-40 w-full max-w-md rounded-sm border border-border object-cover">
                 @endif
 
-                <input type="file" wire:model="ogImageUpload" accept="image/*" class="block w-full max-w-md text-sm text-text-secondary file:mr-3 file:rounded-sm file:border file:border-border-strong file:bg-surface file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-text-primary hover:file:bg-surface-hover">
+                <input id="field-ogImageUpload" type="file" wire:model="ogImageUpload" accept="image/*" class="block w-full max-w-md text-sm text-text-secondary file:mr-3 file:rounded-sm file:border file:border-border-strong file:bg-surface file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-text-primary hover:file:bg-surface-hover">
 
                 <div wire:loading wire:target="ogImageUpload" class="mt-1 text-xs text-text-muted">Uploading…</div>
 

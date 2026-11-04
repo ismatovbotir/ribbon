@@ -4,6 +4,8 @@ namespace App\Livewire\Admin\Articles;
 
 use App\Livewire\Concerns\AuthorizesAdmin;
 use App\Models\Article;
+use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -57,6 +59,43 @@ class Index extends Component
         }
 
         $this->resetPage();
+    }
+
+    /** The article awaiting delete confirmation. */
+    #[Locked]
+    public ?int $deletingId = null;
+
+    public function confirmDelete(int $id): void
+    {
+        $this->authorizeAdmin('content.manage');
+
+        $this->deletingId = Article::findOrFail($id)->id;
+    }
+
+    public function cancelDelete(): void
+    {
+        $this->authorizeAdmin('content.manage');
+
+        $this->deletingId = null;
+    }
+
+    #[Computed]
+    public function deletingArticle(): ?Article
+    {
+        return $this->deletingId ? Article::find($this->deletingId) : null;
+    }
+
+    public function deleteArticle(): void
+    {
+        $this->authorizeAdmin('content.manage');
+
+        Article::find($this->deletingId)?->delete();
+
+        $this->deletingId = null;
+        unset($this->deletingArticle);
+        $this->resetPage();
+
+        session()->flash('status', 'Article deleted.');
     }
 
     public function updatedSearch(): void

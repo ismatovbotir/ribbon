@@ -28,10 +28,10 @@
                 <h2 class="text-lg font-semibold text-text-primary">Type</h2>
             </div>
             <div class="px-5 py-5">
-                <label class="mb-1 block text-sm font-medium text-text-primary">
+                <label for="field-type" class="mb-1 block text-sm font-medium text-text-primary">
                     Type <span class="text-danger-600">*</span>
                 </label>
-                <x-select wire:model="type" :error="$errors->has('type')" class="max-w-xs">
+                <x-select id="field-type" wire:model="type" :error="$errors->has('type')" class="max-w-xs">
                     <option value="article">Article</option>
                     <option value="news">News</option>
                 </x-select>
@@ -40,7 +40,7 @@
                 @enderror
                 <p class="mt-1 text-xs text-text-muted">Article — evergreen guides, history, technical explainers. News — time-sensitive announcements.</p>
 
-                <label class="mt-4 mb-1 block text-sm font-medium text-text-primary">Categories</label>
+                <label for="field-categories" class="mt-4 mb-1 block text-sm font-medium text-text-primary">Categories</label>
                 @php
                     $categoryOptions = $this->categories->map(fn ($category) => [
                         'id' => (string) $category->id,
@@ -91,6 +91,7 @@
                         </template>
                         <input
                             x-ref="tagInput"
+                            id="field-categories"
                             type="text"
                             x-model="query"
                             @focus="open = true"
@@ -139,10 +140,10 @@
                     @foreach (config('ribbon.locales') as $locale)
                         <div x-show="locale === '{{ $locale }}'" x-cloak class="space-y-4">
                             <div>
-                                <label class="mb-1 block text-sm font-medium text-text-primary">
+                                <label for="field-title-{{ $locale }}" class="mb-1 block text-sm font-medium text-text-primary">
                                     Title <span class="text-danger-600">*</span>
                                 </label>
-                                <x-input type="text" wire:model.live.debounce.400ms="title.{{ $locale }}" :error="$errors->has('title.'.$locale)" placeholder="e.g. The history of thermal transfer ribbons" />
+                                <x-input id="field-title-{{ $locale }}" type="text" wire:model.live.debounce.400ms="title.{{ $locale }}" :error="$errors->has('title.'.$locale)" placeholder="e.g. The history of thermal transfer ribbons" />
                                 @error('title.'.$locale)
                                     <p class="mt-1 text-xs text-danger-600">{{ $message }}</p>
                                 @enderror
@@ -150,8 +151,8 @@
                             </div>
 
                             <div>
-                                <label class="mb-1 block text-sm font-medium text-text-primary">Excerpt</label>
-                                <textarea
+                                <label for="field-excerpt-{{ $locale }}" class="mb-1 block text-sm font-medium text-text-primary">Excerpt</label>
+                                <textarea id="field-excerpt-{{ $locale }}"
                                     wire:model.blur="excerpt.{{ $locale }}"
                                     rows="2"
                                     placeholder="Short teaser shown on the home page and articles list"
@@ -164,10 +165,10 @@
                             </div>
 
                             <div>
-                                <label class="mb-1 block text-sm font-medium text-text-primary">
+                                <label id="field-body-{{ $locale }}" class="mb-1 block text-sm font-medium text-text-primary">
                                     Body <span class="text-danger-600">*</span>
                                 </label>
-                                <x-rich-text-editor name="body.{{ $locale }}" :value="$body[$locale]" :error="$errors->has('body.'.$locale)" />
+                                <x-rich-text-editor labelled-by="field-body-{{ $locale }}" name="body.{{ $locale }}" :value="$body[$locale]" :error="$errors->has('body.'.$locale)" />
                                 @error('body.'.$locale)
                                     <p class="mt-1 text-xs text-danger-600">{{ $message }}</p>
                                 @enderror
@@ -191,7 +192,7 @@
                     <img src="{{ Illuminate\Support\Facades\Storage::disk('public')->url($existingCoverImagePath) }}" alt="Current cover image" class="mb-2 h-40 w-full max-w-md rounded-sm border border-border object-cover">
                 @endif
 
-                <input type="file" wire:model="coverImageUpload" accept="image/*" class="block w-full max-w-md text-sm text-text-secondary file:mr-3 file:rounded-sm file:border file:border-border-strong file:bg-surface file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-text-primary hover:file:bg-surface-hover">
+                <input id="field-coverImageUpload" aria-label="Cover image" type="file" wire:model="coverImageUpload" accept="image/*" class="block w-full max-w-md text-sm text-text-secondary file:mr-3 file:rounded-sm file:border file:border-border-strong file:bg-surface file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-text-primary hover:file:bg-surface-hover">
 
                 <div wire:loading wire:target="coverImageUpload" class="mt-1 text-xs text-text-muted">Uploading…</div>
 
@@ -212,8 +213,8 @@
                 <h2 class="text-lg font-semibold text-text-primary">Publishing</h2>
             </div>
             <div class="px-5 py-5">
-                <label class="mb-1 block text-sm font-medium text-text-primary">Published at</label>
-                <x-input type="datetime-local" wire:model.blur="publishedAt" :error="$errors->has('publishedAt')" class="max-w-xs" />
+                <label for="field-publishedAt" class="mb-1 block text-sm font-medium text-text-primary">Published at</label>
+                <x-input id="field-publishedAt" type="datetime-local" wire:model.blur="publishedAt" :error="$errors->has('publishedAt')" class="max-w-xs" />
                 @error('publishedAt')
                     <p class="mt-1 text-xs text-danger-600">{{ $message }}</p>
                 @enderror

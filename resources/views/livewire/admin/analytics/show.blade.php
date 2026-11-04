@@ -175,7 +175,7 @@
             @if (empty($topProducts))
                 <p class="text-sm text-text-secondary">No product views recorded yet.</p>
             @else
-                <div class="overflow-x-auto">
+                <div class="relative overflow-x-auto">
                     <table class="w-full text-sm">
                         <thead>
                             <tr class="border-b border-border text-left text-xs font-medium tracking-wide text-text-muted uppercase">

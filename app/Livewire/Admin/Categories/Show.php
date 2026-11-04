@@ -2,15 +2,15 @@
 
 namespace App\Livewire\Admin\Categories;
 
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Gate;
 use App\Livewire\Concerns\AuthorizesAdmin;
 use App\Models\Article;
 use App\Models\Category;
 use App\Models\CategoryParameter;
 use App\Models\CategoryParameterOption;
 use App\Support\Icon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;

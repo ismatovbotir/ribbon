@@ -1,5 +1,5 @@
 <div>
-    <x-page-header title="Brands" subtitle="Sellers pick a brand when creating a product. &quot;No Brand&quot; is the default and can't be removed.">
+    <x-page-header :title="'Brands'" :subtitle="'Sellers pick a brand when creating a product. “No Brand” is the default and can’t be removed.'">
         <x-slot:actions>
             <x-button variant="primary" wire:click="toggleCreateForm">
                 <x-icon name="add" class="size-4" />
@@ -21,22 +21,22 @@
                 <h2 class="text-lg font-semibold text-text-primary">New Brand</h2>
             </div>
             <form wire:submit="createBrand" class="px-5 py-5">
-                <label class="mb-1 block text-sm font-medium text-text-primary">
+                <label for="field-name" class="mb-1 block text-sm font-medium text-text-primary">
                     Name <span class="text-danger-600">*</span>
                 </label>
-                <x-input type="text" wire:model.blur="name" :error="$errors->has('name')" placeholder="e.g. Zebra" />
+                <x-input id="field-name" type="text" wire:model.blur="name" :error="$errors->has('name')" placeholder="e.g. Zebra" />
                 @error('name')
                     <p class="mt-1 text-xs text-danger-600">{{ $message }}</p>
                 @enderror
 
                 <div class="mt-4">
-                    <label class="mb-1 block text-sm font-medium text-text-primary">Logo</label>
+                    <label for="field-logoUpload" class="mb-1 block text-sm font-medium text-text-primary">Logo</label>
 
                     @if ($logoUpload)
                         <img src="{{ $logoUpload->temporaryUrl() }}" alt="New brand logo preview" class="mb-2 h-14 w-14 rounded-sm border border-border object-cover">
                     @endif
 
-                    <input type="file" wire:model="logoUpload" accept="image/jpeg,image/png" class="block w-full text-sm text-text-secondary file:mr-3 file:rounded-sm file:border file:border-border-strong file:bg-surface file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-text-primary hover:file:bg-surface-hover">
+                    <input id="field-logoUpload" type="file" wire:model="logoUpload" accept="image/jpeg,image/png" class="block w-full text-sm text-text-secondary file:mr-3 file:rounded-sm file:border file:border-border-strong file:bg-surface file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-text-primary hover:file:bg-surface-hover">
 
                     <div wire:loading wire:target="logoUpload" class="mt-1 text-xs text-text-muted">Uploading…</div>
 
@@ -62,7 +62,7 @@
 
     <div class="mb-4 flex items-center gap-3">
         <div class="w-full max-w-xs">
-            <x-input type="search" wire:model.live.debounce.400ms="search" placeholder="Search brands…" class="h-8" />
+            <x-input type="search" wire:model.live.debounce.400ms="search" placeholder="Search brands…" aria-label="Search brands" class="h-8" />
         </div>
         @if ($search !== '')
             <button type="button" wire:click="$set('search', '')" class="text-xs text-text-secondary hover:text-text-primary">Clear</button>
@@ -70,7 +70,7 @@
     </div>
 
     <div class="overflow-hidden rounded-md border border-border-strong bg-surface-raised">
-        <div class="overflow-x-auto">
+        <div class="relative overflow-x-auto">
             <table class="w-full min-w-[560px] border-collapse">
                 <thead class="sticky top-0 z-(--z-sticky) bg-surface-subtle">
                     <tr class="border-b border-border text-left text-xs font-medium text-text-muted uppercase">
@@ -103,7 +103,7 @@
                                     <form wire:submit="updateBrand" class="flex flex-col gap-3">
                                         <div class="flex items-start gap-2">
                                             <div class="w-full max-w-xs">
-                                                <x-input type="text" wire:model.blur="editingName" :error="$errors->has('editingName')" autofocus />
+                                                <x-input type="text" wire:model.blur="editingName" aria-label="Name" :error="$errors->has('editingName')" autofocus />
                                                 @error('editingName')
                                                     <p class="mt-1 text-xs text-danger-600">{{ $message }}</p>
                                                 @enderror
@@ -155,22 +155,12 @@
                             @endif
                             <td class="px-4 py-2 text-right">
                                 @if ($editingBrandId !== $brand->id)
-                                    <x-dropdown align="right">
-                                        <x-slot:trigger>
-                                            <button type="button" class="rounded-sm p-1.5 text-text-muted hover:bg-surface-selected hover:text-text-primary" aria-label="Row actions">
-                                                ⋯
-                                            </button>
-                                        </x-slot:trigger>
-
-                                        <button type="button" wire:click="startEdit({{ $brand->id }})" class="block w-full px-3 py-1.5 text-left text-sm text-text-primary hover:bg-surface-hover">
-                                            Edit
-                                        </button>
+                                    <x-menu label="Row actions">
+<x-menu.item icon="edit" wire:click="startEdit({{ $brand->id }})">Edit</x-menu.item>
                                         @if ($brand->name !== 'No Brand')
-                                            <button type="button" wire:click="confirmDeleteBrand({{ $brand->id }})" class="block w-full px-3 py-1.5 text-left text-sm text-danger-600 hover:bg-danger-50">
-                                                Delete
-                                            </button>
+                                            <x-menu.item destructive wire:click="confirmDeleteBrand({{ $brand->id }})">Delete</x-menu.item>
                                         @endif
-                                    </x-dropdown>
+                                    </x-menu>
                                 @endif
                             </td>
                         </tr>
@@ -202,35 +192,27 @@
 
     {{-- Delete confirmation modal --}}
     @if ($showDeleteConfirm)
-        <div class="fixed inset-0 z-(--z-modal-backdrop) bg-scrim" wire:click="cancelDelete"></div>
-        <div class="fixed inset-0 z-(--z-modal) flex items-center justify-center p-4">
-            <div class="w-full max-w-md rounded-lg border border-border bg-surface-overlay p-5">
-                <h2 class="text-lg font-semibold text-text-primary">
-                    Delete brand "{{ $this->deletingBrand?->name }}"?
-                </h2>
-
-                @if ($this->deleteAffectedProductCount > 0)
-                    <p class="mt-2 text-sm text-text-secondary">
-                        This brand can't be deleted while products still reference it.
-                    </p>
-                    <p class="mt-2 text-sm font-medium text-danger-600">
-                        Used by {{ $this->deleteAffectedProductCount }} {{ \Illuminate\Support\Str::plural('product', $this->deleteAffectedProductCount) }}. Reassign or remove those products first.
-                    </p>
-                @else
-                    <p class="mt-2 text-sm text-text-secondary">
-                        This can't be undone.
-                    </p>
+        <x-modal :title="'Delete brand “'.($this->deletingBrand?->name).'”?'" close="cancelDelete">
+            @if ($this->deleteAffectedProductCount > 0)
+                <p class="mt-2 text-sm text-text-secondary">
+                    This brand can't be deleted while products still reference it.
+                </p>
+                <p class="mt-2 text-sm font-medium text-danger-600">
+                    Used by {{ $this->deleteAffectedProductCount }} {{ \Illuminate\Support\Str::plural('product', $this->deleteAffectedProductCount) }}. Reassign or remove those products first.
+                </p>
+            @else
+                <p class="mt-2 text-sm text-text-secondary">
+                    This can't be undone.
+                </p>
+            @endif
+            <x-slot:footer>
+                <x-button variant="ghost" wire:click="cancelDelete">Cancel</x-button>
+                @if ($this->deleteAffectedProductCount === 0)
+                    <x-button variant="danger-solid" wire:click="deleteBrand" wire:loading.attr="disabled" wire:target="deleteBrand">
+                        Delete brand
+                    </x-button>
                 @endif
-
-                <div class="mt-5 flex items-center justify-end gap-2">
-                    <x-button variant="ghost" wire:click="cancelDelete">Cancel</x-button>
-                    @if ($this->deleteAffectedProductCount === 0)
-                        <x-button variant="danger-solid" wire:click="deleteBrand" wire:loading.attr="disabled" wire:target="deleteBrand">
-                            Delete brand
-                        </x-button>
-                    @endif
-                </div>
-            </div>
-        </div>
+            </x-slot:footer>
+        </x-modal>
     @endif
 </div>

@@ -16,7 +16,7 @@
 
     <div class="mb-4 flex flex-wrap items-center gap-3">
         <div class="w-full max-w-xs">
-            <x-input type="search" wire:model.live.debounce.400ms="search" placeholder="Search articles…" class="h-8" />
+            <x-input type="search" wire:model.live.debounce.400ms="search" aria-label="Search articles" placeholder="Search articles…" class="h-8" />
         </div>
         @if ($search !== '')
             <button type="button" wire:click="$set('search', '')" class="text-xs text-text-secondary hover:text-text-primary">Clear</button>
@@ -43,7 +43,7 @@
     </div>
 
     <div class="overflow-hidden rounded-md border border-border-strong bg-surface-raised">
-        <div class="overflow-x-auto">
+        <div class="relative overflow-x-auto">
             <table class="w-full min-w-[760px] border-collapse">
                 <thead class="sticky top-0 z-(--z-sticky) bg-surface-subtle">
                     <tr class="border-b border-border text-left text-xs font-medium text-text-muted uppercase">
@@ -98,9 +98,10 @@
                             <td class="px-4 py-2 text-right text-xs text-text-secondary">{{ $article->published_at?->format('M j, Y') ?? '—' }}</td>
                             <td class="px-4 py-2 text-right text-xs text-text-secondary">{{ $article->created_at->format('M j, Y') }}</td>
                             <td class="px-4 py-2 text-right">
-                                <x-button tag="a" href="{{ route('admin.articles.edit', $article) }}" wire:navigate variant="secondary" size="sm">
-                                    Edit
-                                </x-button>
+                                <div class="flex items-center justify-end gap-2">
+                                    <x-button tag="a" href="{{ route('admin.articles.edit', $article) }}" wire:navigate variant="secondary" size="sm">Edit</x-button>
+                                    <x-button variant="danger" size="sm" wire:click="confirmDelete({{ $article->id }})">Delete</x-button>
+                                </div>
                             </td>
                         </tr>
                     @empty
@@ -128,4 +129,14 @@
             </div>
         @endif
     </div>
+
+    @if ($this->deletingArticle)
+        <x-modal :title="'Delete article “'.($this->deletingArticle->title[$defaultLocale] ?? '').'”?'" close="cancelDelete">
+            <p class="text-sm text-text-secondary">It is removed from the storefront immediately. This can't be undone.</p>
+            <x-slot:footer>
+                <x-button variant="ghost" wire:click="cancelDelete">Cancel</x-button>
+                <x-button variant="danger-solid" wire:click="deleteArticle" wire:loading.attr="disabled" wire:target="deleteArticle">Delete article</x-button>
+            </x-slot:footer>
+        </x-modal>
+    @endif
 </div>

@@ -26,3 +26,4 @@ Thumbs.db
 CLAUDE.md
 # Editor/FUSE temp files
 .fuse_hidden*
+/public/sitemap.xml

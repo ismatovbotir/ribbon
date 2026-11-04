@@ -1,5 +1,5 @@
 <div>
-    <x-page-header title="Banners" subtitle="Promotional banners scheduled for the buyer storefront — the storefront itself doesn't render them yet.">
+    <x-page-header title="Banners" subtitle="Promotional banners shown on the buyer storefront while they are active and within their schedule.">
         <x-slot:actions>
             <x-button tag="a" href="{{ route('admin.banners.create') }}" wire:navigate variant="primary">
                 <x-icon name="add" class="size-4" />
@@ -16,7 +16,7 @@
 
     <div class="mb-4 flex items-center gap-3">
         <div class="w-full max-w-xs">
-            <x-input type="search" wire:model.live.debounce.400ms="search" placeholder="Search banners…" class="h-8" />
+            <x-input type="search" wire:model.live.debounce.400ms="search" aria-label="Search banners" placeholder="Search banners…" class="h-8" />
         </div>
         @if ($search !== '')
             <button type="button" wire:click="$set('search', '')" class="text-xs text-text-secondary hover:text-text-primary">Clear</button>
@@ -24,7 +24,7 @@
     </div>
 
     <div class="overflow-hidden rounded-md border border-border-strong bg-surface-raised">
-        <div class="overflow-x-auto">
+        <div class="relative overflow-x-auto">
             <table class="w-full min-w-[820px] border-collapse">
                 <thead class="sticky top-0 z-(--z-sticky) bg-surface-subtle">
                     <tr class="border-b border-border text-left text-xs font-medium text-text-muted uppercase">
@@ -75,9 +75,10 @@
                             </td>
                             <td class="px-4 py-2 text-right font-mono tabular-nums text-text-secondary">{{ $banner->sort_order }}</td>
                             <td class="px-4 py-2 text-right">
-                                <x-button tag="a" href="{{ route('admin.banners.edit', $banner) }}" wire:navigate variant="secondary" size="sm">
-                                    Edit
-                                </x-button>
+                                <div class="flex items-center justify-end gap-2">
+                                    <x-button tag="a" href="{{ route('admin.banners.edit', $banner) }}" wire:navigate variant="secondary" size="sm">Edit</x-button>
+                                    <x-button variant="danger" size="sm" wire:click="confirmDelete({{ $banner->id }})">Delete</x-button>
+                                </div>
                             </td>
                         </tr>
                     @empty
@@ -89,7 +90,7 @@
                                     <button type="button" wire:click="$set('search', '')" class="mt-3 text-sm font-medium text-accent-700 hover:underline">Clear filters</button>
                                 @else
                                     <p class="text-sm font-medium text-text-primary">No banners yet</p>
-                                    <p class="mt-1 text-sm text-text-secondary">Create the first banner to have it ready once the storefront can display them.</p>
+                                    <p class="mt-1 text-sm text-text-secondary">Create the first banner to show it on the storefront.</p>
                                     <x-button tag="a" href="{{ route('admin.banners.create') }}" wire:navigate variant="primary" size="sm" class="mt-3">Add Banner</x-button>
                                 @endif
                             </td>
@@ -105,4 +106,14 @@
             </div>
         @endif
     </div>
+
+    @if ($this->deletingBanner)
+        <x-modal :title="'Delete banner “'.($this->deletingBanner->title[$defaultLocale] ?? '').'”?'" close="cancelDelete">
+            <p class="text-sm text-text-secondary">It is removed from the storefront immediately. This can't be undone.</p>
+            <x-slot:footer>
+                <x-button variant="ghost" wire:click="cancelDelete">Cancel</x-button>
+                <x-button variant="danger-solid" wire:click="deleteBanner" wire:loading.attr="disabled" wire:target="deleteBanner">Delete banner</x-button>
+            </x-slot:footer>
+        </x-modal>
+    @endif
 </div>

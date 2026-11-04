@@ -12,7 +12,7 @@
     </div>
 
     <div class="overflow-hidden rounded-md border border-border-strong bg-surface-raised">
-        <div class="overflow-x-auto">
+        <div class="relative overflow-x-auto">
             <table class="w-full min-w-[900px] border-collapse">
                 <thead class="bg-surface-subtle">
                     <tr class="border-b border-border text-left text-xs font-medium text-text-muted uppercase">

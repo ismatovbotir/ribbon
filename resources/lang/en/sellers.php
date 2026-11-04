@@ -237,7 +237,7 @@ return [
     'sub.expiring' => 'Subscription expires in :count day(s) (:date).',
     'sub.active' => 'Subscription active until :date',
     'sub.hidden_badge' => 'Hidden — subscription',
-    'sub.contact_link' => "Contact Ribbon",
+    'sub.contact_link' => 'Contact Ribbon',
     'products.index.add_short' => 'Add',
     'products.index.add_in_category' => 'Add product in :category',
     'products.index.count_label' => ':count product|:count products',

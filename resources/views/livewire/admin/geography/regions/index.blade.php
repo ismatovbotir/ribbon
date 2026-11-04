@@ -27,10 +27,10 @@
                 <x-locale-tabs :incomplete="$this->incompleteLocales">
                     @foreach (config('ribbon.locales') as $locale)
                         <div x-show="locale === '{{ $locale }}'" x-cloak>
-                            <label class="mb-1 block text-sm font-medium text-text-primary">
+                            <label for="field-name-{{ $locale }}" class="mb-1 block text-sm font-medium text-text-primary">
                                 Name <span class="text-danger-600">*</span>
                             </label>
-                            <x-input type="text" wire:model.blur="name.{{ $locale }}" :error="$errors->has('name.'.$locale)" placeholder="e.g. Tashkent Region" />
+                            <x-input id="field-name-{{ $locale }}" type="text" wire:model.blur="name.{{ $locale }}" :error="$errors->has('name.'.$locale)" placeholder="e.g. Tashkent Region" />
                             @error('name.'.$locale)
                                 <p class="mt-1 text-xs text-danger-600">{{ $message }}</p>
                             @enderror
@@ -50,7 +50,7 @@
 
     <div class="mb-4 flex items-center gap-3">
         <div class="w-full max-w-xs">
-            <x-input type="search" wire:model.live.debounce.400ms="search" placeholder="Search regions…" class="h-8" />
+            <x-input type="search" wire:model.live.debounce.400ms="search" aria-label="Search regions" placeholder="Search regions…" class="h-8" />
         </div>
         @if ($search !== '')
             <button type="button" wire:click="$set('search', '')" class="text-xs text-text-secondary hover:text-text-primary">Clear</button>
@@ -58,7 +58,7 @@
     </div>
 
     <div class="overflow-hidden rounded-md border border-border-strong bg-surface-raised">
-        <div class="overflow-x-auto">
+        <div class="relative overflow-x-auto">
             <table class="w-full min-w-[640px] border-collapse">
                 <thead class="sticky top-0 z-(--z-sticky) bg-surface-subtle">
                     <tr class="border-b border-border text-left text-xs font-medium text-text-muted uppercase">
@@ -84,7 +84,7 @@
                                         <x-locale-tabs :incomplete="$this->incompleteEditingLocales">
                                             @foreach (config('ribbon.locales') as $locale)
                                                 <div x-show="locale === '{{ $locale }}'" x-cloak>
-                                                    <x-input type="text" wire:model.blur="editingName.{{ $locale }}" :error="$errors->has('editingName.'.$locale)" autofocus />
+                                                    <x-input type="text" wire:model.blur="editingName.{{ $locale }}" aria-label="Name" :error="$errors->has('editingName.'.$locale)" autofocus />
                                                     @error('editingName.'.$locale)
                                                         <p class="mt-1 text-xs text-danger-600">{{ $message }}</p>
                                                     @enderror
@@ -110,20 +110,10 @@
                                         <x-button tag="a" href="{{ route('admin.geography.cities.index', [$country, $region]) }}" wire:navigate variant="secondary" size="sm">
                                             Manage cities
                                         </x-button>
-                                        <x-dropdown align="right">
-                                            <x-slot:trigger>
-                                                <button type="button" class="rounded-sm p-1.5 text-text-muted hover:bg-surface-selected hover:text-text-primary" aria-label="Row actions">
-                                                    ⋯
-                                                </button>
-                                            </x-slot:trigger>
-
-                                            <button type="button" wire:click="startEdit({{ $region->id }})" class="block w-full px-3 py-1.5 text-left text-sm text-text-primary hover:bg-surface-hover">
-                                                Edit
-                                            </button>
-                                            <button type="button" wire:click="confirmDeleteRegion({{ $region->id }})" class="block w-full px-3 py-1.5 text-left text-sm text-danger-600 hover:bg-danger-50">
-                                                Delete
-                                            </button>
-                                        </x-dropdown>
+                                        <x-menu label="Row actions">
+<x-menu.item icon="edit" wire:click="startEdit({{ $region->id }})">Edit</x-menu.item>
+                                            <x-menu.item destructive wire:click="confirmDeleteRegion({{ $region->id }})">Delete</x-menu.item>
+                                        </x-menu>
                                     </div>
                                 </td>
                             @endif
@@ -156,42 +146,34 @@
 
     {{-- Delete confirmation modal --}}
     @if ($showDeleteConfirm)
-        <div class="fixed inset-0 z-(--z-modal-backdrop) bg-scrim" wire:click="cancelDelete"></div>
-        <div class="fixed inset-0 z-(--z-modal) flex items-center justify-center p-4">
-            <div class="w-full max-w-md rounded-lg border border-border bg-surface-overlay p-5">
-                <h2 class="text-lg font-semibold text-text-primary">
-                    Delete region "{{ $this->deletingRegion?->name[$defaultLocale] ?? '' }}"?
-                </h2>
-
-                @if ($this->deleteBlockedByCitiesCount > 0 || $this->deleteBlockedBySellersCount > 0)
-                    <p class="mt-2 text-sm text-text-secondary">
-                        This region can't be deleted while it's still in use.
-                    </p>
-                    @if ($this->deleteBlockedByCitiesCount > 0)
-                        <p class="mt-2 text-sm font-medium text-danger-600">
-                            Has {{ $this->deleteBlockedByCitiesCount }} {{ \Illuminate\Support\Str::plural('city', $this->deleteBlockedByCitiesCount) }}. Remove them first.
-                        </p>
-                    @endif
-                    @if ($this->deleteBlockedBySellersCount > 0)
-                        <p class="mt-2 text-sm font-medium text-danger-600">
-                            Used by {{ $this->deleteBlockedBySellersCount }} {{ \Illuminate\Support\Str::plural('seller', $this->deleteBlockedBySellersCount) }}.
-                        </p>
-                    @endif
-                @else
-                    <p class="mt-2 text-sm text-text-secondary">
-                        This can't be undone.
+        <x-modal :title="'Delete region “'.($this->deletingRegion?->name[$defaultLocale] ?? '').'”?'" close="cancelDelete">
+            @if ($this->deleteBlockedByCitiesCount > 0 || $this->deleteBlockedBySellersCount > 0)
+                <p class="mt-2 text-sm text-text-secondary">
+                    This region can't be deleted while it's still in use.
+                </p>
+                @if ($this->deleteBlockedByCitiesCount > 0)
+                    <p class="mt-2 text-sm font-medium text-danger-600">
+                        Has {{ $this->deleteBlockedByCitiesCount }} {{ \Illuminate\Support\Str::plural('city', $this->deleteBlockedByCitiesCount) }}. Remove them first.
                     </p>
                 @endif
-
-                <div class="mt-5 flex items-center justify-end gap-2">
-                    <x-button variant="ghost" wire:click="cancelDelete">Cancel</x-button>
-                    @if ($this->deleteBlockedByCitiesCount === 0 && $this->deleteBlockedBySellersCount === 0)
-                        <x-button variant="danger-solid" wire:click="deleteRegion" wire:loading.attr="disabled" wire:target="deleteRegion">
-                            Delete region
-                        </x-button>
-                    @endif
-                </div>
-            </div>
-        </div>
+                @if ($this->deleteBlockedBySellersCount > 0)
+                    <p class="mt-2 text-sm font-medium text-danger-600">
+                        Used by {{ $this->deleteBlockedBySellersCount }} {{ \Illuminate\Support\Str::plural('seller', $this->deleteBlockedBySellersCount) }}.
+                    </p>
+                @endif
+            @else
+                <p class="mt-2 text-sm text-text-secondary">
+                    This can't be undone.
+                </p>
+            @endif
+            <x-slot:footer>
+                <x-button variant="ghost" wire:click="cancelDelete">Cancel</x-button>
+                @if ($this->deleteBlockedByCitiesCount === 0 && $this->deleteBlockedBySellersCount === 0)
+                    <x-button variant="danger-solid" wire:click="deleteRegion" wire:loading.attr="disabled" wire:target="deleteRegion">
+                        Delete region
+                    </x-button>
+                @endif
+            </x-slot:footer>
+        </x-modal>
     @endif
 </div>

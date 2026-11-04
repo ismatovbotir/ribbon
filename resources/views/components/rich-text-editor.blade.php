@@ -47,7 +47,7 @@
     re-render in a mutate/observe loop that froze the tab. Living outside
     Trix's managed subtree entirely sidesteps that class of bug altogether.
 --}}
-@props(['name', 'value' => '', 'error' => false])
+@props(['name', 'value' => '', 'error' => false, 'labelledBy' => null])
 
 @php
     $inputId = 'trix-input-'.str_replace('.', '-', $name);
@@ -277,5 +277,5 @@
     }"
 >
     <input id="{{ $inputId }}" type="hidden" value="{{ $value }}">
-    <trix-editor x-ref="editor" input="{{ $inputId }}" class="{{ $error ? '!border-danger-600' : '' }}"></trix-editor>
+    <trix-editor x-ref="editor" input="{{ $inputId }}" @if ($labelledBy) aria-labelledby="{{ $labelledBy }}" @endif class="{{ $error ? '!border-danger-600' : '' }}"></trix-editor>
 </div>

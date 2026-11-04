@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Livewire\Storefront\Catalog\Show as CatalogShow;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\CategoryParameter;
@@ -12,7 +13,6 @@ use App\Models\Product;
 use App\Models\Region;
 use App\Models\Seller;
 use App\Services\OfferSelectionService;
-use App\Livewire\Storefront\Catalog\Show as CatalogShow;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
