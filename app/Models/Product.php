@@ -20,6 +20,7 @@ use LogicException;
     'name',
     'name_extra',
     'slug',
+    'moq_pcs',
     'status',
     'moderated_by',
     'moderated_at',
@@ -393,12 +394,11 @@ class Product extends Model
     }
 
     /**
-     * Minimum order quantity in pcs. No MOQ column exists yet (CLAUDE.md:
-     * default 1 pcs); this is the one place to read it from once added.
+     * Minimum order quantity in pcs (default 1).
      */
     public function moqInPcs(): int
     {
-        return 1;
+        return max(1, (int) $this->moq_pcs);
     }
 
     /**

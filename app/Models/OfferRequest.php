@@ -6,9 +6,19 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['phone', 'company_name', 'email', 'status'])]
+#[Fillable(['phone', 'company_name', 'email', 'buyer_type', 'utm', 'referrer', 'status'])]
 class OfferRequest extends Model
 {
+    public const BUYER_TYPES = ['retail', 'logistics', 'manufacturing', 'small_business'];
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return ['utm' => 'array'];
+    }
+
     /**
      * The per-seller/per-product line items making up this request.
      */

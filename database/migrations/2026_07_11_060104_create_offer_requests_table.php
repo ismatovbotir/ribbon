@@ -16,6 +16,11 @@ return new class extends Migration
             $table->string('phone');
             $table->string('company_name')->nullable();
             $table->string('email')->nullable();
+            // Optional "Who are you?" answer, see OfferRequest::BUYER_TYPES.
+            $table->string('buyer_type')->nullable();
+            // Where the buyer came from: UTM params + external referrer.
+            $table->json('utm')->nullable();
+            $table->string('referrer')->nullable();
             $table->enum('status', ['pending', 'contacted', 'fulfilled', 'cancelled'])->default('pending');
             $table->timestamps();
 

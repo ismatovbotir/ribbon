@@ -126,6 +126,8 @@ return [
         'body.*' => 'matn',
         'metaDescription.*' => 'meta tavsif',
         'parameterValues.*' => 'parametr qiymati',
+        'moqPcs' => 'Minimal buyurtma',
+        'certificateUpload' => 'Guvohnoma',
         'pcsPrice' => 'narx',
         'categoryId' => 'toifa',
         'brandId' => 'brend',

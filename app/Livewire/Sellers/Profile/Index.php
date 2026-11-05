@@ -5,6 +5,8 @@ namespace App\Livewire\Sellers\Profile;
 use App\Livewire\Concerns\AuthorizesSeller;
 use App\Models\Seller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -29,9 +31,70 @@ class Index extends Component
 
     public ?string $existingLogoPath = null;
 
+    public $certificateUpload = null;
+
+    /** '' = not stated, 'yes', 'no'. */
+    public string $vatPayer = '';
+
+    /** @var array<int, string> */
+    public array $paymentMethods = [];
+
+    public string $warrantyInfo = '';
+
     public function mount(): void
     {
-        $this->existingLogoPath = $this->seller()->logo_path;
+        $seller = $this->seller();
+
+        $this->existingLogoPath = $seller->logo_path;
+        $this->vatPayer = match ($seller->is_vat_payer) {
+            true => 'yes',
+            false => 'no',
+            default => '',
+        };
+        $this->paymentMethods = $seller->payment_methods ?? [];
+        $this->warrantyInfo = (string) $seller->warranty_info;
+    }
+
+    public function saveBusinessInfo(): void
+    {
+        $this->authorizeOwner();
+
+        $this->validate([
+            'vatPayer' => ['nullable', Rule::in(['yes', 'no'])],
+            'paymentMethods' => ['array'],
+            'paymentMethods.*' => [Rule::in(Seller::PAYMENT_METHODS)],
+            'warrantyInfo' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $this->seller()->update([
+            'is_vat_payer' => $this->vatPayer === '' ? null : $this->vatPayer === 'yes',
+            'payment_methods' => array_values($this->paymentMethods) ?: null,
+            'warranty_info' => trim($this->warrantyInfo) ?: null,
+        ]);
+
+        session()->flash('status', __('sellers.profile.business_saved'));
+    }
+
+    public function saveCertificate(): void
+    {
+        $this->authorizeOwner();
+
+        $this->validate([
+            'certificateUpload' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
+        ]);
+
+        $seller = $this->seller();
+        $previous = $seller->registration_certificate_path;
+
+        $seller->update(['registration_certificate_path' => $this->certificateUpload->store('seller-certificates', 'local')]);
+
+        if ($previous) {
+            Storage::disk('local')->delete($previous);
+        }
+
+        $this->certificateUpload = null;
+
+        session()->flash('status', __('sellers.profile.certificate_saved'));
     }
 
     public function seller(): Seller

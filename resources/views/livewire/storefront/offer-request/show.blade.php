@@ -124,12 +124,20 @@
                             <x-input id="req-phone" type="tel" inputmode="tel" autocomplete="tel" wire:model.blur="phone" :error="$errors->has('phone')" placeholder="{{ __('storefront.offer_request.phone_placeholder') }}" class="h-14 font-mono text-lg" />
                         </x-field>
 
-                        <details class="border-y border-border" @if ($companyName !== '' || $email !== '' || $errors->has('companyName') || $errors->has('email')) open @endif>
+                        <details class="border-y border-border" @if ($companyName !== '' || $email !== '' || $buyerType !== '' || $errors->has('companyName') || $errors->has('email')) open @endif>
                             <summary class="group flex min-h-12 cursor-pointer items-center justify-between text-sm font-medium text-text-primary">
                                 {{ __('storefront.offer_request.details_optional') }}
                                 <x-storefront.icon name="chevron-down" class="size-4 text-text-muted group-open:rotate-180" stroke="2" />
                             </summary>
                             <div class="space-y-4 pb-4">
+                                <x-field :label="__('storefront.offer_request.buyer_type_label')" for="req-buyer-type" :error="$errors->first('buyerType')">
+                                    <x-select id="req-buyer-type" wire:model="buyerType" :error="$errors->has('buyerType')">
+                                        <option value="">{{ __('storefront.offer_request.buyer_type_placeholder') }}</option>
+                                        @foreach (\App\Models\OfferRequest::BUYER_TYPES as $type)
+                                            <option value="{{ $type }}">{{ __('storefront.offer_request.buyer_type.'.$type) }}</option>
+                                        @endforeach
+                                    </x-select>
+                                </x-field>
                                 <x-field :label="__('storefront.offer_request.company_label')" for="req-company" :error="$errors->first('companyName')">
                                     <x-input id="req-company" type="text" autocomplete="organization" wire:model.blur="companyName" :error="$errors->has('companyName')" placeholder="{{ __('storefront.offer_request.company_placeholder') }}" />
                                 </x-field>

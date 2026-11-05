@@ -126,6 +126,8 @@ return [
         'body.*' => 'Текст',
         'metaDescription.*' => 'Мета-описание',
         'parameterValues.*' => 'Значение параметра',
+        'moqPcs' => 'Минимальный заказ',
+        'certificateUpload' => 'Свидетельство',
         'pcsPrice' => 'Цена',
         'categoryId' => 'Категория',
         'brandId' => 'Бренд',

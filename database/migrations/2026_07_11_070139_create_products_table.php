@@ -41,6 +41,8 @@ return new class extends Migration
             // creation. See Product::composeNameAndSlug() /
             // Product::generateUniqueSlug().
             $table->json('slug');
+            // Minimum order quantity, always expressed in pcs.
+            $table->unsignedInteger('moq_pcs')->default(1);
             // Catalog moderation, mirrors sellers.status.
             $table->enum('status', ['pending', 'approved', 'rejected', 'suspended'])->default('pending');
             $table->foreignId('moderated_by')->nullable()->constrained('users')->nullOnDelete();

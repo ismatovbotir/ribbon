@@ -8,6 +8,7 @@ use App\Models\ContactMessage;
 use App\Models\Page;
 use App\Models\Setting;
 use App\Rules\PhoneNumber;
+use App\Support\Attribution;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
@@ -53,29 +54,11 @@ class Contact extends Component
 
     private const MIN_FILL_SECONDS = 3;
 
-    private const UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'];
-
     public function mount(): void
     {
         $this->renderedAt = now()->getTimestamp();
 
-        foreach (self::UTM_KEYS as $key) {
-            $value = request()->query($key);
-
-            if (is_string($value) && $value !== '') {
-                $this->utm[$key] = Str::limit($value, 100, '');
-            }
-        }
-
-        $referer = request()->headers->get('referer');
-
-        if (is_string($referer) && $referer !== '' && parse_url($referer, PHP_URL_HOST) !== request()->getHost()) {
-            // Origin + path only: query strings can carry tokens/PII.
-            $parts = parse_url($referer);
-            $this->referrer = isset($parts['host'])
-                ? Str::limit(($parts['scheme'] ?? 'https').'://'.$parts['host'].($parts['path'] ?? ''), 255, '')
-                : null;
-        }
+        ['utm' => $this->utm, 'referrer' => $this->referrer] = Attribution::current(request());
     }
 
     /**

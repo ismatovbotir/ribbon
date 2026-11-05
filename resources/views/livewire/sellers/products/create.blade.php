@@ -111,6 +111,18 @@
                 @error('pcsPrice')
                     <p class="mt-1 text-xs text-danger-600">{{ $message }}</p>
                 @enderror
+
+                <div class="mt-4">
+                    <label for="moq-pcs" class="mb-1 block text-sm font-medium text-text-primary">{{ __('sellers.products.moq_label') }} <span class="text-danger-600">*</span></label>
+                    <div class="flex items-center gap-2">
+                        <x-input id="moq-pcs" type="number" min="1" step="1" wire:model="moqPcs" class="w-44 text-right" :error="$errors->has('moqPcs')" aria-describedby="moq-pcs-hint" />
+                        <span class="text-sm text-text-secondary">{{ __('sellers.products.moq_unit') }}</span>
+                    </div>
+                    <p id="moq-pcs-hint" class="mt-1 text-xs text-text-muted">{{ __('sellers.products.moq_caption') }}</p>
+                    @error('moqPcs')
+                        <p class="mt-1 text-xs text-danger-600">{{ $message }}</p>
+                    @enderror
+                </div>
             </div>
         </div>
 

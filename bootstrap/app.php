@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->appendToGroup('web', SetLocale::class);
+        $middleware->appendToGroup('web', \App\Http\Middleware\CaptureAttribution::class);
 
         // Per-route-group aliases (not global) — applied only to seller
         // dashboard / admin panel routes going forward. See

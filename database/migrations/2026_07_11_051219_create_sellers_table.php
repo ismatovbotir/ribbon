@@ -25,6 +25,12 @@ return new class extends Migration
             // be added later from the dashboard rather than at registration
             // — validated jpg/png, max 1MB, at the UI layer.
             $table->string('logo_path')->nullable();
+            // Private file on the `local` disk, required before approval.
+            $table->string('registration_certificate_path')->nullable();
+            // Public B2B info shown on product pages. Null = not stated.
+            $table->boolean('is_vat_payer')->nullable();
+            $table->json('payment_methods')->nullable();
+            $table->text('warranty_info')->nullable();
             $table->enum('status', ['pending', 'approved', 'rejected', 'suspended'])->default('pending');
             $table->foreignId('approved_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamp('approved_at')->nullable();

@@ -96,6 +96,9 @@ class Edit extends Component
      * would leak whether a given product id exists at all to someone
      * probing another seller's URLs.
      */
+    /** Minimum order quantity in pcs. */
+    public $moqPcs = 1;
+
     public function mount(Product $product): void
     {
         $seller = $this->authorizeSeller();
@@ -106,6 +109,7 @@ class Edit extends Component
 
         $this->brandId = $product->brand_id;
         $this->nameExtra = $product->name_extra;
+        $this->moqPcs = $product->moqInPcs();
 
         $this->fillParameterValuesForm();
         $this->fillPriceForm();
@@ -203,11 +207,13 @@ class Edit extends Component
         $this->validate([
             'brandId' => ['required', 'exists:brands,id'],
             'nameExtra' => ['nullable', 'string', 'max:255'],
+            'moqPcs' => ['required', 'integer', 'min:1', 'max:1000000'],
         ]);
 
         $composed = $this->composeNameAndSlug();
 
         $this->product->update([
+            'moq_pcs' => (int) $this->moqPcs,
             'brand_id' => $this->brandId,
             'name_extra' => $this->nameExtra,
             'name' => $composed['name'],

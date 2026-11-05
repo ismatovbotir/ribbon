@@ -48,6 +48,9 @@ class Create extends Component
     /** Required pcs price in UZS. Pack and box prices are added on the edit page. */
     public ?string $pcsPrice = null;
 
+    /** Minimum order quantity in pcs. */
+    public $moqPcs = 1;
+
     /**
      * Keyed by category_parameter_id. text/number values are scalars,
      * select_single is a single option id, select_multiple is an array of
@@ -283,6 +286,7 @@ class Create extends Component
             'brandId' => ['required', 'exists:brands,id'],
             'nameExtra' => ['nullable', 'string', 'max:255'],
             'pcsPrice' => ['required', 'numeric', 'min:0.01'],
+            'moqPcs' => ['required', 'integer', 'min:1', 'max:1000000'],
         ];
 
         $category = $this->selectedCategory;
@@ -314,6 +318,7 @@ class Create extends Component
                 'name' => $composed['name'],
                 'name_extra' => $this->nameExtra,
                 'slug' => $composed['slug'],
+                'moq_pcs' => (int) $this->moqPcs,
             ]);
 
             $product->prices()->where('unit', 'pcs')->firstOrFail()->update(['price' => $this->pcsPrice]);

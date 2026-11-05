@@ -7,8 +7,10 @@ use App\Models\OfferRequest;
 use App\Models\OfferRequestItem;
 use App\Rules\PhoneNumber;
 use App\Services\OfferSelectionService;
+use App\Support\Attribution;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 
@@ -30,6 +32,19 @@ class Show extends Component
 
     public string $email = '';
 
+    public string $buyerType = '';
+
+    /**
+     * Read on open: Livewire update requests no longer carry the original URL.
+     *
+     * @var array<string, string>
+     */
+    #[Locked]
+    public array $utm = [];
+
+    #[Locked]
+    public ?string $referrer = null;
+
     public bool $submitted = false;
 
     /**
@@ -50,6 +65,8 @@ class Show extends Component
     public function mount(): void
     {
         $this->renderedAt = now()->getTimestamp();
+
+        ['utm' => $this->utm, 'referrer' => $this->referrer] = Attribution::current(request());
     }
 
     /**
@@ -61,6 +78,7 @@ class Show extends Component
             'phone' => ['required', 'string', 'max:32', new PhoneNumber],
             'companyName' => ['nullable', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255'],
+            'buyerType' => ['nullable', 'string', Rule::in(OfferRequest::BUYER_TYPES)],
         ];
     }
 
@@ -73,6 +91,7 @@ class Show extends Component
             'phone' => __('storefront.offer_request.phone_label'),
             'companyName' => __('storefront.offer_request.company_label'),
             'email' => __('storefront.offer_request.email_label'),
+            'buyerType' => __('storefront.offer_request.buyer_type_label'),
         ];
     }
 
@@ -158,6 +177,9 @@ class Show extends Component
                 'phone' => trim($this->phone),
                 'company_name' => $this->companyName !== '' ? $this->companyName : null,
                 'email' => $this->email !== '' ? $this->email : null,
+                'buyer_type' => $this->buyerType !== '' ? $this->buyerType : null,
+                'utm' => $this->utm !== [] ? $this->utm : null,
+                'referrer' => $this->referrer,
                 'status' => 'pending',
             ]);
 

@@ -184,7 +184,7 @@ class AuthorizationGuardsTest extends TestCase
     public function test_moderation_requires_the_matching_permission(): void
     {
         $seller = $this->makeSeller();
-        $seller->forceFill(['status' => 'pending'])->save();
+        $seller->forceFill(['status' => 'pending', 'registration_certificate_path' => 'seller-certificates/c.pdf'])->save();
 
         $this->actingAs($this->limitedAdmin(['products.moderate']));
         Livewire::test(AdminSellerShow::class, ['seller' => $seller])->assertForbidden();

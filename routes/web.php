@@ -20,6 +20,7 @@ use App\Livewire\Admin\Pages\Index as AdminPagesIndex;
 use App\Livewire\Admin\Products\Index as AdminProductsIndex;
 use App\Livewire\Admin\Products\Show as AdminProductsShow;
 use App\Livewire\Admin\Sellers\Index as AdminSellersIndex;
+use App\Http\Controllers\Admin\SellerCertificateController;
 use App\Livewire\Admin\Sellers\Show as AdminSellersShow;
 use App\Livewire\Admin\Settings\Show as AdminSettingsShow;
 use App\Livewire\Admin\Telegram\Show as AdminTelegramShow;
@@ -247,6 +248,7 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
     Route::prefix('sellers')->name('sellers.')->group(function () {
         Route::get('/', AdminSellersIndex::class)->name('index');
         Route::get('/{seller}', AdminSellersShow::class)->name('show');
+        Route::get('/{seller}/certificate', SellerCertificateController::class)->name('certificate');
     });
 
     Route::prefix('products')->name('products.')->group(function () {

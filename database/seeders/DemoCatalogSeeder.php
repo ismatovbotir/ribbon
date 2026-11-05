@@ -13,6 +13,7 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * LOCAL-ONLY demo content: 3 approved sellers and approved products with
@@ -149,6 +150,16 @@ class DemoCatalogSeeder extends Seeder
                 'locale' => 'uz',
             ],
         );
+
+        // Placeholder certificate and B2B info, so the review and product pages show real states.
+        $certificate = "seller-certificates/demo-{$seller->id}.pdf";
+        Storage::disk('local')->put($certificate, "%PDF-1.4\n% Demo placeholder, not a real document\n");
+        $seller->update([
+            'registration_certificate_path' => $certificate,
+            'is_vat_payer' => true,
+            'payment_methods' => ['transfer', 'cash'],
+            'warranty_info' => '12 oy kafolat. Toshkentda servis markazi.',
+        ]);
 
         // register() always creates a pending seller — approve so it's buyer-visible.
         $seller->approve($approver ?? $seller->users()->first());

@@ -63,4 +63,72 @@
             </div>
         </div>
     </div>
+
+    <div class="mt-6 rounded-md border border-border bg-surface-raised">
+        <div class="border-b border-border bg-surface-subtle px-5 py-3">
+            <h2 class="text-lg font-semibold text-text-primary">{{ __('sellers.profile.section_business') }}</h2>
+        </div>
+        <form wire:submit="saveBusinessInfo" class="space-y-5 p-5">
+            <p class="text-xs text-text-muted">{{ __('sellers.profile.business_caption') }}</p>
+            <fieldset @disabled(! $isOwner) class="space-y-5">
+                <x-field :label="__('sellers.profile.vat_payer_label')" for="vat-payer" :error="$errors->first('vatPayer')">
+                    <x-select id="vat-payer" wire:model="vatPayer" class="max-w-xs" :error="$errors->has('vatPayer')">
+                        <option value="">{{ __('sellers.profile.vat_payer_unset') }}</option>
+                        <option value="yes">{{ __('sellers.profile.vat_payer_yes') }}</option>
+                        <option value="no">{{ __('sellers.profile.vat_payer_no') }}</option>
+                    </x-select>
+                </x-field>
+
+                <fieldset>
+                    <legend class="mb-1.5 text-sm font-medium text-text-primary">{{ __('sellers.profile.payment_methods_label') }}</legend>
+                    <div class="flex flex-wrap gap-x-6 gap-y-2">
+                        @foreach (\App\Models\Seller::PAYMENT_METHODS as $method)
+                            <label class="inline-flex min-h-11 items-center gap-2 text-sm text-text-primary">
+                                <input type="checkbox" wire:model="paymentMethods" value="{{ $method }}" class="size-4 accent-accent-700">
+                                {{ __('storefront.seller.payment_method.'.$method) }}
+                            </label>
+                        @endforeach
+                    </div>
+                    @error('paymentMethods.*')
+                        <p class="mt-1 text-xs text-danger-600">{{ $message }}</p>
+                    @enderror
+                </fieldset>
+
+                <x-field :label="__('sellers.profile.warranty_label')" for="warranty-info" :hint="__('sellers.profile.warranty_caption')" :error="$errors->first('warrantyInfo')">
+                    <x-textarea id="warranty-info" rows="3" wire:model="warrantyInfo" :error="$errors->has('warrantyInfo')" />
+                </x-field>
+            </fieldset>
+
+            @if ($isOwner)
+                <div class="flex justify-end">
+                    <x-button type="submit" variant="primary" size="sm" wire:loading.attr="disabled" wire:target="saveBusinessInfo">{{ __('sellers.profile.save_business') }}</x-button>
+                </div>
+            @else
+                <p class="text-xs text-text-muted">{{ __('sellers.profile.business_owner_only') }}</p>
+            @endif
+        </form>
+    </div>
+
+    @if ($isOwner)
+        <div class="mt-6 rounded-md border border-border bg-surface-raised">
+            <div class="border-b border-border bg-surface-subtle px-5 py-3">
+                <h2 class="text-lg font-semibold text-text-primary">{{ __('sellers.certificate_label') }}</h2>
+            </div>
+            <div class="p-5">
+                <p class="text-sm text-text-primary">{{ $seller->hasCertificate() ? __('sellers.profile.certificate_on_file') : __('sellers.profile.certificate_missing') }}</p>
+                <div class="mt-3">
+                    <label for="certificate-upload" class="mb-1 block text-sm font-medium text-text-primary">{{ __('sellers.profile.certificate_replace') }}</label>
+                    <input id="certificate-upload" type="file" wire:model="certificateUpload" accept="application/pdf,image/jpeg,image/png" class="block w-full max-w-md text-sm text-text-secondary file:mr-3 file:rounded-sm file:border file:border-border-strong file:bg-surface file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-text-primary hover:file:bg-surface-hover">
+                    <div wire:loading wire:target="certificateUpload" class="mt-1 text-xs text-text-muted">{{ __('sellers.uploading') }}</div>
+                    @error('certificateUpload')
+                        <p class="mt-1 text-xs text-danger-600">{{ $message }}</p>
+                    @enderror
+                    <p class="mt-1 text-xs text-text-muted">{{ __('sellers.certificate_caption') }}</p>
+                </div>
+                @if ($certificateUpload)
+                    <x-button type="button" variant="primary" size="sm" class="mt-3" wire:click="saveCertificate" wire:loading.attr="disabled" wire:target="saveCertificate, certificateUpload">{{ __('sellers.profile.save_certificate') }}</x-button>
+                @endif
+            </div>
+        </div>
+    @endif
 </div>

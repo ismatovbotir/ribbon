@@ -77,9 +77,15 @@ class Show extends Component
     {
         $this->authorizeAdmin('sellers.moderate');
 
+        if (! $this->seller->hasCertificate()) {
+            $this->addError('approve', __('admin.sellers.certificate_required_to_approve'));
+
+            return;
+        }
+
         $this->seller->approve($this->actingAdmin());
 
-        session()->flash('status', 'Seller approved.');
+        session()->flash('status', __('admin.ui.seller_approved'));
     }
 
     public function openRejectForm(): void
@@ -111,7 +117,7 @@ class Show extends Component
         $this->showRejectForm = false;
         $this->rejectReason = '';
 
-        session()->flash('status', 'Seller rejected.');
+        session()->flash('status', __('admin.ui.seller_rejected'));
     }
 
     public function openSuspendForm(): void
@@ -147,7 +153,7 @@ class Show extends Component
         $this->showSuspendForm = false;
         $this->suspendReason = '';
 
-        session()->flash('status', 'Seller blocked.');
+        session()->flash('status', __('admin.ui.seller_blocked'));
     }
 
     // ---- Subscription (Super Admin only: `manage-subscriptions` gate) ----
@@ -305,7 +311,7 @@ class Show extends Component
         return view('livewire.admin.sellers.show')->layout('layouts.admin', [
             'title' => $this->seller->name,
             'breadcrumb' => [
-                ['label' => 'Sellers', 'url' => route('admin.sellers.index')],
+                ['label' => __('admin.ui.sellers'), 'url' => route('admin.sellers.index')],
                 ['label' => $this->seller->name],
             ],
         ]);

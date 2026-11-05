@@ -10,10 +10,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
+use LogicException;
 
-#[Fillable(['name', 'address', 'country_id', 'region_id', 'city_id', 'vat_number', 'phone', 'logo_path', 'status', 'approved_by', 'approved_at', 'rejected_reason', 'subscription_paid_until'])]
+#[Fillable(['name', 'address', 'country_id', 'region_id', 'city_id', 'vat_number', 'phone', 'logo_path', 'registration_certificate_path', 'is_vat_payer', 'payment_methods', 'warranty_info', 'status', 'approved_by', 'approved_at', 'rejected_reason', 'subscription_paid_until'])]
 class Seller extends Model
 {
+    public const PAYMENT_METHODS = ['transfer', 'cash', 'card', 'installments'];
+
     /**
      * Get the attributes that should be cast.
      *
@@ -23,6 +26,8 @@ class Seller extends Model
     {
         return [
             'approved_at' => 'datetime',
+            'is_vat_payer' => 'boolean',
+            'payment_methods' => 'array',
             'subscription_paid_until' => 'date:Y-m-d',
         ];
     }
@@ -132,6 +137,7 @@ class Seller extends Model
                 'vat_number' => $sellerData['vat_number'],
                 'phone' => $sellerData['phone'],
                 'logo_path' => $sellerData['logo_path'] ?? null,
+                'registration_certificate_path' => $sellerData['registration_certificate_path'] ?? null,
             ]);
 
             $owner = User::create($ownerData);
@@ -168,15 +174,25 @@ class Seller extends Model
     }
 
     /**
-     * Approve this seller, recording which admin acted and when.
+     * Approve this seller, recording which admin acted and when. A registration
+     * certificate is required first, whichever front end calls this.
      */
     public function approve(User $admin): void
     {
+        if (! $this->hasCertificate()) {
+            throw new LogicException('A seller cannot be approved without a registration certificate.');
+        }
+
         $this->status = 'approved';
         $this->approved_by = $admin->id;
         $this->approved_at = now();
         $this->rejected_reason = null;
         $this->save();
+    }
+
+    public function hasCertificate(): bool
+    {
+        return filled($this->registration_certificate_path);
     }
 
     /**

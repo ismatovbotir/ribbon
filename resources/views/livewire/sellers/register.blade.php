@@ -193,9 +193,21 @@
                     @enderror
                 </div>
 
+                <div>
+                    <label for="field-companyCertificate" class="mb-1 block text-sm font-medium text-text-primary">
+                        {{ __('sellers.certificate_label') }} <span class="text-danger-600">*</span>
+                    </label>
+                    <input id="field-companyCertificate" type="file" wire:model="companyCertificate" accept="application/pdf,image/jpeg,image/png" class="block w-full text-sm text-text-secondary file:mr-3 file:rounded-sm file:border file:border-border-strong file:bg-surface file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-text-primary hover:file:bg-surface-hover">
+                    <div wire:loading wire:target="companyCertificate" class="mt-1 text-xs text-text-muted">{{ __('sellers.uploading') }}</div>
+                    @error('companyCertificate')
+                        <p class="mt-1 text-xs text-danger-600">{{ $message }}</p>
+                    @enderror
+                    <p class="mt-1 text-xs text-text-muted">{{ __('sellers.certificate_caption') }}</p>
+                </div>
+
                 <div class="flex items-center justify-between pt-2">
                     <x-button type="button" variant="ghost" wire:click="back">{{ __('sellers.back_button') }}</x-button>
-                    <x-button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="register, companyLogo">
+                    <x-button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="register, companyLogo, companyCertificate">
                         {{ __('sellers.submit_button') }}
                     </x-button>
                 </div>

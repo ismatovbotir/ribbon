@@ -338,14 +338,33 @@
                     </div>
                 </div>
                 <p class="px-4 pt-3 text-xs text-text-muted">{{ __('storefront.seller.verified_explainer') }}</p>
-                @if ($territoryLine !== '')
-                    <dl class="mt-3 text-sm">
+                @php($seller = $product->seller)
+                <dl class="mt-3 text-sm">
+                    @if ($territoryLine !== '')
                         <div class="grid grid-cols-[2fr_3fr] gap-3 border-t border-border px-4 py-3">
                             <dt class="text-text-secondary">{{ __('storefront.seller.location') }}</dt>
                             <dd class="text-text-primary">{{ $territoryLine }}</dd>
                         </div>
-                    </dl>
-                @endif
+                    @endif
+                    @if ($seller->is_vat_payer !== null)
+                        <div class="grid grid-cols-[2fr_3fr] gap-3 border-t border-border px-4 py-3">
+                            <dt class="text-text-secondary">{{ __('storefront.seller.vat_payer') }}</dt>
+                            <dd class="text-text-primary">{{ $seller->is_vat_payer ? __('storefront.seller.vat_payer_yes') : __('storefront.seller.vat_payer_no') }}</dd>
+                        </div>
+                    @endif
+                    @if (! empty($seller->payment_methods))
+                        <div class="grid grid-cols-[2fr_3fr] gap-3 border-t border-border px-4 py-3">
+                            <dt class="text-text-secondary">{{ __('storefront.seller.payment_methods') }}</dt>
+                            <dd class="text-text-primary">{{ collect($seller->payment_methods)->map(fn ($method) => __('storefront.seller.payment_method.'.$method))->implode(', ') }}</dd>
+                        </div>
+                    @endif
+                    @if ($seller->warranty_info)
+                        <div class="grid grid-cols-[2fr_3fr] gap-3 border-t border-border px-4 py-3">
+                            <dt class="text-text-secondary">{{ __('storefront.seller.warranty') }}</dt>
+                            <dd class="break-words whitespace-pre-line text-text-primary">{{ $seller->warranty_info }}</dd>
+                        </div>
+                    @endif
+                </dl>
             </div>
         </section>
     </div>
