@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Exceptions\AdminAccessDeniedException;
+use App\Services\TwoFactorService;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -41,6 +42,12 @@ class EnsureAdminIsAuthenticated
             $request->session()->regenerateToken();
 
             return redirect()->route('login');
+        }
+
+        $twoFactor = app(TwoFactorService::class);
+
+        if ($twoFactor->blocks(Auth::user())) {
+            return redirect()->route($twoFactor->isConfirmed(Auth::user()) ? 'two-factor.challenge' : 'two-factor.setup');
         }
 
         return $next($request);

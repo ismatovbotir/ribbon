@@ -12,6 +12,7 @@ use App\Models\Seller;
 use App\Models\Setting;
 use App\Models\User;
 use App\Services\NavMenu;
+use App\Services\TwoFactorService;
 use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
@@ -49,6 +50,17 @@ class AppServiceProvider extends ServiceProvider
         // `admin-permission` is the permission_role-backed check a
         // Moderator-style role will use (Super Admin always passes).
         // Typed `User` params make guests fail closed.
+        // Every admin ability is denied until 2FA passes. Route middleware doesn't
+        // run on Livewire's update endpoint, so this is what protects actions.
+        Gate::before(function (User $user, string $ability) {
+            if (in_array($ability, ['admin', 'super-admin', 'manage-subscriptions', 'admin-permission'], true)
+                && app(TwoFactorService::class)->blocks($user)) {
+                return false;
+            }
+
+            return null;
+        });
+
         Gate::define('admin', fn (User $user) => $user->isAdmin());
         Gate::define('super-admin', fn (User $user) => $user->isSuperAdmin());
         // Subscriptions / paid_until / payments: Super Admin only. The

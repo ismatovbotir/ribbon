@@ -25,6 +25,8 @@ use App\Livewire\Admin\Sellers\Show as AdminSellersShow;
 use App\Livewire\Admin\Settings\Show as AdminSettingsShow;
 use App\Livewire\Admin\Telegram\Show as AdminTelegramShow;
 use App\Livewire\Auth\Login;
+use App\Livewire\Auth\TwoFactorChallenge;
+use App\Livewire\Auth\TwoFactorSetup;
 use App\Livewire\Sellers\Analytics\Show as SellerAnalyticsShow;
 use App\Livewire\Sellers\Dashboard as SellerDashboard;
 use App\Livewire\Sellers\Employees\Index as SellerEmployeesIndex;
@@ -163,6 +165,12 @@ Route::get('/sellers/register', SellerRegister::class)->name('sellers.register')
 // shared: it's actor-agnostic (just tears down the session), so both the
 // admin and seller panels post to this one route.
 Route::get('/login', Login::class)->name('login');
+
+// The second step of an admin sign-in. Both pages refuse non-admins.
+Route::middleware('auth')->prefix('two-factor')->name('two-factor.')->group(function () {
+    Route::get('/setup', TwoFactorSetup::class)->name('setup');
+    Route::get('/challenge', TwoFactorChallenge::class)->name('challenge');
+});
 
 Route::post('/logout', function () {
     Auth::logout();

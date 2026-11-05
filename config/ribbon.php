@@ -31,4 +31,6 @@ return [
     // a server reachable directly — clients could then forge their IP.
     'trusted_proxies' => env('TRUSTED_PROXIES'),
 
+    // Admin staff must pass TOTP. Only ever turn this off on a local machine.
+    'admin_2fa_required' => (bool) env('ADMIN_2FA_REQUIRED', true),
 ];

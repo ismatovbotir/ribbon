@@ -107,7 +107,7 @@
 
         @if ($settings->google_analytics_id)
             <script async src="https://www.googletagmanager.com/gtag/js?id={{ $settings->google_analytics_id }}"></script>
-            <script>
+            <script nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}">
                 window.dataLayer = window.dataLayer || [];
                 function gtag() { dataLayer.push(arguments); }
                 gtag('js', new Date());
@@ -116,7 +116,7 @@
         @endif
 
         @if ($settings->yandex_metrica_id)
-            <script>
+            <script nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}">
                 (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
                 m[i].l=1*new Date();
                 for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
