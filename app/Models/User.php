@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -37,6 +38,11 @@ class User extends Authenticatable
      * The seller companies this user belongs to, with their role (Owner/
      * Employee) within each one carried on the seller_user pivot row.
      */
+    public function telegramLink(): HasOne
+    {
+        return $this->hasOne(TelegramLink::class);
+    }
+
     public function sellers(): BelongsToMany
     {
         return $this->belongsToMany(Seller::class, 'seller_user')

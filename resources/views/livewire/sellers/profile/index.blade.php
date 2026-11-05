@@ -64,6 +64,29 @@
         </div>
     </div>
 
+    {{-- Personal, not company-wide: every user links their own chat. Polls only while a link is open. --}}
+    <div class="mt-6 rounded-md border border-border bg-surface-raised" @if ($telegramLinkUrl && ! $telegramLink) wire:poll.4s @endif>
+        <div class="border-b border-border bg-surface-subtle px-5 py-3">
+            <h2 class="text-lg font-semibold text-text-primary">{{ __('sellers.telegram.section') }}</h2>
+        </div>
+        <div class="space-y-3 p-5">
+            <p class="text-sm text-text-secondary">{{ $fullAlerts ? __('sellers.telegram.tier_full') : __('sellers.telegram.tier_free') }}</p>
+            @if ($telegramLink)
+                <div class="flex flex-wrap items-center gap-3">
+                    <x-badge variant="success" :dot="true">{{ $telegramLink->username ? __('sellers.telegram.connected_as', ['username' => $telegramLink->username]) : __('sellers.telegram.connected') }}</x-badge>
+                    <x-button type="button" variant="secondary" size="sm" wire:click="disconnectTelegram" wire:loading.attr="disabled" wire:target="disconnectTelegram">{{ __('sellers.telegram.disconnect') }}</x-button>
+                </div>
+            @elseif (! $botConnected)
+                <p class="text-sm text-text-muted">{{ __('sellers.telegram.unavailable') }}</p>
+            @elseif ($telegramLinkUrl)
+                <x-button tag="a" variant="primary" href="{{ $telegramLinkUrl }}" target="_blank" rel="noopener">{{ __('sellers.telegram.open') }}</x-button>
+                <p class="text-xs text-text-muted">{{ __('sellers.telegram.open_hint') }}</p>
+            @else
+                <x-button type="button" variant="primary" wire:click="connectTelegram" wire:loading.attr="disabled" wire:target="connectTelegram">{{ __('sellers.telegram.connect') }}</x-button>
+            @endif
+        </div>
+    </div>
+
     <div class="mt-6 rounded-md border border-border bg-surface-raised">
         <div class="border-b border-border bg-surface-subtle px-5 py-3">
             <h2 class="text-lg font-semibold text-text-primary">{{ __('sellers.profile.section_business') }}</h2>

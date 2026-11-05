@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Storefront\OfferRequest;
 
+use App\Jobs\NotifySellersOfOfferRequest;
 use App\Jobs\NotifyTelegramOfNewOfferRequest;
 use App\Models\OfferRequest;
 use App\Models\OfferRequestItem;
@@ -207,6 +208,9 @@ class Show extends Component
         // clicks straight through to /admin/offers — never race a
         // not-yet-committed row.
         NotifyTelegramOfNewOfferRequest::dispatch($offerRequest);
+
+        // After the response: the buyer's confirmation never waits on Telegram.
+        NotifySellersOfOfferRequest::dispatchAfterResponse($offerRequest);
 
         $this->submitted = true;
     }

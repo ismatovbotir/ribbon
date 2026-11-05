@@ -13,10 +13,8 @@ use Illuminate\Support\Facades\Log;
  * Subscription expiry reminder. Synchronous like the other NotifyTelegram*
  * jobs (no guaranteed queue worker on shared hosting).
  *
- * Seller-to-Telegram linking is not built yet, so for now the reminder goes
- * to the Super Admin chat, who relays it. HOOK: when linking exists, extend
- * recipientChatIds() to return the seller's own linked chat(s) (and keep or
- * drop the admin copy); nothing else in the flow has to change.
+ * Goes to the Super Admin chat and to each of the seller's linked users, the
+ * latter in their own language.
  *
  * handle() returns true when at least one message was delivered so the
  * caller only marks the reminder as sent on success.
@@ -39,7 +37,6 @@ class NotifyTelegramOfSubscriptionExpiry
      */
     protected function recipientChatIds(): array
     {
-        // TODO(seller-telegram-linking): add the seller's linked chat id(s) here.
         return array_filter([config('services.telegram.super_admin_chat_id')]);
     }
 
@@ -48,7 +45,9 @@ class NotifyTelegramOfSubscriptionExpiry
         $botToken = Setting::current()->effectiveTelegramBotToken();
         $chatIds = $this->recipientChatIds();
 
-        if (! $botToken || $chatIds === []) {
+        $linkedUsers = $this->seller->users()->whereHas('telegramLink')->with('telegramLink')->get();
+
+        if (! $botToken || ($chatIds === [] && $linkedUsers->isEmpty())) {
             Log::warning('No Telegram bot token / chat id - skipping subscription reminder.');
 
             return false;
@@ -70,6 +69,11 @@ class NotifyTelegramOfSubscriptionExpiry
 
         foreach ($chatIds as $chatId) {
             $sent = $telegram->sendMessage($botToken, $chatId, $text, 'HTML') !== null || $sent;
+        }
+
+        foreach ($linkedUsers as $user) {
+            $sellerText = __('sellers.telegram.reminder_'.$this->kind, ['date' => $date], $user->locale);
+            $sent = $telegram->sendMessage($botToken, $user->telegramLink->chat_id, $sellerText, 'HTML') !== null || $sent;
         }
 
         return $sent;

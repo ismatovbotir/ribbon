@@ -16,6 +16,8 @@ use Throwable;
  */
 class TelegramBotService
 {
+    private const TIMEOUT_SECONDS = 5;
+
     /**
      * Verifies a token actually works and fetches the bot's own username —
      * used both to validate what an admin just typed into the Settings
@@ -93,13 +95,14 @@ class TelegramBotService
      * on failure — logged either way, never thrown, matching this app's
      * existing "don't let a Telegram hiccup break the real request" rule.
      */
-    public function sendMessage(string $token, int|string $chatId, string $text, ?string $parseMode = null): ?int
+    public function sendMessage(string $token, int|string $chatId, string $text, ?string $parseMode = null, ?array $replyMarkup = null): ?int
     {
         try {
-            $response = Http::post("https://api.telegram.org/bot{$token}/sendMessage", array_filter([
+            $response = Http::timeout(self::TIMEOUT_SECONDS)->post("https://api.telegram.org/bot{$token}/sendMessage", array_filter([
                 'chat_id' => $chatId,
                 'text' => $text,
                 'parse_mode' => $parseMode,
+                'reply_markup' => $replyMarkup,
             ]));
 
             if ($response->failed() || ! $response->json('ok')) {
@@ -120,6 +123,36 @@ class TelegramBotService
             ]);
 
             return null;
+        }
+    }
+
+    /** Stops the spinner on a pressed inline button and shows a short toast. */
+    public function answerCallbackQuery(string $token, string $callbackId, string $text): void
+    {
+        $this->call($token, 'answerCallbackQuery', ['callback_query_id' => $callbackId, 'text' => $text]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $replyMarkup
+     */
+    public function editMessageReplyMarkup(string $token, int|string $chatId, int $messageId, array $replyMarkup): void
+    {
+        $this->call($token, 'editMessageReplyMarkup', ['chat_id' => $chatId, 'message_id' => $messageId, 'reply_markup' => $replyMarkup]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    private function call(string $token, string $method, array $payload): void
+    {
+        try {
+            $response = Http::timeout(self::TIMEOUT_SECONDS)->post("https://api.telegram.org/bot{$token}/{$method}", $payload);
+
+            if ($response->failed()) {
+                Log::warning("Telegram {$method} failed.", ['status' => $response->status()]);
+            }
+        } catch (Throwable $e) {
+            Log::warning("Telegram {$method} threw an exception.", ['error' => $e::class]);
         }
     }
 }

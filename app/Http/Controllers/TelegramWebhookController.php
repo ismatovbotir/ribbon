@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Setting;
 use App\Models\TelegramContact;
 use App\Models\TelegramMessage;
+use App\Services\SellerTelegramService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -26,13 +27,19 @@ use Illuminate\Http\Request;
  */
 class TelegramWebhookController extends Controller
 {
-    public function __invoke(Request $request): JsonResponse
+    public function __invoke(Request $request, SellerTelegramService $sellerTelegram): JsonResponse
     {
         $setting = Setting::current();
         $expectedSecret = $setting->telegram_webhook_secret;
 
         if (! $expectedSecret || $request->header('X-Telegram-Bot-Api-Secret-Token') !== $expectedSecret) {
             abort(403);
+        }
+
+        if (is_array($callback = $request->input('callback_query'))) {
+            $sellerTelegram->handleCallback($callback);
+
+            return response()->json(['ok' => true]);
         }
 
         $message = $request->input('message');
@@ -44,6 +51,15 @@ class TelegramWebhookController extends Controller
         }
 
         $from = $message['from'] ?? [];
+
+        // A linking token is a secret: handled here and never saved to the inbox.
+        if (preg_match('/^\/start(?:@\w+)?\s+(\S+)/', $text, $match)) {
+            if (($message['chat']['type'] ?? null) === 'private') {
+                $sellerTelegram->handleStart($match[1], $chatId, $from['username'] ?? null);
+            }
+
+            return response()->json(['ok' => true]);
+        }
 
         $contact = TelegramContact::query()->updateOrCreate(
             ['chat_id' => $chatId],

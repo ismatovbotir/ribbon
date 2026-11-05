@@ -4,8 +4,11 @@ namespace App\Livewire\Sellers\Profile;
 
 use App\Livewire\Concerns\AuthorizesSeller;
 use App\Models\Seller;
+use App\Models\Setting;
+use App\Services\SellerTelegramService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -32,6 +35,10 @@ class Index extends Component
 
     public $certificateUpload = null;
 
+    /** Holds a secret token, so only ever set by connectTelegram(). */
+    #[Locked]
+    public ?string $telegramLinkUrl = null;
+
     /** '' = not stated, 'yes', 'no'. */
     public string $vatPayer = '';
 
@@ -52,6 +59,24 @@ class Index extends Component
         };
         $this->paymentMethods = $seller->payment_methods ?? [];
         $this->warrantyInfo = (string) $seller->warranty_info;
+    }
+
+    /** Each user links their own chat, so Employees can do this too. */
+    public function connectTelegram(SellerTelegramService $telegram): void
+    {
+        $this->authorizeSeller();
+
+        $this->telegramLinkUrl = $telegram->linkUrlFor(Auth::user());
+    }
+
+    public function disconnectTelegram(SellerTelegramService $telegram): void
+    {
+        $this->authorizeSeller();
+
+        $telegram->unlink(Auth::user());
+        $this->telegramLinkUrl = null;
+
+        session()->flash('status', __('sellers.telegram.disconnected'));
     }
 
     public function saveBusinessInfo(): void
@@ -137,6 +162,9 @@ class Index extends Component
         return view('livewire.sellers.profile.index', [
             'seller' => $this->seller(),
             'isOwner' => $this->isOwner(),
+            'telegramLink' => Auth::user()->telegramLink,
+            'botConnected' => Setting::current()->isTelegramBotConnected(),
+            'fullAlerts' => app(SellerTelegramService::class)->getsFullAlerts($this->seller()),
         ])->layout('layouts.seller', [
             'title' => __('sellers.nav.profile'),
             'breadcrumb' => [
