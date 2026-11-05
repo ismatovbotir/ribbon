@@ -176,7 +176,7 @@ class Show extends Component
         $this->catImageUpload = null;
         $this->catExistingImagePath = $this->category->image_path;
 
-        session()->flash('status', 'Category details saved.');
+        session()->flash('status', __('admin.ui.category_details_saved'));
     }
 
     /**
@@ -537,7 +537,7 @@ class Show extends Component
 
         $this->category->unsetRelation('parameters');
         $this->closeDrawer();
-        session()->flash('status', 'Parameter saved.');
+        session()->flash('status', __('admin.ui.parameter_saved'));
     }
 
     // ------------------------------------------------------------------
@@ -595,19 +595,19 @@ class Show extends Component
         $this->showDeleteConfirm = false;
         $this->deletingParameterId = null;
 
-        session()->flash('status', 'Parameter deleted.');
+        session()->flash('status', __('admin.ui.parameter_deleted'));
     }
 
     public function render()
     {
         return view('livewire.admin.categories.show', [
             'defaultLocale' => config('ribbon.locales')[0],
-            'typeLabels' => self::TYPE_LABELS,
+            'typeLabels' => collect(self::TYPE_LABELS)->map(fn ($label, $type) => __('admin.ui.param_type_'.$type))->all(),
         ])->layout('layouts.admin', [
-            'title' => $this->category->name[config('ribbon.locales')[0]] ?? 'Category',
+            'title' => $this->category->name[app()->getLocale()] ?? __('admin.ui.category'),
             'breadcrumb' => [
-                ['label' => 'Categories', 'url' => route('admin.categories.index')],
-                ['label' => $this->category->name[config('ribbon.locales')[0]] ?? 'Category'],
+                ['label' => __('admin.ui.categories'), 'url' => route('admin.categories.index')],
+                ['label' => $this->category->name[app()->getLocale()] ?? __('admin.ui.category')],
             ],
         ]);
     }

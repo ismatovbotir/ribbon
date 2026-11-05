@@ -91,7 +91,7 @@ class Index extends Component
         unset($this->deletingBanner);
         $this->resetPage();
 
-        session()->flash('status', 'Banner deleted.');
+        session()->flash('status', __('admin.ui.banner_deleted'));
     }
 
     public function updatedSearch(): void
@@ -115,25 +115,25 @@ class Index extends Component
     public static function statusMeta(Banner $banner): array
     {
         if ($banner->isCurrentlyLive()) {
-            return ['label' => 'Live now', 'variant' => 'success'];
+            return ['label' => __('admin.ui.live_now'), 'variant' => 'success'];
         }
 
         if (! $banner->is_active) {
-            return ['label' => 'Inactive', 'variant' => 'muted'];
+            return ['label' => __('admin.ui.inactive'), 'variant' => 'muted'];
         }
 
         if ($banner->starts_at !== null && $banner->starts_at->isFuture()) {
-            return ['label' => 'Scheduled', 'variant' => 'info'];
+            return ['label' => __('admin.ui.scheduled'), 'variant' => 'info'];
         }
 
         if ($banner->ends_at !== null && $banner->ends_at->isPast()) {
-            return ['label' => 'Expired', 'variant' => 'muted'];
+            return ['label' => __('admin.ui.expired'), 'variant' => 'muted'];
         }
 
         // Not reachable given isCurrentlyLive()'s own logic (active + no
         // future start + no past end implies live), but fall back to a
         // safe, non-misleading label rather than nothing.
-        return ['label' => 'Inactive', 'variant' => 'muted'];
+        return ['label' => __('admin.ui.inactive'), 'variant' => 'muted'];
     }
 
     public function render()
@@ -151,11 +151,10 @@ class Index extends Component
         return view('livewire.admin.banners.index', [
             'banners' => $banners,
             'defaultLocale' => $defaultLocale,
-            'placementLabels' => Form::PLACEMENTS,
         ])->layout('layouts.admin', [
-            'title' => 'Banners',
+            'title' => __('admin.ui.banners'),
             'breadcrumb' => [
-                ['label' => 'Banners'],
+                ['label' => __('admin.ui.banners')],
             ],
         ]);
     }

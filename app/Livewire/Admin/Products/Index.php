@@ -111,9 +111,9 @@ class Index extends Component
             'statuses' => self::STATUSES,
             'defaultLocale' => config('ribbon.locales')[0],
         ])->layout('layouts.admin', [
-            'title' => 'Products',
+            'title' => __('admin.ui.products'),
             'breadcrumb' => [
-                ['label' => 'Products'],
+                ['label' => __('admin.ui.products')],
             ],
         ]);
     }

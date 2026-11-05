@@ -1,23 +1,23 @@
 <div>
-    <x-page-header title="Analytics" subtitle="Platform-wide traffic, product views, and search activity — every seller combined." />
+    <x-page-header :title="__('admin.ui.analytics')" :subtitle="__('admin.ui.platform_wide_traffic_product_views_and_search_activity_ever')" />
 
     @if ($totalViews === 0 && $totalSearches === 0)
         <div class="rounded-md border border-dashed border-border-strong bg-surface-subtle p-10 text-center">
             <x-icon name="catalog" class="mx-auto size-8 text-text-muted" />
-            <p class="mt-3 text-sm font-medium text-text-primary">No activity yet</p>
-            <p class="mx-auto mt-1 max-w-sm text-sm text-text-secondary">Traffic and search data will show up here once buyers start browsing the storefront.</p>
+            <p class="mt-3 text-sm font-medium text-text-primary">{{ __('admin.ui.no_activity_yet') }}</p>
+            <p class="mx-auto mt-1 max-w-sm text-sm text-text-secondary">{{ __('admin.ui.traffic_and_search_data_will_show_up_here_once_buyers_start') }}</p>
         </div>
     @else
-        <p class="mb-4 text-xs font-medium tracking-wide text-text-muted uppercase">Last {{ $days }} days</p>
+        <p class="mb-4 text-xs font-medium tracking-wide text-text-muted uppercase">{{ __('admin.ui.last_days', ['days' => $days]) }}</p>
 
         {{-- Stat tiles --}}
         <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div class="rounded-md border border-border bg-surface-raised p-5">
-                <p class="text-xs font-medium tracking-wide text-text-muted uppercase">Product views</p>
+                <p class="text-xs font-medium tracking-wide text-text-muted uppercase">{{ __('admin.ui.product_views') }}</p>
                 <p class="mt-1.5 text-2xl font-semibold text-text-primary">{{ number_format($totalViews) }}</p>
             </div>
             <div class="rounded-md border border-border bg-surface-raised p-5">
-                <p class="text-xs font-medium tracking-wide text-text-muted uppercase">Searches</p>
+                <p class="text-xs font-medium tracking-wide text-text-muted uppercase">{{ __('admin.ui.searches') }}</p>
                 <p class="mt-1.5 text-2xl font-semibold text-text-primary">{{ number_format($totalSearches) }}</p>
             </div>
         </div>
@@ -25,23 +25,23 @@
         {{-- Trend chart --}}
         <div class="mb-6 rounded-md border border-border bg-surface-raised p-5" x-data="{ tooltip: null }">
             <div class="mb-3 flex items-center justify-between">
-                <p class="text-sm font-semibold text-text-primary">Views &amp; searches over time</p>
+                <p class="text-sm font-semibold text-text-primary">{{ __('admin.ui.views_searches_over_time') }}</p>
 
                 {{-- Legend — required for 2 series; line-key + label, never color-only --}}
                 <div class="flex items-center gap-4 text-xs text-text-secondary">
                     <span class="flex items-center gap-1.5">
                         <span class="inline-block h-0.5 w-4 rounded-pill bg-accent-600"></span>
-                        Product views
+                        {{ __('admin.ui.product_views') }}
                     </span>
                     <span class="flex items-center gap-1.5">
                         <span class="inline-block h-0.5 w-4 rounded-pill bg-info-600"></span>
-                        Searches
+                        {{ __('admin.ui.searches') }}
                     </span>
                 </div>
             </div>
 
             <div class="relative">
-                <svg viewBox="0 0 {{ $chart['width'] }} {{ $chart['height'] }}" class="w-full" role="img" aria-label="Views and searches over time">
+                <svg viewBox="0 0 {{ $chart['width'] }} {{ $chart['height'] }}" class="w-full" role="img" aria-label="{{ __('admin.ui.views_and_searches_over_time') }}">
                     {{-- Gridlines (recessive, hairline, one-step-off-surface) --}}
                     @foreach ($chart['gridlines'] as $line)
                         <line x1="40" y1="{{ $line['y'] }}" x2="{{ $chart['width'] - 8 }}" y2="{{ $line['y'] }}" class="stroke-border" stroke-width="1" />
@@ -89,12 +89,12 @@
                     <p class="mt-1 flex items-center gap-1.5">
                         <span class="inline-block h-0.5 w-3 rounded-pill bg-accent-600"></span>
                         <span class="font-semibold text-text-primary" x-text="tooltip?.views"></span>
-                        <span class="text-text-secondary">views</span>
+                        <span class="text-text-secondary">{{ __('admin.ui.views') }}</span>
                     </p>
                     <p class="mt-0.5 flex items-center gap-1.5">
                         <span class="inline-block h-0.5 w-3 rounded-pill bg-info-600"></span>
                         <span class="font-semibold text-text-primary" x-text="tooltip?.searches"></span>
-                        <span class="text-text-secondary">searches</span>
+                        <span class="text-text-secondary">{{ __('admin.ui.searches_2') }}</span>
                     </p>
                 </div>
             </div>
@@ -105,7 +105,7 @@
                  same colors as the seller dashboard's identical chart (consistency
                  across the app, not a fresh color decision). --}}
             <div class="rounded-md border border-border bg-surface-raised p-5">
-                <p class="mb-4 text-sm font-semibold text-text-primary">Traffic sources</p>
+                <p class="mb-4 text-sm font-semibold text-text-primary">{{ __('admin.ui.traffic_sources') }}</p>
 
                 @php
                     $sourceColors = [
@@ -118,9 +118,9 @@
                     $sourceLabels = [
                         'google' => 'Google',
                         'yandex' => 'Yandex',
-                        'internal_search' => 'Internal search',
-                        'direct' => 'Direct',
-                        'other' => 'Other',
+                        'internal_search' => __('admin.ui.src_internal_search'),
+                        'direct' => __('admin.ui.src_direct'),
+                        'other' => __('admin.ui.src_other'),
                     ];
                 @endphp
 
@@ -146,10 +146,10 @@
             {{-- Top searches — single sequential hue (a ranked list, not
                  distinct categories) --}}
             <div class="rounded-md border border-border bg-surface-raised p-5">
-                <p class="mb-4 text-sm font-semibold text-text-primary">Top searches</p>
+                <p class="mb-4 text-sm font-semibold text-text-primary">{{ __('admin.ui.top_searches') }}</p>
 
                 @if (empty($topQueries))
-                    <p class="text-sm text-text-secondary">No searches recorded yet.</p>
+                    <p class="text-sm text-text-secondary">{{ __('admin.ui.no_searches_recorded_yet') }}</p>
                 @else
                     <div class="space-y-3">
                         @foreach ($topQueries as $row)
@@ -170,18 +170,18 @@
 
         {{-- Top viewed products --}}
         <div class="rounded-md border border-border bg-surface-raised p-5">
-            <p class="mb-4 text-sm font-semibold text-text-primary">Top viewed products</p>
+            <p class="mb-4 text-sm font-semibold text-text-primary">{{ __('admin.ui.top_viewed_products') }}</p>
 
             @if (empty($topProducts))
-                <p class="text-sm text-text-secondary">No product views recorded yet.</p>
+                <p class="text-sm text-text-secondary">{{ __('admin.ui.no_product_views_recorded_yet') }}</p>
             @else
                 <div class="relative overflow-x-auto">
                     <table class="w-full text-sm">
                         <thead>
                             <tr class="border-b border-border text-left text-xs font-medium tracking-wide text-text-muted uppercase">
-                                <th class="pb-2">Product</th>
-                                <th class="pb-2">Seller</th>
-                                <th class="pb-2 text-right">Views</th>
+                                <th class="pb-2">{{ __('admin.ui.product') }}</th>
+                                <th class="pb-2">{{ __('admin.ui.seller') }}</th>
+                                <th class="pb-2 text-right">{{ __('admin.ui.views_2') }}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-border">

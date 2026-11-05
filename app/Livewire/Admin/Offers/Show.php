@@ -89,7 +89,7 @@ class Show extends Component
 
         $this->offerRequest->markContacted();
 
-        session()->flash('status', 'Request marked as contacted.');
+        session()->flash('status', __('admin.ui.request_marked_as_contacted'));
     }
 
     public function markFulfilled(): void
@@ -102,7 +102,7 @@ class Show extends Component
 
         $this->offerRequest->markFulfilled();
 
-        session()->flash('status', 'Request marked as fulfilled.');
+        session()->flash('status', __('admin.ui.request_marked_as_fulfilled'));
     }
 
     public function cancel(): void
@@ -115,7 +115,7 @@ class Show extends Component
 
         $this->offerRequest->cancel();
 
-        session()->flash('status', 'Request cancelled.');
+        session()->flash('status', __('admin.ui.request_cancelled'));
     }
 
     public function render()
@@ -125,9 +125,9 @@ class Show extends Component
             'itemsBySeller' => $this->itemsBySeller,
             'grandTotal' => $this->grandTotal,
         ])->layout('layouts.admin', [
-            'title' => 'Commercial Offer #'.$this->offerRequest->id,
+            'title' => __('admin.ui.commercial_offer_n', ['id' => $this->offerRequest->id]),
             'breadcrumb' => [
-                ['label' => 'Commercial Offers', 'url' => route('admin.offers.index')],
+                ['label' => __('admin.ui.commercial_offers'), 'url' => route('admin.offers.index')],
                 ['label' => '#'.$this->offerRequest->id],
             ],
         ]);

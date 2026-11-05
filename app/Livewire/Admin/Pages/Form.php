@@ -144,7 +144,7 @@ class Form extends Component
             $others = Page::query()->where('show_in_header', true)->when($page, fn ($q) => $q->where('id', '!=', $page->id))->count();
 
             if ($others >= Page::MAX_HEADER_PAGES) {
-                $this->addError('showInHeader', 'At most '.Page::MAX_HEADER_PAGES.' pages can be shown in the header menu.');
+                $this->addError('showInHeader', __('admin.ui.at_most', ['count' => Page::MAX_HEADER_PAGES]));
 
                 return;
             }
@@ -188,7 +188,7 @@ class Form extends Component
             'body_hash_after' => $page->isLegal() ? hash('sha256', json_encode($page->body)) : null,
         ], fn ($v) => $v !== null));
 
-        session()->flash('status', 'Page saved.');
+        session()->flash('status', __('admin.ui.page_saved'));
 
         $this->redirectRoute('admin.pages.index', navigate: true);
     }
@@ -198,7 +198,7 @@ class Form extends Component
         return view('livewire.admin.pages.form')->layout('layouts.admin', [
             'title' => $this->page ? 'Edit Page' : 'New Page',
             'breadcrumb' => [
-                ['label' => 'Pages', 'url' => route('admin.pages.index')],
+                ['label' => __('admin.ui.pages'), 'url' => route('admin.pages.index')],
                 ['label' => $this->page ? ($this->page->title[config('ribbon.locales')[0]] ?? 'Edit') : 'New'],
             ],
         ]);

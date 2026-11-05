@@ -149,9 +149,9 @@ class Show extends Component
             'totalSearches' => array_sum($daily['searches']),
             'days' => self::DAYS,
         ])->layout('layouts.admin', [
-            'title' => 'Analytics',
+            'title' => __('admin.ui.analytics'),
             'breadcrumb' => [
-                ['label' => 'Analytics'],
+                ['label' => __('admin.ui.analytics')],
             ],
         ]);
     }

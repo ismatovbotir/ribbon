@@ -60,7 +60,7 @@ class Index extends Component
 
         $page->delete();
 
-        session()->flash('status', 'Page deleted.');
+        session()->flash('status', __('admin.ui.page_deleted'));
     }
 
     public function render()
@@ -81,8 +81,8 @@ class Index extends Component
             'defaultLocale' => config('ribbon.locales')[0],
             'user' => Auth::user(),
         ])->layout('layouts.admin', [
-            'title' => 'Pages',
-            'breadcrumb' => [['label' => 'Pages']],
+            'title' => __('admin.ui.pages'),
+            'breadcrumb' => [['label' => __('admin.ui.pages')]],
         ]);
     }
 }

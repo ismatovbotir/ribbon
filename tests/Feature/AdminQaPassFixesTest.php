@@ -96,6 +96,23 @@ class AdminQaPassFixesTest extends TestCase
         $this->assertStringNotContainsString('src', HtmlSanitizer::clean('<img src="data:image/svg+xml;base64,AAAA">'));
     }
 
+    public function test_admin_ui_strings_exist_in_every_locale(): void
+    {
+        $keysFor = fn (string $locale) => array_keys(require lang_path($locale.'/admin.php'));
+
+        $this->assertEqualsCanonicalizing($keysFor('en'), $keysFor('uz'));
+        $this->assertEqualsCanonicalizing($keysFor('en'), $keysFor('ru'));
+    }
+
+    public function test_russian_plurals_pick_the_right_form(): void
+    {
+        app()->setLocale('ru');
+
+        $this->assertSame('1 товар', trans_choice('admin.ui.products_count', 1));
+        $this->assertSame('3 товара', trans_choice('admin.ui.products_count', 3));
+        $this->assertSame('5 товаров', trans_choice('admin.ui.products_count', 5));
+    }
+
     public function test_admin_root_redirects_to_the_landing_page(): void
     {
         $this->actingAs($this->superAdmin())->get('/admin')->assertRedirect('/admin/categories');

@@ -1,7 +1,9 @@
 {{-- Overflow / row action menu. Anchored popover at md+, bottom action sheet under md.
      Slot items: <button role="menuitem" class="{{ ... }}"> or use <x-menu.item>.
      Optional `trigger` slot replaces the default kebab icon button. --}}
-@props(['title' => null, 'label' => 'Actions'])
+@props(['title' => null, 'label' => null])
+
+@php($label ??= __('admin.ui.actions'))
 
 <div
     x-data="{ open: false, desktop: window.matchMedia('(min-width: 48rem)').matches, triggerEl: null }"
@@ -71,7 +73,7 @@
             >
                 <div class="flex h-14 shrink-0 items-center justify-between border-b border-border pr-1 pl-4">
                     <p class="truncate text-base font-semibold text-text-primary">{{ $title ?? $label }}</p>
-                    <x-icon-button x-on:click="open = false" aria-label="Close">
+                    <x-icon-button x-on:click="open = false" :aria-label="__('admin.ui.close')">
                         <x-icon name="close" class="size-5" />
                     </x-icon-button>
                 </div>

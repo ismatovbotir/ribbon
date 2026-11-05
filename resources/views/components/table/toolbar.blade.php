@@ -12,7 +12,7 @@
         @isset($filters)
             <x-button variant="secondary" aria-haspopup="dialog" x-on:click="$dispatch('open-sheet', '{{ $sheetName }}')">
                 <x-icon name="funnel" class="size-4" />
-                Filters
+                {{ __('admin.ui.filters') }}
                 @if ($activeCount > 0)
                     <span class="inline-flex h-5 min-w-5 items-center justify-center bg-accent-700 px-1 font-mono text-xs text-white">{{ $activeCount }}</span>
                 @endif
@@ -34,19 +34,19 @@
         @if ($activeCount > 0)
             <div class="-mt-1 flex snap-x items-center gap-2 overflow-x-auto px-3 pb-3 md:px-4">
                 {{ $chips }}
-                <button type="button" wire:click="{{ $reset }}" class="h-9 shrink-0 px-2 text-xs font-medium text-accent-700 hover:underline">Clear all</button>
+                <button type="button" wire:click="{{ $reset }}" class="h-9 shrink-0 px-2 text-xs font-medium text-accent-700 hover:underline">{{ __('admin.ui.clear_all') }}</button>
             </div>
         @endif
     @endisset
 </div>
 
 @isset($filters)
-    <x-sheet :name="$sheetName" title="Filters">
+    <x-sheet :name="$sheetName" :title="__('admin.ui.filters')">
         <div class="space-y-4">{{ $filters }}</div>
         <x-slot:footer>
-            <x-button variant="secondary" wire:click="{{ $reset }}">Reset</x-button>
+            <x-button variant="secondary" wire:click="{{ $reset }}">{{ __('admin.ui.reset') }}</x-button>
             <x-button variant="primary" x-on:click="$dispatch('close-sheet', '{{ $sheetName }}')">
-                @if ($resultCount !== null) Show <span class="font-mono">{{ $resultCount }}</span> results @else Apply @endif
+                @if ($resultCount !== null) {{ __('admin.ui.show_results', ['count' => $resultCount]) }} @else {{ __('admin.ui.apply') }} @endif
             </x-button>
         </x-slot:footer>
     </x-sheet>

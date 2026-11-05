@@ -1,12 +1,12 @@
 <div>
-    <x-page-header :title="$region->name[$defaultLocale] ?? 'Cities'" :subtitle="'Cities in '.($country->name[$defaultLocale] ?? 'this country').'.'">
+    <x-page-header :title="$region->name[app()->getLocale()] ?? __('admin.ui.cities')" :subtitle="__('admin.ui.cities_in', ['country' => $country->name[app()->getLocale()] ?? ''])">
         <x-slot:actions>
             <x-button tag="a" href="{{ route('admin.geography.regions.index', $country) }}" wire:navigate variant="ghost">
-                ← {{ $country->name[$defaultLocale] ?? 'All regions' }}
+                ← {{ $country->name[app()->getLocale()] ?? __('admin.ui.all_regions') }}
             </x-button>
             <x-button variant="primary" wire:click="toggleCreateForm">
                 <x-icon name="add" class="size-4" />
-                Add City
+                {{ __('admin.ui.add_city') }}
             </x-button>
         </x-slot:actions>
     </x-page-header>
@@ -21,16 +21,16 @@
     @if ($showCreateForm)
         <div class="mb-6 rounded-md border border-border bg-surface-raised">
             <div class="border-b border-border bg-surface-subtle px-5 py-3">
-                <h2 class="text-lg font-semibold text-text-primary">New City</h2>
+                <h2 class="text-lg font-semibold text-text-primary">{{ __('admin.ui.new_city') }}</h2>
             </div>
             <form wire:submit="createCity" class="px-5 py-5">
                 <x-locale-tabs :incomplete="$this->incompleteLocales">
                     @foreach (config('ribbon.locales') as $locale)
                         <div x-show="locale === '{{ $locale }}'" x-cloak>
                             <label for="field-name-{{ $locale }}" class="mb-1 block text-sm font-medium text-text-primary">
-                                Name <span class="text-danger-600">*</span>
+                                {{ __('admin.ui.name') }} <span class="text-danger-600">*</span>
                             </label>
-                            <x-input id="field-name-{{ $locale }}" type="text" wire:model.blur="name.{{ $locale }}" :error="$errors->has('name.'.$locale)" placeholder="e.g. Tashkent" />
+                            <x-input id="field-name-{{ $locale }}" type="text" wire:model.blur="name.{{ $locale }}" :error="$errors->has('name.'.$locale)" :placeholder="__('admin.ui.e_g_tashkent')" />
                             @error('name.'.$locale)
                                 <p class="mt-1 text-xs text-danger-600">{{ $message }}</p>
                             @enderror
@@ -39,9 +39,9 @@
                 </x-locale-tabs>
 
                 <div class="mt-6 flex items-center justify-end gap-2">
-                    <x-button variant="ghost" wire:click="toggleCreateForm">Cancel</x-button>
+                    <x-button variant="ghost" wire:click="toggleCreateForm">{{ __('admin.ui.cancel') }}</x-button>
                     <x-button variant="primary" type="submit" wire:loading.attr="disabled" wire:target="createCity">
-                        Save City
+                        {{ __('admin.ui.save_city') }}
                     </x-button>
                 </div>
             </form>
@@ -50,10 +50,10 @@
 
     <div class="mb-4 flex items-center gap-3">
         <div class="w-full max-w-xs">
-            <x-input type="search" wire:model.live.debounce.400ms="search" aria-label="Search cities" placeholder="Search cities…" class="h-8" />
+            <x-input type="search" wire:model.live.debounce.400ms="search" :aria-label="__('admin.ui.search_cities')" :placeholder="__('admin.ui.search_cities_2')" class="h-8" />
         </div>
         @if ($search !== '')
-            <button type="button" wire:click="$set('search', '')" class="text-xs text-text-secondary hover:text-text-primary">Clear</button>
+            <button type="button" wire:click="$set('search', '')" class="text-xs text-text-secondary hover:text-text-primary">{{ __('admin.ui.clear') }}</button>
         @endif
     </div>
 
@@ -62,16 +62,16 @@
             <table class="w-full min-w-[560px] border-collapse">
                 <thead class="sticky top-0 z-(--z-sticky) bg-surface-subtle">
                     <tr class="border-b border-border text-left text-xs font-medium text-text-muted uppercase">
-                        <th class="px-4 py-2.5">Name</th>
+                        <th class="px-4 py-2.5">{{ __('admin.ui.name') }}</th>
                         <th class="px-4 py-2.5 text-right">
                             <button type="button" wire:click="sortBy('sort_order')" class="inline-flex items-center gap-1 hover:text-text-secondary">
-                                Sort order
+                                {{ __('admin.ui.sort_order') }}
                                 @if ($sortField === 'sort_order')
                                     <span>{{ $sortDirection === 'asc' ? '▲' : '▼' }}</span>
                                 @endif
                             </button>
                         </th>
-                        <th class="px-4 py-2.5"><span class="sr-only">Actions</span></th>
+                        <th class="px-4 py-2.5"><span class="sr-only">{{ __('admin.ui.actions') }}</span></th>
                     </tr>
                 </thead>
                 <tbody wire:loading.class="opacity-50" wire:target="search, sortBy" class="divide-y divide-border">
@@ -83,7 +83,7 @@
                                         <x-locale-tabs :incomplete="$this->incompleteEditingLocales">
                                             @foreach (config('ribbon.locales') as $locale)
                                                 <div x-show="locale === '{{ $locale }}'" x-cloak>
-                                                    <x-input type="text" wire:model.blur="editingName.{{ $locale }}" aria-label="Name" :error="$errors->has('editingName.'.$locale)" autofocus />
+                                                    <x-input type="text" wire:model.blur="editingName.{{ $locale }}" :aria-label="__('admin.ui.name')" :error="$errors->has('editingName.'.$locale)" autofocus />
                                                     @error('editingName.'.$locale)
                                                         <p class="mt-1 text-xs text-danger-600">{{ $message }}</p>
                                                     @enderror
@@ -91,18 +91,18 @@
                                             @endforeach
                                         </x-locale-tabs>
                                         <div class="mt-3 flex items-center gap-2">
-                                            <x-button type="submit" variant="primary" size="sm" wire:loading.attr="disabled" wire:target="updateCity">Save</x-button>
-                                            <x-button type="button" variant="ghost" size="sm" wire:click="cancelEdit">Cancel</x-button>
+                                            <x-button type="submit" variant="primary" size="sm" wire:loading.attr="disabled" wire:target="updateCity">{{ __('admin.ui.save') }}</x-button>
+                                            <x-button type="button" variant="ghost" size="sm" wire:click="cancelEdit">{{ __('admin.ui.cancel') }}</x-button>
                                         </div>
                                     </form>
                                 </td>
                             @else
-                                <td class="px-4 py-2 font-medium">{{ $city->name[$defaultLocale] ?? '—' }}</td>
+                                <td class="px-4 py-2 font-medium">{{ $city->name[app()->getLocale()] ?? '—' }}</td>
                                 <td class="px-4 py-2 text-right font-mono tabular-nums text-text-secondary">{{ $city->sort_order }}</td>
                                 <td class="px-4 py-2 text-right">
-                                    <x-menu label="Row actions">
-<x-menu.item icon="edit" wire:click="startEdit({{ $city->id }})">Edit</x-menu.item>
-                                        <x-menu.item destructive wire:click="confirmDeleteCity({{ $city->id }})">Delete</x-menu.item>
+                                    <x-menu :label="__('admin.ui.row_actions')">
+<x-menu.item icon="edit" wire:click="startEdit({{ $city->id }})">{{ __('admin.ui.edit') }}</x-menu.item>
+                                        <x-menu.item destructive wire:click="confirmDeleteCity({{ $city->id }})">{{ __('admin.ui.delete') }}</x-menu.item>
                                     </x-menu>
                                 </td>
                             @endif
@@ -111,13 +111,13 @@
                         <tr>
                             <td colspan="3" class="px-4 py-16 text-center">
                                 @if ($search !== '')
-                                    <p class="text-sm font-medium text-text-primary">No results match your filters</p>
-                                    <p class="mt-1 text-sm text-text-secondary">Try a different search term.</p>
-                                    <button type="button" wire:click="$set('search', '')" class="mt-3 text-sm font-medium text-accent-700 hover:underline">Clear filters</button>
+                                    <p class="text-sm font-medium text-text-primary">{{ __('admin.ui.no_results_match_your_filters') }}</p>
+                                    <p class="mt-1 text-sm text-text-secondary">{{ __('admin.ui.try_a_different_search_term') }}</p>
+                                    <button type="button" wire:click="$set('search', '')" class="mt-3 text-sm font-medium text-accent-700 hover:underline">{{ __('admin.ui.clear_filters') }}</button>
                                 @else
-                                    <p class="text-sm font-medium text-text-primary">No cities yet</p>
-                                    <p class="mt-1 text-sm text-text-secondary">Add the first city for this region.</p>
-                                    <x-button variant="primary" size="sm" wire:click="toggleCreateForm" class="mt-3">Add City</x-button>
+                                    <p class="text-sm font-medium text-text-primary">{{ __('admin.ui.no_cities_yet') }}</p>
+                                    <p class="mt-1 text-sm text-text-secondary">{{ __('admin.ui.add_the_first_city_for_this_region') }}</p>
+                                    <x-button variant="primary" size="sm" wire:click="toggleCreateForm" class="mt-3">{{ __('admin.ui.add_city') }}</x-button>
                                 @endif
                             </td>
                         </tr>
@@ -135,24 +135,24 @@
 
     {{-- Delete confirmation modal --}}
     @if ($showDeleteConfirm)
-        <x-modal :title="'Delete city “'.($this->deletingCity?->name[$defaultLocale] ?? '').'”?'" close="cancelDelete">
+        <x-modal :title="__('admin.ui.delete_named', ['name' => $this->deletingCity?->name[app()->getLocale()] ?? ''])" close="cancelDelete">
             @if ($this->deleteBlockedBySellersCount > 0)
                 <p class="mt-2 text-sm text-text-secondary">
-                    This city can't be deleted while it's still in use.
+                    {{ __('admin.ui.this_city_can_t_be_deleted_while_it_s_still_in_use') }}
                 </p>
                 <p class="mt-2 text-sm font-medium text-danger-600">
-                    Used by {{ $this->deleteBlockedBySellersCount }} {{ \Illuminate\Support\Str::plural('seller', $this->deleteBlockedBySellersCount) }}.
+                    {{ __('admin.ui.used_by_what', ['what' => trans_choice('admin.ui.sellers_count', $this->deleteBlockedBySellersCount)]) }}
                 </p>
             @else
                 <p class="mt-2 text-sm text-text-secondary">
-                    This can't be undone.
+                    {{ __('admin.ui.this_can_t_be_undone') }}
                 </p>
             @endif
             <x-slot:footer>
-                <x-button variant="ghost" wire:click="cancelDelete">Cancel</x-button>
+                <x-button variant="ghost" wire:click="cancelDelete">{{ __('admin.ui.cancel') }}</x-button>
                 @if ($this->deleteBlockedBySellersCount === 0)
                     <x-button variant="danger-solid" wire:click="deleteCity" wire:loading.attr="disabled" wire:target="deleteCity">
-                        Delete city
+                        {{ __('admin.ui.delete_city') }}
                     </x-button>
                 @endif
             </x-slot:footer>

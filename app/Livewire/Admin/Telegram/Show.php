@@ -91,7 +91,7 @@ class Show extends Component
         $botToken = Setting::current()->effectiveTelegramBotToken();
 
         if (! $botToken) {
-            $this->addError('replyText', 'No Telegram bot is connected — configure one in Settings first.');
+            $this->addError('replyText', __('admin.ui.no_telegram_bot_is_connected_configure_one_in_settings_first'));
 
             return;
         }
@@ -99,7 +99,7 @@ class Show extends Component
         $telegramMessageId = $telegram->sendMessage($botToken, $contact->chat_id, $this->replyText);
 
         if (! $telegramMessageId) {
-            $this->addError('replyText', 'Telegram did not accept this message — it may not have been delivered.');
+            $this->addError('replyText', __('admin.ui.telegram_did_not_accept_this_message_it_may_not_have_been_de'));
 
             return;
         }
@@ -119,9 +119,9 @@ class Show extends Component
     public function render()
     {
         return view('livewire.admin.telegram.show')->layout('layouts.admin', [
-            'title' => 'Messages',
+            'title' => __('admin.ui.messages'),
             'breadcrumb' => [
-                ['label' => 'Messages'],
+                ['label' => __('admin.ui.messages')],
             ],
         ]);
     }

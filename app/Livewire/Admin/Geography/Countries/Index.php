@@ -133,7 +133,7 @@ class Index extends Component
         $this->showCreateForm = false;
         $this->resetPage();
 
-        session()->flash('status', 'Country created.');
+        session()->flash('status', __('admin.ui.country_created'));
     }
 
     protected function resetForm(): void
@@ -198,7 +198,7 @@ class Index extends Component
 
         $this->cancelEdit();
 
-        session()->flash('status', 'Country updated.');
+        session()->flash('status', __('admin.ui.country_updated'));
     }
 
     #[Computed]
@@ -273,7 +273,7 @@ class Index extends Component
         $this->showDeleteConfirm = false;
         $this->deletingCountryId = null;
 
-        session()->flash('status', 'Country deleted.');
+        session()->flash('status', __('admin.ui.country_deleted'));
     }
 
     public function render()
@@ -293,9 +293,9 @@ class Index extends Component
             'countries' => $countries,
             'defaultLocale' => $defaultLocale,
         ])->layout('layouts.admin', [
-            'title' => 'Geography',
+            'title' => __('admin.ui.geography'),
             'breadcrumb' => [
-                ['label' => 'Geography'],
+                ['label' => __('admin.ui.geography')],
             ],
         ]);
     }

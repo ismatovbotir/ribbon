@@ -125,7 +125,7 @@ class Show extends Component
 
         $this->product->approve($this->actingAdmin());
 
-        session()->flash('status', 'Product approved.');
+        session()->flash('status', __('admin.ui.product_approved'));
     }
 
     public function openRejectForm(): void
@@ -157,7 +157,7 @@ class Show extends Component
         $this->showRejectForm = false;
         $this->rejectReason = '';
 
-        session()->flash('status', 'Product rejected.');
+        session()->flash('status', __('admin.ui.product_rejected'));
     }
 
     public function openSuspendForm(): void
@@ -194,7 +194,7 @@ class Show extends Component
         $this->showSuspendForm = false;
         $this->suspendReason = '';
 
-        session()->flash('status', 'Product blocked.');
+        session()->flash('status', __('admin.ui.product_blocked'));
     }
 
     public function render()
@@ -204,7 +204,7 @@ class Show extends Component
         ])->layout('layouts.admin', [
             'title' => $this->product->name,
             'breadcrumb' => [
-                ['label' => 'Products', 'url' => route('admin.products.index')],
+                ['label' => __('admin.ui.products'), 'url' => route('admin.products.index')],
                 ['label' => $this->product->name ?? 'Product'],
             ],
         ]);

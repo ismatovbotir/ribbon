@@ -57,7 +57,7 @@
                                     <x-badge variant="warning" dot>{{ __('admin.cms.contact.status_new') }}</x-badge>
                                 @endif
                             </td>
-                            <td class="px-4 py-3 text-right text-xs whitespace-nowrap text-text-secondary tabular-nums">{{ $message->created_at->format('M j, Y H:i') }}</td>
+                            <td class="px-4 py-3 text-right text-xs whitespace-nowrap text-text-secondary tabular-nums">{{ $message->created_at->translatedFormat('M j, Y H:i') }}</td>
                             <td class="px-4 py-3 text-right">
                                 @if ($message->status !== 'handled')
                                     <x-button variant="secondary" size="sm" wire:click="markHandled({{ $message->id }})" wire:loading.attr="disabled" wire:target="markHandled">{{ __('admin.cms.contact.mark_handled') }}</x-button>

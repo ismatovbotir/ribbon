@@ -110,7 +110,7 @@ class Show extends Component
         $me = $telegram->getMe($this->telegramBotToken);
 
         if (! $me) {
-            $this->addError('telegramBotToken', 'Could not verify this token with Telegram — double-check it and try again.');
+            $this->addError('telegramBotToken', __('admin.ui.could_not_verify_this_token_with_telegram_double_check_it_an'));
 
             return;
         }
@@ -118,7 +118,7 @@ class Show extends Component
         $webhookSecret = Str::random(40);
 
         if (! $telegram->setWebhook($this->telegramBotToken, route('telegram.webhook'), $webhookSecret)) {
-            $this->addError('telegramBotToken', 'The token is valid, but registering the webhook with Telegram failed. Try again.');
+            $this->addError('telegramBotToken', __('admin.ui.the_token_is_valid_but_registering_the_webhook_with_telegram'));
 
             return;
         }
@@ -148,7 +148,7 @@ class Show extends Component
 
         $this->telegramBotToken = null;
 
-        session()->flash('status', 'Telegram bot disconnected.');
+        session()->flash('status', __('admin.ui.telegram_bot_disconnected'));
     }
 
     public function regenerateSitemap(SitemapGeneratorService $sitemap): void
@@ -200,15 +200,15 @@ class Show extends Component
 
         $this->resetForm();
 
-        session()->flash('status', 'Settings saved.');
+        session()->flash('status', __('admin.ui.settings_saved'));
     }
 
     public function render()
     {
         return view('livewire.admin.settings.show')->layout('layouts.admin', [
-            'title' => 'Settings',
+            'title' => __('admin.ui.settings'),
             'breadcrumb' => [
-                ['label' => 'Settings'],
+                ['label' => __('admin.ui.settings')],
             ],
         ]);
     }

@@ -95,7 +95,7 @@ class Index extends Component
         unset($this->deletingArticle);
         $this->resetPage();
 
-        session()->flash('status', 'Article deleted.');
+        session()->flash('status', __('admin.ui.article_deleted'));
     }
 
     public function updatedSearch(): void
@@ -130,14 +130,14 @@ class Index extends Component
     public static function statusMeta(Article $article): array
     {
         if ($article->isPublished()) {
-            return ['label' => 'Published', 'variant' => 'success'];
+            return ['label' => __('admin.ui.published'), 'variant' => 'success'];
         }
 
         if ($article->published_at !== null && $article->published_at->isFuture()) {
-            return ['label' => 'Scheduled', 'variant' => 'info'];
+            return ['label' => __('admin.ui.scheduled'), 'variant' => 'info'];
         }
 
-        return ['label' => 'Draft', 'variant' => 'muted'];
+        return ['label' => __('admin.ui.draft'), 'variant' => 'muted'];
     }
 
     public function render()
@@ -157,9 +157,9 @@ class Index extends Component
             'articles' => $articles,
             'defaultLocale' => $defaultLocale,
         ])->layout('layouts.admin', [
-            'title' => 'Articles',
+            'title' => __('admin.ui.articles'),
             'breadcrumb' => [
-                ['label' => 'Articles'],
+                ['label' => __('admin.ui.articles')],
             ],
         ]);
     }

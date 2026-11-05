@@ -220,7 +220,7 @@ class Form extends Component
             Banner::create($data);
         }
 
-        session()->flash('status', 'Banner saved.');
+        session()->flash('status', __('admin.ui.banner_saved'));
 
         $this->redirectRoute('admin.banners.index', navigate: true);
     }
@@ -230,7 +230,7 @@ class Form extends Component
         return view('livewire.admin.banners.form')->layout('layouts.admin', [
             'title' => $this->banner ? 'Edit Banner' : 'New Banner',
             'breadcrumb' => [
-                ['label' => 'Banners', 'url' => route('admin.banners.index')],
+                ['label' => __('admin.ui.banners'), 'url' => route('admin.banners.index')],
                 ['label' => $this->banner ? ($this->banner->title[config('ribbon.locales')[0]] ?? 'Edit') : 'New'],
             ],
         ]);

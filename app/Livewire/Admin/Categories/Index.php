@@ -162,7 +162,7 @@ class Index extends Component
         $this->showCreateForm = false;
         $this->resetPage();
 
-        session()->flash('status', 'Category created.');
+        session()->flash('status', __('admin.ui.category_created'));
     }
 
     /**
@@ -222,9 +222,9 @@ class Index extends Component
             'categories' => $categories,
             'defaultLocale' => $defaultLocale,
         ])->layout('layouts.admin', [
-            'title' => 'Categories',
+            'title' => __('admin.ui.categories'),
             'breadcrumb' => [
-                ['label' => 'Categories'],
+                ['label' => __('admin.ui.categories')],
             ],
         ]);
     }

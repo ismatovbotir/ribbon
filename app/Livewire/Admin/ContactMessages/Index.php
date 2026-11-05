@@ -54,8 +54,8 @@ class Index extends Component
         return view('livewire.admin.contact-messages.index', [
             'messages' => $messages,
         ])->layout('layouts.admin', [
-            'title' => 'Contact messages',
-            'breadcrumb' => [['label' => 'Contact messages']],
+            'title' => __('admin.ui.contact_messages'),
+            'breadcrumb' => [['label' => __('admin.ui.contact_messages')]],
         ]);
     }
 }

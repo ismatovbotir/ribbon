@@ -22,7 +22,7 @@
     >
         <div class="flex h-14 shrink-0 items-center justify-between border-b border-border-strong pr-1 pl-4">
             <h2 id="drawer-title" class="truncate text-lg font-semibold text-text-primary">{{ $title }}</h2>
-            <x-icon-button x-on:click="$wire.{{ $close }}()" aria-label="Close">
+            <x-icon-button x-on:click="$wire.{{ $close }}()" :aria-label="__('admin.ui.close')">
                 <x-icon name="close" class="size-5" />
             </x-icon-button>
         </div>

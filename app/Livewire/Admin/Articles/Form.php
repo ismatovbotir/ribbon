@@ -221,7 +221,7 @@ class Form extends Component
 
         $article->categories()->sync($this->categoryIds);
 
-        session()->flash('status', 'Article saved.');
+        session()->flash('status', __('admin.ui.article_saved'));
 
         $this->redirectRoute('admin.articles.index', navigate: true);
     }
@@ -231,7 +231,7 @@ class Form extends Component
         return view('livewire.admin.articles.form')->layout('layouts.admin', [
             'title' => $this->article ? 'Edit Article' : 'New Article',
             'breadcrumb' => [
-                ['label' => 'Articles', 'url' => route('admin.articles.index')],
+                ['label' => __('admin.ui.articles'), 'url' => route('admin.articles.index')],
                 ['label' => $this->article ? ($this->article->title[config('ribbon.locales')[0]] ?? 'Edit') : 'New'],
             ],
         ]);

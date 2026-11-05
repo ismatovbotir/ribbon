@@ -128,7 +128,7 @@ class Index extends Component
         $this->showCreateForm = false;
         $this->resetPage();
 
-        session()->flash('status', 'Brand created.');
+        session()->flash('status', __('admin.ui.brand_created'));
     }
 
     /**
@@ -218,7 +218,7 @@ class Index extends Component
 
         $this->cancelEdit();
 
-        session()->flash('status', 'Brand renamed.');
+        session()->flash('status', __('admin.ui.brand_renamed'));
     }
 
     // ------------------------------------------------------------------
@@ -284,7 +284,7 @@ class Index extends Component
         $this->showDeleteConfirm = false;
         $this->deletingBrandId = null;
 
-        session()->flash('status', 'Brand deleted.');
+        session()->flash('status', __('admin.ui.brand_deleted'));
     }
 
     public function render()
@@ -302,9 +302,9 @@ class Index extends Component
         return view('livewire.admin.brands.index', [
             'brands' => $brands,
         ])->layout('layouts.admin', [
-            'title' => 'Brands',
+            'title' => __('admin.ui.brands'),
             'breadcrumb' => [
-                ['label' => 'Brands'],
+                ['label' => __('admin.ui.brands')],
             ],
         ]);
     }

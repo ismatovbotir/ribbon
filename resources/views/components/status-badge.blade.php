@@ -5,16 +5,16 @@
 @php
     $map = $type === 'offer'
         ? [
-            'pending' => ['warning', 'New', 'clock'],
-            'contacted' => ['info', 'Contacted', 'phone'],
-            'fulfilled' => ['success', 'Fulfilled', 'check'],
-            'cancelled' => ['muted', 'Cancelled', 'x'],
+            'pending' => ['warning', __('admin.ui.status_new'), 'clock'],
+            'contacted' => ['info', __('admin.ui.status_contacted'), 'phone'],
+            'fulfilled' => ['success', __('admin.ui.status_fulfilled'), 'check'],
+            'cancelled' => ['muted', __('admin.ui.status_cancelled'), 'x'],
         ]
         : [
-            'pending' => ['warning', 'Pending', 'clock'],
-            'approved' => ['success', 'Approved', 'check'],
-            'rejected' => ['danger', 'Rejected', 'x'],
-            'suspended' => ['muted', 'Suspended', 'pause'],
+            'pending' => ['warning', __('admin.ui.status_pending'), 'clock'],
+            'approved' => ['success', __('admin.ui.status_approved'), 'check'],
+            'rejected' => ['danger', __('admin.ui.status_rejected'), 'x'],
+            'suspended' => ['muted', __('admin.ui.status_suspended'), 'pause'],
         ];
     [$variant, $label, $icon] = $map[$status] ?? ['muted', ucfirst((string) $status), 'clock'];
     $icons = ['clock' => 'time', 'check' => 'success', 'x' => 'reject', 'pause' => 'pause', 'phone' => 'phone'];

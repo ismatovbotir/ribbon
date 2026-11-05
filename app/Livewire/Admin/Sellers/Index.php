@@ -112,9 +112,9 @@ class Index extends Component
             'statusCounts' => $statusCounts,
             'statuses' => self::STATUSES,
         ])->layout('layouts.admin', [
-            'title' => 'Sellers',
+            'title' => __('admin.ui.sellers'),
             'breadcrumb' => [
-                ['label' => 'Sellers'],
+                ['label' => __('admin.ui.sellers')],
             ],
         ]);
     }

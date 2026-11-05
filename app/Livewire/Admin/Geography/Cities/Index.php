@@ -145,7 +145,7 @@ class Index extends Component
         $this->showCreateForm = false;
         $this->resetPage();
 
-        session()->flash('status', 'City created.');
+        session()->flash('status', __('admin.ui.city_created'));
     }
 
     protected function resetForm(): void
@@ -210,7 +210,7 @@ class Index extends Component
 
         $this->cancelEdit();
 
-        session()->flash('status', 'City updated.');
+        session()->flash('status', __('admin.ui.city_updated'));
     }
 
     #[Computed]
@@ -275,7 +275,7 @@ class Index extends Component
         $this->showDeleteConfirm = false;
         $this->deletingCityId = null;
 
-        session()->flash('status', 'City deleted.');
+        session()->flash('status', __('admin.ui.city_deleted'));
     }
 
     public function render()
@@ -294,11 +294,11 @@ class Index extends Component
             'cities' => $cities,
             'defaultLocale' => $defaultLocale,
         ])->layout('layouts.admin', [
-            'title' => $this->region->name[$defaultLocale] ?? 'Cities',
+            'title' => $this->region->name[app()->getLocale()] ?? __('admin.ui.cities'),
             'breadcrumb' => [
-                ['label' => 'Geography', 'url' => route('admin.geography.countries.index')],
-                ['label' => $this->country->name[$defaultLocale] ?? 'Country', 'url' => route('admin.geography.regions.index', $this->country)],
-                ['label' => $this->region->name[$defaultLocale] ?? 'Region'],
+                ['label' => __('admin.ui.geography'), 'url' => route('admin.geography.countries.index')],
+                ['label' => $this->country->name[app()->getLocale()] ?? __('admin.ui.country'), 'url' => route('admin.geography.regions.index', $this->country)],
+                ['label' => $this->region->name[app()->getLocale()] ?? __('admin.ui.region')],
             ],
         ]);
     }

@@ -5,13 +5,13 @@
     an offer-request submitter).
 --}}
 <div>
-    <x-page-header title="Messages" subtitle="Conversations with people who've messaged your Telegram bot directly." />
+    <x-page-header :title="__('admin.ui.messages')" :subtitle="__('admin.ui.conversations_with_people_who_ve_messaged_your_telegram_bot')" />
 
     @if ($this->contacts->isEmpty())
         <div class="rounded-md border border-border-strong bg-surface-raised px-6 py-12 text-center">
-            <p class="text-sm font-medium text-text-primary">No conversations yet</p>
-            <p class="mt-1 text-sm text-text-secondary">Contacts appear here once someone messages your bot on Telegram.</p>
-            <a href="{{ route('admin.settings.show') }}" wire:navigate class="mt-3 inline-block text-sm font-medium text-accent-700 hover:underline">Set up the bot in Settings →</a>
+            <p class="text-sm font-medium text-text-primary">{{ __('admin.ui.no_conversations_yet') }}</p>
+            <p class="mt-1 text-sm text-text-secondary">{{ __('admin.ui.contacts_appear_here_once_someone_messages_your_bot_on_teleg') }}</p>
+            <a href="{{ route('admin.settings.show') }}" wire:navigate class="mt-3 inline-block text-sm font-medium text-accent-700 hover:underline">{{ __('admin.ui.set_up_the_bot_in_settings') }}</a>
         </div>
     @else
         <div class="flex h-[calc(100vh-14rem)] min-h-[28rem] overflow-hidden rounded-md border border-border-strong bg-surface-raised">
@@ -46,7 +46,7 @@
                                 </div>
                             </div>
                         @empty
-                            <p class="text-sm text-text-muted">No messages yet.</p>
+                            <p class="text-sm text-text-muted">{{ __('admin.ui.no_messages_yet') }}</p>
                         @endforelse
                     </div>
 
@@ -54,10 +54,10 @@
                         <textarea
                             wire:model="replyText"
                             rows="2"
-                            placeholder="Type a reply…"
+                            placeholder="{{ __('admin.ui.type_a_reply') }}"
                             class="block w-full resize-none rounded-sm border bg-surface px-3 py-2 text-sm text-text-primary placeholder:text-text-muted focus:border-accent-500 {{ $errors->has('replyText') ? 'border-danger-600' : 'border-border' }}"
                         ></textarea>
-                        <x-button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="send">Send</x-button>
+                        <x-button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="send">{{ __('admin.ui.send') }}</x-button>
                     </form>
                     @error('replyText')
                         <p class="px-4 pb-3 text-xs text-danger-600">{{ $message }}</p>

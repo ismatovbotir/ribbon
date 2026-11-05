@@ -23,7 +23,7 @@
             $adminRole = Auth::user()->adminRoleOrFail();
         @endphp
 
-        <x-panel.shell tag="Admin" :user-name="Auth::user()->name" :user-sub="$adminRole->name" :breadcrumb="$breadcrumb ?? []">
+        <x-panel.shell :tag="__('admin.ui.admin_tag')" :logout-label="__('admin.ui.log_out')" :open-label="__('admin.ui.open_navigation')" :close-label="__('admin.ui.close_navigation')" :user-name="Auth::user()->name" :user-sub="$adminRole->name" :breadcrumb="$breadcrumb ?? []">
             <x-slot:nav><x-admin.nav /></x-slot:nav>
             {{ $slot }}
         </x-panel.shell>

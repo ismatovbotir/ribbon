@@ -10,7 +10,7 @@
 @php($locales = $locales ?? config('ribbon.locales'))
 
 <div x-data="{ locale: '{{ $locales[0] }}', order: @js(array_values($locales)) }">
-    <div role="tablist" aria-label="Language"
+    <div role="tablist" aria-label="{{ __('admin.ui.language') }}"
          x-on:keydown.arrow-right.prevent="locale = order[(order.indexOf(locale) + 1) % order.length]; $nextTick(() => $refs['tab-' + locale].focus())"
          x-on:keydown.arrow-left.prevent="locale = order[(order.indexOf(locale) + order.length - 1) % order.length]; $nextTick(() => $refs['tab-' + locale].focus())"
          class="sticky top-0 z-(--z-bar) -mx-4 mb-3 grid grid-cols-3 divide-x divide-border border-y border-border-strong bg-surface md:static md:mx-0 md:inline-grid md:grid-cols-[repeat(3,5rem)] md:border">
@@ -29,13 +29,13 @@
             >
                 {{ strtoupper($loc) }}
                 @if (in_array($loc, $incomplete, true))
-                    <span class="size-2 bg-danger-600"><span class="sr-only">missing</span></span>
+                    <span class="size-2 bg-danger-600"><span class="sr-only">{{ __('admin.ui.locale_missing') }}</span></span>
                 @endif
             </button>
         @endforeach
     </div>
     @if ($incomplete)
-        <p class="mb-3 text-xs font-medium text-danger-700">Incomplete: {{ strtoupper(implode(', ', $incomplete)) }}</p>
+        <p class="mb-3 text-xs font-medium text-danger-700">{{ __('admin.ui.locale_incomplete', ['locales' => strtoupper(implode(', ', $incomplete))]) }}</p>
     @endif
 
     {{ $slot }}

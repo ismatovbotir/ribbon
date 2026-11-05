@@ -85,7 +85,7 @@
                                     @endif
                                 </div>
                             </td>
-                            <td class="px-4 py-2 text-right text-xs text-text-secondary tabular-nums">{{ $page->updated_at?->format('M j, Y') ?? '—' }}</td>
+                            <td class="px-4 py-2 text-right text-xs text-text-secondary tabular-nums">{{ $page->updated_at?->translatedFormat('M j, Y') ?? '—' }}</td>
                             <td class="px-4 py-2">
                                 <div class="flex items-center justify-end gap-2">
                                     @if ($editable)
