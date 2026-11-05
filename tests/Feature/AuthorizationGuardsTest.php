@@ -28,7 +28,6 @@ use App\Models\Role;
 use App\Models\Seller;
 use App\Models\User;
 use App\Services\OfferSelectionService;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
@@ -229,14 +228,9 @@ class AuthorizationGuardsTest extends TestCase
         $b = $this->makeSeller();
         $this->actingAs($this->ownerOf($a));
 
-        $component = Livewire::test(EmployeesIndex::class);
-
-        try {
-            $component->call('confirmRemove', $this->ownerOf($b)->id);
-            $this->fail('Foreign employee should not resolve.');
-        } catch (ModelNotFoundException) {
-            $this->addToAssertionCount(1);
-        }
+        Livewire::test(EmployeesIndex::class)
+            ->call('confirmRemove', $this->ownerOf($b)->id)
+            ->assertNotFound();
 
         $this->assertTrue($b->users()->whereKey($this->ownerOf($b)->id)->exists());
     }
@@ -265,16 +259,12 @@ class AuthorizationGuardsTest extends TestCase
         ]);
         $foreign = CategoryParameter::create(['category_id' => $other->id, 'name' => ['uz' => 'F', 'ru' => 'F', 'en' => 'F'], 'type' => 'text', 'sort_order' => 0, 'is_required' => false, 'is_filterable' => true]);
 
-        $component = Livewire::test(CategoriesShow::class, ['category' => $mine]);
-
         foreach (['confirmDeleteParameter', 'openEditDrawer'] as $action) {
-            try {
-                $component->call($action, $foreign->id);
-                $this->fail("$action accepted a foreign parameter id.");
-            } catch (ModelNotFoundException) {
-                $this->addToAssertionCount(1);
-            }
+            Livewire::test(CategoriesShow::class, ['category' => $mine])
+                ->call($action, $foreign->id)
+                ->assertNotFound();
         }
+
         $this->assertDatabaseHas('category_parameters', ['id' => $foreign->id]);
     }
 

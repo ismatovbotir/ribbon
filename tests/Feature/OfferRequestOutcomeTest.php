@@ -16,7 +16,6 @@ use App\Models\Region;
 use App\Models\Role;
 use App\Models\Seller;
 use App\Models\User;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use InvalidArgumentException;
@@ -118,13 +117,10 @@ class OfferRequestOutcomeTest extends TestCase
         $private = OfferRequest::create(['phone' => '+998907777777', 'status' => 'pending']);
         $this->addItem($private, $this->sellerB, 'Bravo Only');
 
-        try {
-            Livewire::actingAs($this->owner($this->sellerA))
-                ->test(Index::class)
-                ->call('setOutcome', $private->id, 'won');
-        } catch (ModelNotFoundException) {
-            // Either a thrown 404 or a rendered one is fine: nothing may be written.
-        }
+        Livewire::actingAs($this->owner($this->sellerA))
+            ->test(Index::class)
+            ->call('setOutcome', $private->id, 'won')
+            ->assertNotFound();
 
         $this->assertSame(0, OfferRequestOutcome::count());
     }
