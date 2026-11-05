@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\SellerCertificateController;
 use App\Http\Controllers\TelegramWebhookController;
 use App\Livewire\Admin\Analytics\Show as AdminAnalyticsShow;
 use App\Livewire\Admin\Articles\Form as AdminArticlesForm;
@@ -20,7 +21,6 @@ use App\Livewire\Admin\Pages\Index as AdminPagesIndex;
 use App\Livewire\Admin\Products\Index as AdminProductsIndex;
 use App\Livewire\Admin\Products\Show as AdminProductsShow;
 use App\Livewire\Admin\Sellers\Index as AdminSellersIndex;
-use App\Http\Controllers\Admin\SellerCertificateController;
 use App\Livewire\Admin\Sellers\Show as AdminSellersShow;
 use App\Livewire\Admin\Settings\Show as AdminSettingsShow;
 use App\Livewire\Admin\Telegram\Show as AdminTelegramShow;
@@ -33,6 +33,7 @@ use App\Livewire\Sellers\Products\Edit as SellerProductsEdit;
 use App\Livewire\Sellers\Products\Index as SellerProductsIndex;
 use App\Livewire\Sellers\Profile\Index as SellerProfileIndex;
 use App\Livewire\Sellers\Register as SellerRegister;
+use App\Livewire\Sellers\Requests\Index as SellerRequestsIndex;
 use App\Livewire\Storefront\Articles\Index as StorefrontArticlesIndex;
 use App\Livewire\Storefront\Articles\Show as StorefrontArticlesShow;
 use App\Livewire\Storefront\Catalog\Show as StorefrontCatalogShow;
@@ -193,6 +194,11 @@ Route::prefix('seller')->name('seller.')->group(function () {
     // Product performance stats (views, search appearances, traffic
     // source) — read-only, viewable by both Owner and Employee like
     // /seller/profile, not just the Owner.
+    // Buyer requests: each seller sees only their own items of a request.
+    Route::get('/requests', SellerRequestsIndex::class)
+        ->middleware('seller.auth')
+        ->name('requests');
+
     Route::get('/analytics', SellerAnalyticsShow::class)
         ->middleware('seller.auth')
         ->name('analytics');

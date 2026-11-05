@@ -39,7 +39,11 @@
                 <div class="border-b border-border last:border-b-0">
                     <div class="flex items-center justify-between gap-3 bg-surface-subtle px-4 py-2.5 md:px-5">
                         <h3 class="min-w-0 truncate text-sm font-semibold text-text-primary">{{ $sellerName }}</h3>
-                        <span class="shrink-0 text-xs text-text-secondary">{{ trans_choice('admin.ui.items_count', $sellerItems->count()) }}</span>
+                        <span class="flex shrink-0 items-center gap-2 text-xs text-text-secondary">
+                            @php($sellerOutcome = $offerRequest->outcomes->firstWhere('seller_id', $sellerItems->first()->seller_id)?->outcome)
+                            <x-badge :variant="$sellerOutcome ? 'info' : 'muted'" :dot="true">{{ $sellerOutcome ? __('sellers.requests.outcome.'.$sellerOutcome) : __('admin.offers.no_seller_answer') }}</x-badge>
+                            {{ trans_choice('admin.ui.items_count', $sellerItems->count()) }}
+                        </span>
                     </div>
                     <ul class="divide-y divide-border">
                         @foreach ($sellerItems as $item)

@@ -6,6 +6,7 @@
 
 <x-panel.nav-group :label="__('sellers.nav.section_catalog')" />
 <x-panel.nav-item :href="route('seller.products.index')" :active="request()->routeIs('seller.products.*')" :label="__('sellers.nav.products')" icon="table" />
+<x-panel.nav-item :href="route('seller.requests')" :active="request()->routeIs('seller.requests')" :label="__('sellers.nav.requests')" icon="document" :count="\App\Models\OfferRequest::unansweredCountFor($seller)" count-event="new-requests-count" />
 <x-panel.nav-item :href="route('seller.analytics')" :active="request()->routeIs('seller.analytics')" :label="__('sellers.nav.analytics')" icon="chart" />
 
 <x-panel.nav-group :label="__('sellers.nav.section_company')" />

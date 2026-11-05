@@ -3,8 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use InvalidArgumentException;
+use LogicException;
 
 #[Fillable(['phone', 'company_name', 'email', 'buyer_type', 'utm', 'referrer', 'status'])]
 class OfferRequest extends Model
@@ -25,6 +28,51 @@ class OfferRequest extends Model
     public function items(): HasMany
     {
         return $this->hasMany(OfferRequestItem::class);
+    }
+
+    public function outcomes(): HasMany
+    {
+        return $this->hasMany(OfferRequestOutcome::class);
+    }
+
+    /**
+     * Requests with at least one item from this seller. Sellers only ever reach
+     * a request through this scope.
+     */
+    public function scopeForSeller(Builder $query, Seller $seller): void
+    {
+        $query->whereHas('items', fn (Builder $items) => $items->where('seller_id', $seller->id));
+    }
+
+    /** Requests this seller hasn't answered yet: the "New" count. */
+    public static function unansweredCountFor(Seller $seller): int
+    {
+        return static::forSeller($seller)
+            ->whereDoesntHave('outcomes', fn (Builder $outcomes) => $outcomes->where('seller_id', $seller->id))
+            ->count();
+    }
+
+    /**
+     * Record a seller's answer to their part of this request. It can be changed
+     * later (a quote becomes won or lost), but first_marked_at stays put.
+     */
+    public function markOutcome(Seller $seller, string $outcome, User $by): OfferRequestOutcome
+    {
+        if (! in_array($outcome, OfferRequestOutcome::OUTCOMES, true)) {
+            throw new InvalidArgumentException("Unknown request outcome [{$outcome}].");
+        }
+
+        if (! $this->items()->where('seller_id', $seller->id)->exists()) {
+            throw new LogicException('A seller can only answer a request that includes their items.');
+        }
+
+        $row = $this->outcomes()->firstOrNew(['seller_id' => $seller->id]);
+        $row->first_marked_at ??= now();
+        $row->outcome = $outcome;
+        $row->marked_by = $by->id;
+        $row->save();
+
+        return $row;
     }
 
     /**

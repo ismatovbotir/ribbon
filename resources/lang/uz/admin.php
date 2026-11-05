@@ -629,4 +629,5 @@ return [
     'ui.already_first' => 'Allaqachon birinchi',
     'ui.already_last' => 'Allaqachon oxirgi',
     'ui.remove_filter' => 'Filtrni olib tashlash',
+    'offers.no_seller_answer' => 'Hali javob yoʻq',
 ];

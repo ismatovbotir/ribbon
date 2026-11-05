@@ -629,4 +629,5 @@ return [
     'ui.already_first' => 'Уже первый',
     'ui.already_last' => 'Уже последний',
     'ui.remove_filter' => 'Убрать фильтр',
+    'offers.no_seller_answer' => 'Пока нет ответа',
 ];

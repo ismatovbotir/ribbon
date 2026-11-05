@@ -629,4 +629,5 @@ return [
     'ui.already_first' => 'Already first',
     'ui.already_last' => 'Already last',
     'ui.remove_filter' => 'Remove filter',
+    'offers.no_seller_answer' => 'No answer yet',
 ];
