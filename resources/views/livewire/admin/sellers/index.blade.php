@@ -64,11 +64,11 @@
             <tbody class="block md:table-row-group">
                 <tr class="block md:table-row"><td colspan="5" class="block md:table-cell">
                     @if ($activeCount > 0)
-                        <x-empty-state variant="filtered" :title="__('admin.ui.no_results_match_your_filters')" description="Try a different search term or status.">
+                        <x-empty-state variant="filtered" :title="__('admin.ui.no_results_match_your_filters')" :description="__('admin.ui.try_a_different_search_term_or_status')">
                             <x-slot:actions><x-button variant="secondary" wire:click="clearFilters">{{ __('admin.ui.clear_filters') }}</x-button></x-slot:actions>
                         </x-empty-state>
                     @else
-                        <x-empty-state :title="__('admin.ui.no_seller_applications_yet')" description="Applications submitted via the public registration form will appear here." />
+                        <x-empty-state :title="__('admin.ui.no_seller_applications_yet')" :description="__('admin.ui.empty_seller_applications')" />
                     @endif
                 </td></tr>
             </tbody>
@@ -79,7 +79,12 @@
                         <x-table.cell role="primary">
                             <a href="{{ route('admin.sellers.show', $seller) }}" wire:navigate title="{{ $seller->name }}" class="line-clamp-2 after:absolute after:inset-0 hover:text-accent-700 hover:underline md:line-clamp-none">{{ $seller->name }}</a>
                         </x-table.cell>
-                        <x-table.cell role="status"><x-status-badge :status="$seller->status" /></x-table.cell>
+                        <x-table.cell role="status">
+                            <x-status-badge :status="$seller->status" />
+                            @if ($seller->certificate_needs_review)
+                                <x-badge variant="warning" :dot="true">{{ __('admin.sellers.certificate_needs_review') }}</x-badge>
+                            @endif
+                        </x-table.cell>
                         <x-table.cell role="meta" :label="__('admin.ui.phone')" :mono="true">{{ $seller->phone }}</x-table.cell>
                         <x-table.cell role="meta" :tier="3" class="font-mono text-xs">{{ $seller->created_at->translatedFormat('d M Y') }}</x-table.cell>
                         <x-table.cell role="actions">

@@ -55,11 +55,11 @@
             <tbody class="block md:table-row-group">
                 <tr class="block md:table-row"><td colspan="6" class="block md:table-cell">
                     @if ($activeCount > 0)
-                        <x-empty-state variant="filtered" :title="__('admin.ui.no_results_match_your_filters')" description="Try a different search term or status.">
+                        <x-empty-state variant="filtered" :title="__('admin.ui.no_results_match_your_filters')" :description="__('admin.ui.try_a_different_search_term_or_status')">
                             <x-slot:actions><x-button variant="secondary" wire:click="clearFilters">{{ __('admin.ui.clear_filters') }}</x-button></x-slot:actions>
                         </x-empty-state>
                     @else
-                        <x-empty-state :title="__('admin.ui.no_commercial_offer_requests_yet')" description="Requests submitted via the public storefront will appear here." />
+                        <x-empty-state :title="__('admin.ui.no_commercial_offer_requests_yet')" :description="__('admin.ui.empty_offers')" />
                     @endif
                 </td></tr>
             </tbody>

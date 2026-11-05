@@ -27,6 +27,8 @@ return new class extends Migration
             $table->string('logo_path')->nullable();
             // Private file on the `local` disk, required before approval.
             $table->string('registration_certificate_path')->nullable();
+            // Set when an Owner replaces the file; cleared by a moderator's review.
+            $table->boolean('certificate_needs_review')->default(false);
             // Public B2B info shown on product pages. Null = not stated.
             $table->boolean('is_vat_payer')->nullable();
             $table->json('payment_methods')->nullable();

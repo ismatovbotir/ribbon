@@ -46,6 +46,17 @@
                     @else
                         <x-badge variant="warning" :dot="true">{{ __('admin.sellers.certificate_missing') }}</x-badge>
                     @endif
+                    @if ($seller->certificate_needs_review)
+                        <div class="mt-2 flex flex-wrap items-center gap-2">
+                            <x-badge variant="warning" :dot="true">{{ __('admin.sellers.certificate_needs_review') }}</x-badge>
+                            <x-button variant="secondary" size="sm" wire:click="markCertificateReviewed" wire:loading.attr="disabled" wire:target="markCertificateReviewed">{{ __('admin.sellers.certificate_mark_reviewed') }}</x-button>
+                        </div>
+                    @endif
+                    @foreach ($seller->certificateAudits()->with('user')->limit(10)->get() as $audit)
+                        <p class="mt-1 text-xs text-text-muted">
+                            {{ __('admin.sellers.certificate_audit_'.$audit->action, ['name' => $audit->user?->name ?? '—', 'date' => $audit->created_at->translatedFormat('d M Y H:i')]) }}
+                        </p>
+                    @endforeach
                 </x-fact>
                 <x-fact :label="__('storefront.seller.vat_payer')">{{ $seller->is_vat_payer === null ? '—' : ($seller->is_vat_payer ? __('storefront.seller.vat_payer_yes') : __('storefront.seller.vat_payer_no')) }}</x-fact>
                 <x-fact :label="__('storefront.seller.payment_methods')">{{ collect($seller->payment_methods ?? [])->map(fn ($method) => __('storefront.seller.payment_method.'.$method))->implode(', ') ?: '—' }}</x-fact>

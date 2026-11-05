@@ -124,6 +124,7 @@
                         <p class="mt-1 text-xs text-danger-600">{{ $message }}</p>
                     @enderror
                     <p class="mt-1 text-xs text-text-muted">{{ __('sellers.certificate_caption') }}</p>
+                    <p class="mt-1 text-xs text-text-muted">{{ __('sellers.profile.certificate_review_note') }}</p>
                 </div>
                 @if ($certificateUpload)
                     <x-button type="button" variant="primary" size="sm" class="mt-3" wire:click="saveCertificate" wire:loading.attr="disabled" wire:target="saveCertificate, certificateUpload">{{ __('sellers.profile.save_certificate') }}</x-button>

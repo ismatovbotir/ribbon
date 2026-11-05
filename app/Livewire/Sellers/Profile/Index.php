@@ -5,7 +5,6 @@ namespace App\Livewire\Sellers\Profile;
 use App\Livewire\Concerns\AuthorizesSeller;
 use App\Models\Seller;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -83,14 +82,10 @@ class Index extends Component
             'certificateUpload' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
         ]);
 
-        $seller = $this->seller();
-        $previous = $seller->registration_certificate_path;
-
-        $seller->update(['registration_certificate_path' => $this->certificateUpload->store('seller-certificates', 'local')]);
-
-        if ($previous) {
-            Storage::disk('local')->delete($previous);
-        }
+        $this->seller()->replaceCertificate(
+            $this->certificateUpload->store('seller-certificates', 'local'),
+            Auth::user(),
+        );
 
         $this->certificateUpload = null;
 

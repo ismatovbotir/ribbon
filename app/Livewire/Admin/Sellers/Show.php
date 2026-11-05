@@ -88,6 +88,15 @@ class Show extends Component
         session()->flash('status', __('admin.ui.seller_approved'));
     }
 
+    public function markCertificateReviewed(): void
+    {
+        $this->authorizeAdmin('sellers.moderate');
+
+        $this->seller->markCertificateReviewed($this->actingAdmin());
+
+        session()->flash('status', __('admin.sellers.certificate_reviewed'));
+    }
+
     public function openRejectForm(): void
     {
         $this->authorizeAdmin('sellers.moderate');

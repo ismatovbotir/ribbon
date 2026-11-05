@@ -281,4 +281,5 @@ return [
     'profile.certificate_replace' => 'Yangi fayl yuklash',
     'profile.save_certificate' => 'Guvohnomani saqlash',
     'profile.certificate_saved' => 'Guvohnoma saqlandi.',
+    'profile.certificate_review_note' => 'Yuklangach, moderator yangi faylni koʻrib chiqadi. Eʼlonlaringiz koʻrinishda qoladi.',
 ];

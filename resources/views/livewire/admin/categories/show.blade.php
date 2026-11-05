@@ -127,7 +127,7 @@
         </header>
 
         @if ($category->parameters->isEmpty())
-            <x-empty-state :title="__('admin.ui.this_category_has_no_parameters_yet')" description="Sellers won't be able to add meaningful specs until you add at least one.">
+            <x-empty-state :title="__('admin.ui.this_category_has_no_parameters_yet')" :description="__('admin.ui.empty_parameters')">
                 <x-slot:actions><x-button variant="primary" wire:click="openCreateDrawer">{{ __('admin.ui.add_parameter') }}</x-button></x-slot:actions>
             </x-empty-state>
         @else
@@ -181,8 +181,8 @@
                             <x-menu :title="$parameter->name[$previewLocale] ?? 'Parameter'" :label="__('admin.ui.row_actions')">
                                 <x-menu.item icon="edit" wire:click="openEditDrawer({{ $parameter->id }})">{{ __('admin.ui.edit') }}</x-menu.item>
                                 <x-menu.item icon="copy" wire:click="duplicateParameter({{ $parameter->id }})">{{ __('admin.ui.duplicate') }}</x-menu.item>
-                                <x-menu.item icon="arrow-up" wire:click="moveParameter({{ $parameter->id }}, 'up')" :disabled="$loop->first" reason="Already first">{{ __('admin.ui.move_up') }}</x-menu.item>
-                                <x-menu.item icon="arrow-down" wire:click="moveParameter({{ $parameter->id }}, 'down')" :disabled="$loop->last" reason="Already last">{{ __('admin.ui.move_down') }}</x-menu.item>
+                                <x-menu.item icon="arrow-up" wire:click="moveParameter({{ $parameter->id }}, 'up')" :disabled="$loop->first" :reason="__('admin.ui.already_first')">{{ __('admin.ui.move_up') }}</x-menu.item>
+                                <x-menu.item icon="arrow-down" wire:click="moveParameter({{ $parameter->id }}, 'down')" :disabled="$loop->last" :reason="__('admin.ui.already_last')">{{ __('admin.ui.move_down') }}</x-menu.item>
                                 <x-menu.item icon="delete" wire:click="confirmDeleteParameter({{ $parameter->id }})" :destructive="true">{{ __('admin.ui.delete') }}</x-menu.item>
                             </x-menu>
                         </div>
@@ -253,8 +253,8 @@
                                         @endforeach
                                     </div>
                                     <x-menu :title="__('admin.ui.option_n', ['n' => $index + 1])" :label="__('admin.ui.option_actions')">
-                                        <x-menu.item icon="arrow-up" wire:click="moveOption('{{ $option['key'] }}', 'up')" :disabled="$loop->first" reason="Already first">{{ __('admin.ui.move_up') }}</x-menu.item>
-                                        <x-menu.item icon="arrow-down" wire:click="moveOption('{{ $option['key'] }}', 'down')" :disabled="$loop->last" reason="Already last">{{ __('admin.ui.move_down') }}</x-menu.item>
+                                        <x-menu.item icon="arrow-up" wire:click="moveOption('{{ $option['key'] }}', 'up')" :disabled="$loop->first" :reason="__('admin.ui.already_first')">{{ __('admin.ui.move_up') }}</x-menu.item>
+                                        <x-menu.item icon="arrow-down" wire:click="moveOption('{{ $option['key'] }}', 'down')" :disabled="$loop->last" :reason="__('admin.ui.already_last')">{{ __('admin.ui.move_down') }}</x-menu.item>
                                         <x-menu.item icon="delete" wire:click="removeOption('{{ $option['key'] }}')" :destructive="true">{{ __('admin.ui.remove') }}</x-menu.item>
                                     </x-menu>
                                 </li>

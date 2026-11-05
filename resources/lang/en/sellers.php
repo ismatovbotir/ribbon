@@ -281,4 +281,5 @@ return [
     'profile.certificate_replace' => 'Upload a new file',
     'profile.save_certificate' => 'Save certificate',
     'profile.certificate_saved' => 'Certificate saved.',
+    'profile.certificate_review_note' => 'After you upload it, a moderator reviews the new file. Your listings stay live.',
 ];

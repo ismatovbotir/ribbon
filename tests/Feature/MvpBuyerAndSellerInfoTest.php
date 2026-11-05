@@ -18,6 +18,7 @@ use App\Models\Product;
 use App\Models\Region;
 use App\Models\Role;
 use App\Models\Seller;
+use App\Models\SellerCertificateAudit;
 use App\Models\User;
 use App\Services\OfferSelectionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -356,6 +357,77 @@ class MvpBuyerAndSellerInfoTest extends TestCase
 
         Storage::disk('local')->assertMissing($old);
         Storage::disk('local')->assertExists($seller->fresh()->registration_certificate_path);
+    }
+
+    public function test_replacing_a_certificate_flags_review_and_keeps_listings_live(): void
+    {
+        $seller = $this->seller();
+        $owner = $seller->users()->firstOrFail();
+        $product = $this->product($seller);
+
+        Livewire::actingAs($owner)
+            ->test(Profile::class)
+            ->set('certificateUpload', UploadedFile::fake()->create('new.pdf', 50, 'application/pdf'))
+            ->call('saveCertificate')
+            ->assertHasNoErrors();
+
+        $seller->refresh();
+        $this->assertTrue($seller->certificate_needs_review);
+        $this->assertSame('approved', $seller->status);
+        $this->assertTrue(Product::visibleOnStorefront()->whereKey($product->id)->exists());
+
+        $audit = SellerCertificateAudit::sole();
+        $this->assertSame($owner->id, $audit->user_id);
+        $this->assertSame(SellerCertificateAudit::ACTION_REPLACED, $audit->action);
+    }
+
+    public function test_moderator_clears_the_review_flag_and_it_is_audited(): void
+    {
+        $seller = $this->seller();
+        $seller->update(['certificate_needs_review' => true]);
+        $moderator = $this->adminWith('sellers.moderate');
+
+        Livewire::actingAs($moderator)
+            ->test(AdminSellerShow::class, ['seller' => $seller])
+            ->assertSee(__('admin.sellers.certificate_needs_review'))
+            ->call('markCertificateReviewed')
+            ->assertDontSee(__('admin.sellers.certificate_needs_review'));
+
+        $this->assertFalse($seller->fresh()->certificate_needs_review);
+
+        $audit = SellerCertificateAudit::sole();
+        $this->assertSame($moderator->id, $audit->user_id);
+        $this->assertSame(SellerCertificateAudit::ACTION_REVIEWED, $audit->action);
+    }
+
+    public function test_review_action_requires_seller_moderation_permission(): void
+    {
+        $seller = $this->seller();
+        $seller->update(['certificate_needs_review' => true]);
+
+        Livewire::actingAs($this->adminWith('catalog.manage'))
+            ->test(AdminSellerShow::class, ['seller' => $seller])
+            ->assertForbidden();
+
+        $this->assertTrue($seller->fresh()->certificate_needs_review);
+    }
+
+    public function test_approving_a_seller_clears_the_review_flag(): void
+    {
+        $seller = $this->seller();
+        $seller->forceFill(['status' => 'pending', 'certificate_needs_review' => true])->save();
+
+        $seller->approve($this->superAdmin());
+
+        $this->assertFalse($seller->fresh()->certificate_needs_review);
+        $this->assertSame(SellerCertificateAudit::ACTION_REVIEWED, SellerCertificateAudit::sole()->action);
+    }
+
+    public function test_reviewing_with_nothing_pending_writes_no_audit(): void
+    {
+        $this->seller()->markCertificateReviewed($this->superAdmin());
+
+        $this->assertSame(0, SellerCertificateAudit::count());
     }
 
     // ---- Seller B2B info ----

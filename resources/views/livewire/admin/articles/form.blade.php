@@ -84,7 +84,7 @@
                             <span class="inline-flex items-center gap-1 rounded-pill bg-accent-50 py-0.5 pr-1 pl-2.5 text-xs font-medium whitespace-nowrap text-accent-700">
                                 <span x-text="category.name"></span>
                                 <button type="button" @click.stop="remove(category.id)" class="rounded-pill p-0.5 text-accent-500 hover:bg-accent-100 hover:text-accent-700">
-                                    <span class="sr-only">Remove</span>
+                                    <span class="sr-only">{{ __('admin.ui.remove') }}</span>
                                     <span aria-hidden="true">&times;</span>
                                 </button>
                             </span>

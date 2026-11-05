@@ -10,9 +10,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use LogicException;
 
-#[Fillable(['name', 'address', 'country_id', 'region_id', 'city_id', 'vat_number', 'phone', 'logo_path', 'registration_certificate_path', 'is_vat_payer', 'payment_methods', 'warranty_info', 'status', 'approved_by', 'approved_at', 'rejected_reason', 'subscription_paid_until'])]
+#[Fillable(['name', 'address', 'country_id', 'region_id', 'city_id', 'vat_number', 'phone', 'logo_path', 'registration_certificate_path', 'certificate_needs_review', 'is_vat_payer', 'payment_methods', 'warranty_info', 'status', 'approved_by', 'approved_at', 'rejected_reason', 'subscription_paid_until'])]
 class Seller extends Model
 {
     public const PAYMENT_METHODS = ['transfer', 'cash', 'card', 'installments'];
@@ -26,6 +27,7 @@ class Seller extends Model
     {
         return [
             'approved_at' => 'datetime',
+            'certificate_needs_review' => 'boolean',
             'is_vat_payer' => 'boolean',
             'payment_methods' => 'array',
             'subscription_paid_until' => 'date:Y-m-d',
@@ -183,6 +185,9 @@ class Seller extends Model
             throw new LogicException('A seller cannot be approved without a registration certificate.');
         }
 
+        // Approving means the current certificate has been looked at.
+        $this->markCertificateReviewed($admin);
+
         $this->status = 'approved';
         $this->approved_by = $admin->id;
         $this->approved_at = now();
@@ -193,6 +198,52 @@ class Seller extends Model
     public function hasCertificate(): bool
     {
         return filled($this->registration_certificate_path);
+    }
+
+    public function certificateAudits(): HasMany
+    {
+        return $this->hasMany(SellerCertificateAudit::class)->latest('created_at')->latest('id');
+    }
+
+    /**
+     * Swap in a new certificate and flag it for a moderator. Listings stay live:
+     * hiding them would punish a seller for simply renewing a document.
+     */
+    public function replaceCertificate(string $path, User $by): void
+    {
+        $previous = $this->registration_certificate_path;
+
+        DB::transaction(function () use ($path, $by) {
+            $this->update(['registration_certificate_path' => $path, 'certificate_needs_review' => true]);
+
+            $this->certificateAudits()->create([
+                'user_id' => $by->id,
+                'action' => SellerCertificateAudit::ACTION_REPLACED,
+                'created_at' => now(),
+            ]);
+        });
+
+        if ($previous) {
+            Storage::disk('local')->delete($previous);
+        }
+    }
+
+    /** No-op unless a replaced certificate is waiting for review. */
+    public function markCertificateReviewed(User $by): void
+    {
+        if (! $this->certificate_needs_review) {
+            return;
+        }
+
+        DB::transaction(function () use ($by) {
+            $this->update(['certificate_needs_review' => false]);
+
+            $this->certificateAudits()->create([
+                'user_id' => $by->id,
+                'action' => SellerCertificateAudit::ACTION_REVIEWED,
+                'created_at' => now(),
+            ]);
+        });
     }
 
     /**

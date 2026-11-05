@@ -281,4 +281,5 @@ return [
     'profile.certificate_replace' => 'Загрузить новый файл',
     'profile.save_certificate' => 'Сохранить свидетельство',
     'profile.certificate_saved' => 'Свидетельство сохранено.',
+    'profile.certificate_review_note' => 'После загрузки модератор проверит новый файл. Ваши объявления останутся на витрине.',
 ];

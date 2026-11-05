@@ -76,11 +76,11 @@
             <tbody class="block md:table-row-group">
                 <tr class="block md:table-row"><td colspan="6" class="block md:table-cell">
                     @if ($search !== '')
-                        <x-empty-state variant="filtered" :title="__('admin.ui.no_results_match_your_filters')" description="Try a different search term.">
+                        <x-empty-state variant="filtered" :title="__('admin.ui.no_results_match_your_filters')" :description="__('admin.ui.try_a_different_search_term')">
                             <x-slot:actions><x-button variant="secondary" wire:click="$set('search', '')">{{ __('admin.ui.clear_filters') }}</x-button></x-slot:actions>
                         </x-empty-state>
                     @else
-                        <x-empty-state :title="__('admin.ui.no_categories_yet')" description="Create the first category to start defining its parameters.">
+                        <x-empty-state :title="__('admin.ui.no_categories_yet')" :description="__('admin.ui.empty_categories')">
                             <x-slot:actions><x-button variant="primary" wire:click="toggleCreateForm">{{ __('admin.ui.add_category') }}</x-button></x-slot:actions>
                         </x-empty-state>
                     @endif
