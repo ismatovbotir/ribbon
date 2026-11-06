@@ -7,7 +7,7 @@
         ->all();
     $isSuperAdmin = Auth::user()->isSuperAdmin();
 @endphp
-<div class="max-w-4xl">
+<div class="mx-auto w-full max-w-4xl">
     <x-page-header :title="$page ? __('admin.cms.pages.form_edit') : __('admin.cms.pages.form_new')" :subtitle="__('admin.cms.pages.form_subtitle')">
         <x-slot:actions>
             <x-button tag="a" href="{{ route('admin.pages.index') }}" wire:navigate variant="ghost">← {{ __('admin.cms.pages.back') }}</x-button>

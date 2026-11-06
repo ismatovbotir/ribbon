@@ -1,4 +1,4 @@
-<div class="max-w-4xl">
+<div class="mx-auto w-full max-w-4xl">
     <x-page-header :title="$product->name ?: 'Product'" :subtitle="__('admin.ui.product_listing_review')" :back-url="route('admin.products.index')" :back-label="__('admin.ui.all_products')">
         <x-slot:meta>
             <x-status-badge :status="$product->status" />

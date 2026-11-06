@@ -5,7 +5,7 @@
     this template, so the stale-Alpine-binding wire:key bug that hit the
     seller-registration wizard doesn't apply here. See Form::class docblock.
 --}}
-<div class="max-w-4xl">
+<div class="mx-auto w-full max-w-4xl">
     <x-page-header :title="$banner ? __('admin.ui.edit_banner') : __('admin.ui.new_banner')" :subtitle="__('admin.ui.shown_on_the_buyer_storefront_while_active_and_within_its_sc')">
         <x-slot:actions>
             <x-button tag="a" href="{{ route('admin.banners.index') }}" wire:navigate variant="ghost">

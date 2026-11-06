@@ -2,7 +2,7 @@
     Single form editing the one sitewide Setting row — see
     Livewire\Admin\Settings\Show's docblock.
 --}}
-<div class="max-w-4xl">
+<div class="mx-auto w-full max-w-4xl">
     <x-page-header :title="__('admin.ui.settings')" :subtitle="__('admin.ui.sitewide_analytics_contact_info_and_default_seo_tags')">
         <x-slot:actions>
             <x-button variant="primary" wire:click="save" wire:loading.attr="disabled" wire:target="save, ogImageUpload">
@@ -80,8 +80,8 @@
                     </div>
                 @else
                     <label for="field-telegramBotToken" class="mb-1 block text-sm font-medium text-text-primary">{{ __('admin.ui.bot_token') }}</label>
-                    <div class="flex max-w-lg items-start gap-2">
-                        <div class="flex-1">
+                    <div class="flex max-w-lg flex-col items-stretch gap-2 sm:flex-row sm:items-start">
+                        <div class="min-w-0 flex-1">
                             <x-input id="field-telegramBotToken" type="text" wire:model="telegramBotToken" :error="$errors->has('telegramBotToken')" placeholder="123456789:AAExampleTokenFromBotFather" />
                             @error('telegramBotToken')
                                 <p class="mt-1 text-xs text-danger-600">{{ $message }}</p>

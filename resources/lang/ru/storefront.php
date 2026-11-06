@@ -253,7 +253,7 @@ return [
     'nav.mega_guide_label' => 'Как выбрать',
     'nav.mega_guide_read' => 'Читать гид',
     'nav.mega_brands' => 'Бренды',
-    'nav.mega_featured' => 'Рекомендуем',
+    'nav.mega_featured' => 'Новая статья',
     'nav.mega_cant_find' => 'Не нашли нужную модель?',
     'nav.mega_cant_find_link' => 'Напишите нам',
     'nav.shortcuts_of' => 'Фильтры «:name»',

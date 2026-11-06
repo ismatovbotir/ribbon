@@ -53,9 +53,10 @@
         x-cloak
         x-transition.opacity.duration.100ms
         aria-label="{{ __('storefront.nav.catalog_menu_label') }}"
-        class="elev-2 absolute inset-x-0 top-full hidden border-b border-border-strong bg-surface motion-reduce:transition-none lg:block"
+        class="pointer-events-none absolute inset-x-0 top-full hidden px-6 pt-2 motion-reduce:transition-none lg:block"
     >
-        <div class="mx-auto flex max-h-[min(35rem,calc(100dvh-var(--spacing-storefront-header)))] max-w-7xl flex-col">
+        {{-- Narrower than the page, with a border on all sides, so it's clear where the menu starts and ends. --}}
+        <div class="elev-2 pointer-events-auto mx-auto flex max-h-[min(35rem,calc(100dvh-var(--spacing-storefront-header)-1rem))] max-w-6xl flex-col overflow-hidden rounded-md border border-border-strong bg-surface">
             <div class="grid min-h-0 flex-1 grid-cols-[18.75rem_minmax(0,1fr)]">
                 {{-- Left: category list (the only part that may scroll). Roving tabindex: Tab leaves the list into the pane. --}}
                 <ul

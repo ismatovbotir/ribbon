@@ -258,7 +258,7 @@ return [
     'nav.mega_guide_label' => 'Buying guide',
     'nav.mega_guide_read' => 'Read guide',
     'nav.mega_brands' => 'Brands',
-    'nav.mega_featured' => 'Featured article',
+    'nav.mega_featured' => 'New article',
     'nav.mega_cant_find' => "Can't find the model?",
     'nav.mega_cant_find_link' => 'Contact us',
     'nav.shortcuts_of' => 'Shortcuts for :name',

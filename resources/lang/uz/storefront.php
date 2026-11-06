@@ -253,7 +253,7 @@ return [
     'nav.mega_guide_label' => 'Qanday tanlash kerak',
     'nav.mega_guide_read' => 'Qo‘llanmani o‘qish',
     'nav.mega_brands' => 'Brendlar',
-    'nav.mega_featured' => 'Tavsiya etamiz',
+    'nav.mega_featured' => 'Yangi maqola',
     'nav.mega_cant_find' => 'Kerakli modelni topa olmadingizmi?',
     'nav.mega_cant_find_link' => 'Bizga yozing',
     'nav.shortcuts_of' => ':name filtrlari',

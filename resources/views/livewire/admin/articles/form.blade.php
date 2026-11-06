@@ -3,7 +3,7 @@
     Every field keeps the exact same wire:model binding regardless of mode —
     see Form::class docblock.
 --}}
-<div class="max-w-4xl">
+<div class="mx-auto w-full max-w-4xl">
     <x-page-header :title="$article ? __('admin.ui.edit_article') : __('admin.ui.new_article')" :subtitle="__('admin.ui.educational_content_shown_on_the_storefront_s_articles_secti')">
         <x-slot:actions>
             <x-button tag="a" href="{{ route('admin.articles.index') }}" wire:navigate variant="ghost">
