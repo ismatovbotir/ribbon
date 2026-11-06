@@ -468,6 +468,11 @@
             <x-storefront.selection-bar :count="$selectionCount" />
         @endif
 
+        {{-- Hidden where it would compete with the offer request or repeat the contact form. --}}
+        @unless (request()->routeIs('storefront.products.show', 'storefront.offer-request.show', 'storefront.contact'))
+            <livewire:storefront.chat-widget />
+        @endunless
+
         @livewireScripts
     </body>
 </html>

@@ -45,7 +45,7 @@
                                     <p class="text-text-muted">{{ __('admin.cms.contact.no_message') }}</p>
                                 @endif
                             </td>
-                            <td class="px-4 py-3 text-text-secondary">{{ $message->source === 'cant_find' ? __('admin.cms.contact.source_cant_find') : __('admin.cms.contact.source_contact') }}</td>
+                            <td class="px-4 py-3 text-text-secondary">{{ __('admin.cms.contact.source_'.$message->source) }}</td>
                             <td class="px-4 py-3 text-xs text-text-secondary">{{ $attribution !== '' ? $attribution : __('admin.cms.contact.direct') }}</td>
                             <td class="px-4 py-3">
                                 @if ($message->status === 'handled')

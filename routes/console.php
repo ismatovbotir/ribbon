@@ -12,3 +12,6 @@ Artisan::command('inspire', function () {
 // idempotent (see seller_subscription_reminders), so overlapping/repeated
 // runs are safe.
 Schedule::command('subscriptions:remind')->dailyAt('09:00');
+
+// Chat button messages: needs cron to run `schedule:run` every minute.
+Schedule::command('chat-messages:send')->everyMinute()->withoutOverlapping();

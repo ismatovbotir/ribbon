@@ -626,4 +626,5 @@ return [
     'ui.edit_page' => 'Sahifani tahrirlash',
     'ui.new_page' => 'Yangi sahifa',
     'ui.skip_to_content' => 'Asosiy qismga oʻtish',
+    'cms.contact.source_chat' => 'Chat tugmasi',
 ];

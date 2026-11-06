@@ -626,4 +626,5 @@ return [
     'ui.edit_page' => 'Edit Page',
     'ui.new_page' => 'New Page',
     'ui.skip_to_content' => 'Skip to content',
+    'cms.contact.source_chat' => 'Chat button',
 ];

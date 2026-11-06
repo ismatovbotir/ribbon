@@ -11,10 +11,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * Buyer PII: visible to Super Admin only, never written to logs or
  * analytics events.
  */
-#[Fillable(['source', 'phone', 'message', 'locale', 'utm', 'referrer', 'status', 'handled_by', 'handled_at'])]
+#[Fillable(['source', 'phone', 'message', 'locale', 'utm', 'referrer', 'page', 'status', 'handled_by', 'handled_at'])]
 class ContactMessage extends Model
 {
-    public const SOURCES = ['contact', 'cant_find'];
+    public const SOURCES = ['contact', 'chat', 'cant_find'];
 
     public const STATUSES = ['new', 'handled'];
 
@@ -26,6 +26,7 @@ class ContactMessage extends Model
         return [
             'utm' => 'array',
             'handled_at' => 'datetime',
+            'telegram_sent_at' => 'datetime',
         ];
     }
 

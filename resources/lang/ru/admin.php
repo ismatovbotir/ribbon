@@ -626,4 +626,5 @@ return [
     'ui.edit_page' => 'Редактировать страницу',
     'ui.new_page' => 'Новая страница',
     'ui.skip_to_content' => 'Перейти к содержимому',
+    'cms.contact.source_chat' => 'Кнопка чата',
 ];
