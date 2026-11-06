@@ -19,7 +19,6 @@ return [
         'metaDescription.*' => 'meta description',
         'parameterValues.*' => 'parameter value',
         'moqPcs' => 'minimum order',
-        'certificateUpload' => 'certificate',
         'pcsPrice' => 'price',
         'categoryId' => 'category',
         'brandId' => 'brand',

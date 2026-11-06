@@ -258,9 +258,6 @@ return [
     'products.create.price_label' => 'Price per piece (pcs)',
     'products.create.price_caption' => 'You can add pack and box prices after saving.',
 
-    'certificate_label' => 'Registration certificate',
-    'certificate_caption' => 'PDF, JPG or PNG, up to 5 MB. Only Ribbon moderators can see it.',
-    'validation.certificate_required' => 'Upload your registration certificate.',
     'products.moq_label' => 'Minimum order',
     'products.moq_unit' => 'pcs',
     'products.moq_caption' => 'The smallest quantity a buyer can order, in pcs.',
@@ -276,12 +273,6 @@ return [
     'profile.save_business' => 'Save',
     'profile.business_saved' => 'Information saved.',
     'profile.business_owner_only' => 'Only the company Owner can change this information.',
-    'profile.certificate_on_file' => 'Certificate on file.',
-    'profile.certificate_missing' => 'No certificate on file. The company can\'t be approved without one.',
-    'profile.certificate_replace' => 'Upload a new file',
-    'profile.save_certificate' => 'Save certificate',
-    'profile.certificate_saved' => 'Certificate saved.',
-    'profile.certificate_review_note' => 'After you upload it, a moderator reviews the new file. Your listings stay live.',
     'nav.requests' => 'Requests',
     'requests.subtitle' => 'Buyers who asked for an offer on your products. Call them, then mark how it went.',
     'requests.filter_label' => 'Filter requests',
@@ -318,4 +309,5 @@ return [
     'telegram.outcome_refused' => 'This request is not available.',
     'telegram.reminder_expiring' => "<b>Your Ribbon subscription expires soon</b>\nPaid until: :date",
     'telegram.reminder_grace_started' => "<b>Your Ribbon subscription has expired</b>\nPaid until: :date. Renew during the grace period to keep your paid listings visible.",
+    'validation.vat_number_invalid' => 'Enter the tax number as 9 to 14 digits.',
 ];

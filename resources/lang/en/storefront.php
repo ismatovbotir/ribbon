@@ -305,7 +305,7 @@ return [
     'footer.privacy_link' => 'Privacy policy',
     'footer.inn' => 'Tax ID (INN)',
     'footer.disclaimer' => 'Ribbon is a marketplace: offers, prices and delivery are agreed directly between buyer and seller. Ribbon is not a party to the sale.',
-    'seller.verified_explainer' => 'Verified: company registration and tax ID are checked by Ribbon moderators.',
+    'seller.verified_explainer' => 'Verified: tax ID and company contacts are checked by Ribbon.',
     'offer_request.assurance_1' => 'Free for buyers',
     'offer_request.assurance_2' => 'Only the sellers in this request see your number',
     'offer_request.assurance_3' => 'Sellers reply with a commercial offer, there is no payment on this site',

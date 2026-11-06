@@ -18,16 +18,12 @@ use App\Models\Product;
 use App\Models\Region;
 use App\Models\Role;
 use App\Models\Seller;
-use App\Models\SellerCertificateAudit;
 use App\Models\User;
 use App\Services\OfferSelectionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Queue;
-use Illuminate\Support\Facades\Storage;
 use Livewire\Features\SupportLockedProperties\CannotUpdateLockedPropertyException;
 use Livewire\Livewire;
-use LogicException;
 use Tests\TestCase;
 
 /** MVP gaps from admin QA pass #4 (N4-14). */
@@ -46,8 +42,6 @@ class MvpBuyerAndSellerInfoTest extends TestCase
         parent::setUp();
 
         Queue::fake();
-        Storage::fake('local');
-        Storage::fake('public');
 
         $names = array_fill_keys(config('ribbon.locales'), 'X');
         $this->country = Country::create(['name' => $names]);
@@ -55,12 +49,11 @@ class MvpBuyerAndSellerInfoTest extends TestCase
         $this->city = City::create(['region_id' => $this->region->id, 'name' => $names]);
     }
 
-    private function seller(string $email = 'owner@example.test', ?string $certificate = 'seller-certificates/c.pdf'): Seller
+    private function seller(string $email = 'owner@example.test'): Seller
     {
         $seller = Seller::register(
             ['name' => 'Seller', 'address' => 'A', 'country_id' => $this->country->id, 'region_id' => $this->region->id,
-                'city_id' => $this->city->id, 'vat_number' => '2001', 'phone' => '+998901234567',
-                'registration_certificate_path' => $certificate],
+                'city_id' => $this->city->id, 'vat_number' => '200123456', 'phone' => '+998901234567'],
             ['name' => 'Owner', 'email' => $email, 'password' => 'password', 'locale' => 'uz'],
         );
 
@@ -235,7 +228,7 @@ class MvpBuyerAndSellerInfoTest extends TestCase
         $this->assertSame(3, $product->minQtyForPrice($box));
     }
 
-    // ---- Registration certificate ----
+    // ---- Registration and tax number ----
 
     private function registerForm()
     {
@@ -250,184 +243,54 @@ class MvpBuyerAndSellerInfoTest extends TestCase
             ->set('regionId', $this->region->id)
             ->set('cityId', $this->city->id)
             ->set('companyAddress', 'Addr')
-            ->set('companyVatNumber', '300')
+            ->set('companyVatNumber', '300123456')
             ->set('companyPhone', '+998901234567');
     }
 
-    public function test_registration_requires_a_certificate(): void
+    public function test_registration_needs_no_certificate(): void
     {
-        $this->registerForm()->call('register')->assertHasErrors(['companyCertificate']);
+        $this->registerForm()->call('register')->assertHasNoErrors();
 
-        $this->assertSame(0, Seller::count());
+        $this->assertSame('pending', Seller::sole()->refresh()->status);
     }
 
-    public function test_registration_rejects_unsafe_certificate_types(): void
+    public function test_tax_number_must_be_9_to_14_digits(): void
     {
-        foreach (['x.html', 'x.svg', 'x.php'] as $name) {
-            $this->registerForm()
-                ->set('companyCertificate', UploadedFile::fake()->create($name, 10))
-                ->call('register')
-                ->assertHasErrors(['companyCertificate']);
+        foreach (['12345678', '123456789012345', '12345abcd', '123 456 789', '+123456789'] as $invalid) {
+            $this->registerForm()->set('companyVatNumber', $invalid)->call('register')->assertHasErrors(['companyVatNumber']);
         }
 
         $this->assertSame(0, Seller::count());
+
+        $this->registerForm()->set('companyVatNumber', '12345678901234')->call('register')->assertHasNoErrors();
+
+        $this->assertSame('12345678901234', Seller::sole()->vat_number);
     }
 
-    public function test_registration_stores_the_certificate_privately(): void
-    {
-        $this->registerForm()
-            ->set('companyCertificate', UploadedFile::fake()->create('cert.pdf', 100, 'application/pdf'))
-            ->call('register')
-            ->assertHasNoErrors();
-
-        $path = Seller::sole()->registration_certificate_path;
-
-        Storage::disk('local')->assertExists($path);
-        Storage::disk('public')->assertMissing($path);
-    }
-
-    public function test_seller_cannot_be_approved_without_a_certificate(): void
-    {
-        $seller = $this->seller(certificate: null);
-        $seller->forceFill(['status' => 'pending'])->save();
-
-        Livewire::actingAs($this->superAdmin())
-            ->test(AdminSellerShow::class, ['seller' => $seller])
-            ->call('approve')
-            ->assertHasErrors(['approve'])
-            ->assertSee(__('admin.sellers.certificate_required_to_approve'));
-
-        $this->assertSame('pending', $seller->fresh()->status);
-
-        $this->expectException(LogicException::class);
-        $seller->approve($this->superAdmin());
-    }
-
-    public function test_seller_with_a_certificate_can_be_approved(): void
+    public function test_a_pending_seller_is_approved_with_only_a_tax_number(): void
     {
         $seller = $this->seller();
         $seller->forceFill(['status' => 'pending'])->save();
 
         Livewire::actingAs($this->superAdmin())
             ->test(AdminSellerShow::class, ['seller' => $seller])
+            ->assertSee(__('admin.sellers.approval_check'))
             ->call('approve')
             ->assertHasNoErrors();
 
         $this->assertSame('approved', $seller->fresh()->status);
     }
 
-    public function test_certificate_download_is_limited_to_staff_who_moderate_sellers(): void
+    public function test_buyers_are_told_what_is_actually_checked(): void
     {
-        $seller = $this->seller();
-        Storage::disk('local')->put($seller->registration_certificate_path, 'pdf');
-        $url = route('admin.sellers.certificate', $seller);
+        foreach (config('ribbon.locales') as $locale) {
+            app()->setLocale($locale);
+            $text = mb_strtolower(__('storefront.seller.verified_explainer'));
 
-        $this->get($url)->assertRedirect();
-        $this->actingAs($seller->users()->firstOrFail())->get($url)->assertForbidden();
-        $this->actingAs($this->seller('other@example.test')->users()->firstOrFail())->get($url)->assertForbidden();
-        $this->actingAs($this->adminWith('catalog.manage'))->get($url)->assertForbidden();
-
-        $response = $this->actingAs($this->adminWith('sellers.moderate'))->get($url);
-        $response->assertOk()->assertDownload('certificate-'.$seller->id.'.pdf');
-        $this->assertSame('nosniff', $response->headers->get('X-Content-Type-Options'));
-
-        $this->actingAs($this->superAdmin())->get($url)->assertOk();
-    }
-
-    public function test_download_returns_404_when_no_certificate_exists(): void
-    {
-        $seller = $this->seller(certificate: null);
-
-        $this->actingAs($this->superAdmin())
-            ->get(route('admin.sellers.certificate', $seller))
-            ->assertNotFound();
-    }
-
-    public function test_owner_replacing_the_certificate_removes_the_old_file(): void
-    {
-        $seller = $this->seller();
-        Storage::disk('local')->put($seller->registration_certificate_path, 'old');
-        $old = $seller->registration_certificate_path;
-
-        Livewire::actingAs($seller->users()->firstOrFail())
-            ->test(Profile::class)
-            ->set('certificateUpload', UploadedFile::fake()->create('new.pdf', 50, 'application/pdf'))
-            ->call('saveCertificate')
-            ->assertHasNoErrors();
-
-        Storage::disk('local')->assertMissing($old);
-        Storage::disk('local')->assertExists($seller->fresh()->registration_certificate_path);
-    }
-
-    public function test_replacing_a_certificate_flags_review_and_keeps_listings_live(): void
-    {
-        $seller = $this->seller();
-        $owner = $seller->users()->firstOrFail();
-        $product = $this->product($seller);
-
-        Livewire::actingAs($owner)
-            ->test(Profile::class)
-            ->set('certificateUpload', UploadedFile::fake()->create('new.pdf', 50, 'application/pdf'))
-            ->call('saveCertificate')
-            ->assertHasNoErrors();
-
-        $seller->refresh();
-        $this->assertTrue($seller->certificate_needs_review);
-        $this->assertSame('approved', $seller->status);
-        $this->assertTrue(Product::visibleOnStorefront()->whereKey($product->id)->exists());
-
-        $audit = SellerCertificateAudit::sole();
-        $this->assertSame($owner->id, $audit->user_id);
-        $this->assertSame(SellerCertificateAudit::ACTION_REPLACED, $audit->action);
-    }
-
-    public function test_moderator_clears_the_review_flag_and_it_is_audited(): void
-    {
-        $seller = $this->seller();
-        $seller->update(['certificate_needs_review' => true]);
-        $moderator = $this->adminWith('sellers.moderate');
-
-        Livewire::actingAs($moderator)
-            ->test(AdminSellerShow::class, ['seller' => $seller])
-            ->assertSee(__('admin.sellers.certificate_needs_review'))
-            ->call('markCertificateReviewed')
-            ->assertDontSee(__('admin.sellers.certificate_needs_review'));
-
-        $this->assertFalse($seller->fresh()->certificate_needs_review);
-
-        $audit = SellerCertificateAudit::sole();
-        $this->assertSame($moderator->id, $audit->user_id);
-        $this->assertSame(SellerCertificateAudit::ACTION_REVIEWED, $audit->action);
-    }
-
-    public function test_review_action_requires_seller_moderation_permission(): void
-    {
-        $seller = $this->seller();
-        $seller->update(['certificate_needs_review' => true]);
-
-        Livewire::actingAs($this->adminWith('catalog.manage'))
-            ->test(AdminSellerShow::class, ['seller' => $seller])
-            ->assertForbidden();
-
-        $this->assertTrue($seller->fresh()->certificate_needs_review);
-    }
-
-    public function test_approving_a_seller_clears_the_review_flag(): void
-    {
-        $seller = $this->seller();
-        $seller->forceFill(['status' => 'pending', 'certificate_needs_review' => true])->save();
-
-        $seller->approve($this->superAdmin());
-
-        $this->assertFalse($seller->fresh()->certificate_needs_review);
-        $this->assertSame(SellerCertificateAudit::ACTION_REVIEWED, SellerCertificateAudit::sole()->action);
-    }
-
-    public function test_reviewing_with_nothing_pending_writes_no_audit(): void
-    {
-        $this->seller()->markCertificateReviewed($this->superAdmin());
-
-        $this->assertSame(0, SellerCertificateAudit::count());
+            $this->assertStringNotContainsString('registration', $text);
+            $this->assertStringNotContainsString('регистрац', $text);
+            $this->assertStringNotContainsString('o\'tishi', $text);
+        }
     }
 
     // ---- Seller B2B info ----
@@ -466,7 +329,7 @@ class MvpBuyerAndSellerInfoTest extends TestCase
             ->assertHasErrors(['paymentMethods.0']);
     }
 
-    public function test_employee_cannot_change_business_info_or_the_certificate(): void
+    public function test_employee_cannot_change_business_info(): void
     {
         $seller = $this->seller();
         $employee = $this->employeeOf($seller);
@@ -474,11 +337,6 @@ class MvpBuyerAndSellerInfoTest extends TestCase
         Livewire::actingAs($employee)->test(Profile::class)
             ->set('vatPayer', 'yes')
             ->call('saveBusinessInfo')
-            ->assertForbidden();
-
-        Livewire::actingAs($employee)->test(Profile::class)
-            ->set('certificateUpload', UploadedFile::fake()->create('new.pdf', 50, 'application/pdf'))
-            ->call('saveCertificate')
             ->assertForbidden();
 
         $this->assertNull($seller->fresh()->is_vat_payer);

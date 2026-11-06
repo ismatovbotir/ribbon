@@ -300,7 +300,7 @@ return [
     'footer.privacy_link' => 'Maxfiylik siyosati',
     'footer.inn' => 'STIR',
     'footer.disclaimer' => "Ribbon — savdo maydonchasi: takliflar, narxlar va yetkazib berish xaridor va sotuvchi o'rtasida to'g'ridan-to'g'ri kelishiladi. Ribbon bitim tarafi emas.",
-    'seller.verified_explainer' => "Tekshirilgan: kompaniya ro'yxatdan o'tishi va STIR Ribbon moderatorlari tomonidan tekshiriladi.",
+    'seller.verified_explainer' => 'Tekshirilgan: STIR va kompaniya kontaktlari Ribbon tomonidan tekshiriladi.',
     'offer_request.assurance_1' => 'Xaridorlar uchun bepul',
     'offer_request.assurance_2' => "Raqamingizni faqat shu so'rovdagi sotuvchilar ko'radi",
     'offer_request.assurance_3' => "Sotuvchilar tijorat taklifini yuboradi, saytda to'lov yo'q",

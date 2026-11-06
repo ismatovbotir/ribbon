@@ -138,10 +138,6 @@ return [
     'offers.source' => 'Source',
     'offers.source_direct' => 'Direct',
     'offers.referrer' => 'Referring site',
-    'sellers.certificate' => 'Registration certificate',
-    'sellers.certificate_download' => 'Download',
-    'sellers.certificate_missing' => 'Missing',
-    'sellers.certificate_required_to_approve' => 'A seller can\'t be approved without a registration certificate.',
 
     // Admin panel UI strings.
     'ui.actions' => 'Actions',
@@ -615,11 +611,6 @@ return [
     'ui.no' => 'no',
     'ui.country' => 'Country',
     'ui.region' => 'Region',
-    'sellers.certificate_needs_review' => 'New certificate to review',
-    'sellers.certificate_mark_reviewed' => 'Mark as reviewed',
-    'sellers.certificate_reviewed' => 'Certificate marked as reviewed.',
-    'sellers.certificate_audit_replaced' => 'Replaced by :name, :date',
-    'sellers.certificate_audit_reviewed' => 'Reviewed by :name, :date',
     'ui.try_a_different_search_term_or_status' => 'Try a different search term or status.',
     'ui.empty_seller_applications' => 'Applications submitted via the public registration form will appear here.',
     'ui.empty_categories' => 'Create the first category to start defining its parameters.',
@@ -630,4 +621,5 @@ return [
     'ui.already_last' => 'Already last',
     'ui.remove_filter' => 'Remove filter',
     'offers.no_seller_answer' => 'No answer yet',
+    'sellers.approval_check' => 'Check the tax number on the tax site and call the company before approving.',
 ];

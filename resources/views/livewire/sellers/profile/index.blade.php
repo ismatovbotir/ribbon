@@ -132,27 +132,4 @@
         </form>
     </div>
 
-    @if ($isOwner)
-        <div class="mt-6 rounded-md border border-border bg-surface-raised">
-            <div class="border-b border-border bg-surface-subtle px-5 py-3">
-                <h2 class="text-lg font-semibold text-text-primary">{{ __('sellers.certificate_label') }}</h2>
-            </div>
-            <div class="p-5">
-                <p class="text-sm text-text-primary">{{ $seller->hasCertificate() ? __('sellers.profile.certificate_on_file') : __('sellers.profile.certificate_missing') }}</p>
-                <div class="mt-3">
-                    <label for="certificate-upload" class="mb-1 block text-sm font-medium text-text-primary">{{ __('sellers.profile.certificate_replace') }}</label>
-                    <input id="certificate-upload" type="file" wire:model="certificateUpload" accept="application/pdf,image/jpeg,image/png" class="block w-full max-w-md text-sm text-text-secondary file:mr-3 file:rounded-sm file:border file:border-border-strong file:bg-surface file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-text-primary hover:file:bg-surface-hover">
-                    <div wire:loading wire:target="certificateUpload" class="mt-1 text-xs text-text-muted">{{ __('sellers.uploading') }}</div>
-                    @error('certificateUpload')
-                        <p class="mt-1 text-xs text-danger-600">{{ $message }}</p>
-                    @enderror
-                    <p class="mt-1 text-xs text-text-muted">{{ __('sellers.certificate_caption') }}</p>
-                    <p class="mt-1 text-xs text-text-muted">{{ __('sellers.profile.certificate_review_note') }}</p>
-                </div>
-                @if ($certificateUpload)
-                    <x-button type="button" variant="primary" size="sm" class="mt-3" wire:click="saveCertificate" wire:loading.attr="disabled" wire:target="saveCertificate, certificateUpload">{{ __('sellers.profile.save_certificate') }}</x-button>
-                @endif
-            </div>
-        </div>
-    @endif
 </div>

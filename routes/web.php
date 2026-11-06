@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\Admin\SellerCertificateController;
 use App\Http\Controllers\TelegramWebhookController;
 use App\Livewire\Admin\Analytics\Show as AdminAnalyticsShow;
 use App\Livewire\Admin\Articles\Form as AdminArticlesForm;
@@ -262,7 +261,6 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
     Route::prefix('sellers')->name('sellers.')->group(function () {
         Route::get('/', AdminSellersIndex::class)->name('index');
         Route::get('/{seller}', AdminSellersShow::class)->name('show');
-        Route::get('/{seller}/certificate', SellerCertificateController::class)->name('certificate');
     });
 
     Route::prefix('products')->name('products.')->group(function () {

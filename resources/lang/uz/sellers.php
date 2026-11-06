@@ -258,9 +258,6 @@ return [
     'products.create.price_label' => 'Bir dona narxi (dona)',
     'products.create.price_caption' => 'Qadoq va quti narxlarini saqlagandan keyin qo\'shishingiz mumkin.',
 
-    'certificate_label' => 'Roʻyxatdan oʻtganlik guvohnomasi',
-    'certificate_caption' => 'PDF, JPG yoki PNG, 5 MB gacha. Faqat Ribbon moderatorlari koʻradi.',
-    'validation.certificate_required' => 'Roʻyxatdan oʻtganlik guvohnomasini yuklang.',
     'products.moq_label' => 'Minimal buyurtma',
     'products.moq_unit' => 'dona',
     'products.moq_caption' => 'Xaridor buyurtma qilishi mumkin boʻlgan eng kam miqdor, donada.',
@@ -276,12 +273,6 @@ return [
     'profile.save_business' => 'Saqlash',
     'profile.business_saved' => 'Maʼlumot saqlandi.',
     'profile.business_owner_only' => 'Bu maʼlumotni faqat kompaniya egasi oʻzgartira oladi.',
-    'profile.certificate_on_file' => 'Guvohnoma yuklangan.',
-    'profile.certificate_missing' => 'Guvohnoma yuklanmagan. Usiz kompaniya tasdiqlanmaydi.',
-    'profile.certificate_replace' => 'Yangi fayl yuklash',
-    'profile.save_certificate' => 'Guvohnomani saqlash',
-    'profile.certificate_saved' => 'Guvohnoma saqlandi.',
-    'profile.certificate_review_note' => 'Yuklangach, moderator yangi faylni koʻrib chiqadi. Eʼlonlaringiz koʻrinishda qoladi.',
     'nav.requests' => 'Soʻrovlar',
     'requests.subtitle' => 'Mahsulotlaringizga taklif soʻragan xaridorlar. Ularga qoʻngʻiroq qiling va natijani belgilang.',
     'requests.filter_label' => 'Soʻrovlarni saralash',
@@ -318,4 +309,5 @@ return [
     'telegram.outcome_refused' => 'Bu soʻrov mavjud emas.',
     'telegram.reminder_expiring' => "<b>Ribbon obunangiz tez orada tugaydi</b>\nToʻlangan muddat: :date",
     'telegram.reminder_grace_started' => "<b>Ribbon obunangiz tugadi</b>\nToʻlangan muddat: :date. Pullik eʼlonlaringiz koʻrinib turishi uchun imtiyozli davrda yangilang.",
+    'validation.vat_number_invalid' => 'Soliq raqamini 9 tadan 14 tagacha raqam bilan kiriting.',
 ];

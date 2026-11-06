@@ -81,12 +81,6 @@ class Register extends Component
     public $companyLogo = null;
 
     /**
-     * Required: a pending applicant can't log in, so there is no later chance
-     * to add it. Stored on the private `local` disk, never publicly reachable.
-     */
-    public $companyCertificate = null;
-
-    /**
      * Custom attribute names so validation messages read naturally (the
      * default would otherwise print the raw camelCase property name, e.g.
      * "ownerName").
@@ -109,7 +103,6 @@ class Register extends Component
             'companyVatNumber' => __('sellers.vat_number_label'),
             'companyPhone' => __('sellers.phone_label'),
             'companyLogo' => __('sellers.company_logo_label'),
-            'companyCertificate' => __('sellers.certificate_label'),
         ];
     }
 
@@ -156,7 +149,7 @@ class Register extends Component
             'companyAddress.required' => __('sellers.validation.address_required'),
             'companyVatNumber.required' => __('sellers.validation.vat_number_required'),
             'companyPhone.required' => __('sellers.validation.phone_required'),
-            'companyCertificate.required' => __('sellers.validation.certificate_required'),
+            'companyVatNumber.regex' => __('sellers.validation.vat_number_invalid'),
         ];
     }
 
@@ -200,13 +193,10 @@ class Register extends Component
                 Rule::exists('cities', 'id')->where('region_id', $this->regionId),
             ],
             'companyAddress' => ['required', 'string', 'max:500'],
-            // Intentionally no format/regex — this is a multi-country B2B
-            // marketplace and VAT formats vary; just require it's present,
-            // Super Admin vets the value manually during approval.
-            'companyVatNumber' => ['required', 'string', 'max:60'],
+            // Digits only; a moderator checks the number itself during approval.
+            'companyVatNumber' => ['required', 'string', 'regex:/^\d{9,14}$/'],
             'companyPhone' => ['required', 'string', 'max:30', new PhoneNumber],
             'companyLogo' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:1024'],
-            'companyCertificate' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
         ];
     }
 
@@ -320,7 +310,6 @@ class Register extends Component
                 'vat_number' => $this->companyVatNumber,
                 'phone' => trim($this->companyPhone),
                 'logo_path' => $logoPath,
-                'registration_certificate_path' => $this->companyCertificate->store('seller-certificates', 'local'),
             ],
             [
                 'name' => $this->ownerName,

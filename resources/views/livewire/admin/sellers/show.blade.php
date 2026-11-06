@@ -40,24 +40,6 @@
                 <x-fact :label="__('admin.ui.address')">{{ $seller->address }}</x-fact>
                 <x-fact :label="__('admin.ui.vat_number')" :mono="true">{{ $seller->vat_number }}</x-fact>
                 <x-fact :label="__('admin.ui.phone')" :mono="true">{{ $seller->phone }}</x-fact>
-                <x-fact :label="__('admin.sellers.certificate')">
-                    @if ($seller->hasCertificate())
-                        <a href="{{ route('admin.sellers.certificate', $seller) }}" class="text-accent-700 hover:underline">{{ __('admin.sellers.certificate_download') }}</a>
-                    @else
-                        <x-badge variant="warning" :dot="true">{{ __('admin.sellers.certificate_missing') }}</x-badge>
-                    @endif
-                    @if ($seller->certificate_needs_review)
-                        <div class="mt-2 flex flex-wrap items-center gap-2">
-                            <x-badge variant="warning" :dot="true">{{ __('admin.sellers.certificate_needs_review') }}</x-badge>
-                            <x-button variant="secondary" size="sm" wire:click="markCertificateReviewed" wire:loading.attr="disabled" wire:target="markCertificateReviewed">{{ __('admin.sellers.certificate_mark_reviewed') }}</x-button>
-                        </div>
-                    @endif
-                    @foreach ($seller->certificateAudits()->with('user')->limit(10)->get() as $audit)
-                        <p class="mt-1 text-xs text-text-muted">
-                            {{ __('admin.sellers.certificate_audit_'.$audit->action, ['name' => $audit->user?->name ?? '—', 'date' => $audit->created_at->translatedFormat('d M Y H:i')]) }}
-                        </p>
-                    @endforeach
-                </x-fact>
                 <x-fact :label="__('storefront.seller.vat_payer')">{{ $seller->is_vat_payer === null ? '—' : ($seller->is_vat_payer ? __('storefront.seller.vat_payer_yes') : __('storefront.seller.vat_payer_no')) }}</x-fact>
                 <x-fact :label="__('storefront.seller.payment_methods')">{{ collect($seller->payment_methods ?? [])->map(fn ($method) => __('storefront.seller.payment_method.'.$method))->implode(', ') ?: '—' }}</x-fact>
                 <x-fact :label="__('storefront.seller.warranty')"><span class="whitespace-pre-line">{{ $seller->warranty_info ?: '—' }}</span></x-fact>
@@ -152,9 +134,9 @@
     </div>
 
     {{-- Decision bar. Reject is an initial-review decision only; an active seller gets "Block" instead (see Seller::suspend()). --}}
-    @error('approve')
-        <x-alert variant="danger" class="mt-6">{{ $message }}</x-alert>
-    @enderror
+    @if ($seller->status === 'pending')
+        <x-alert variant="info" class="mt-6">{{ __('admin.sellers.approval_check') }}</x-alert>
+    @endif
 
     <x-action-bar>
         @if ($seller->status !== 'approved')

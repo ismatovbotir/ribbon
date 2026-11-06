@@ -79,12 +79,7 @@
                         <x-table.cell role="primary">
                             <a href="{{ route('admin.sellers.show', $seller) }}" wire:navigate title="{{ $seller->name }}" class="line-clamp-2 after:absolute after:inset-0 hover:text-accent-700 hover:underline md:line-clamp-none">{{ $seller->name }}</a>
                         </x-table.cell>
-                        <x-table.cell role="status">
-                            <x-status-badge :status="$seller->status" />
-                            @if ($seller->certificate_needs_review)
-                                <x-badge variant="warning" :dot="true">{{ __('admin.sellers.certificate_needs_review') }}</x-badge>
-                            @endif
-                        </x-table.cell>
+                        <x-table.cell role="status"><x-status-badge :status="$seller->status" /></x-table.cell>
                         <x-table.cell role="meta" :label="__('admin.ui.phone')" :mono="true">{{ $seller->phone }}</x-table.cell>
                         <x-table.cell role="meta" :tier="3" class="font-mono text-xs">{{ $seller->created_at->translatedFormat('d M Y') }}</x-table.cell>
                         <x-table.cell role="actions">

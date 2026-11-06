@@ -138,10 +138,6 @@ return [
     'offers.source' => 'Manba',
     'offers.source_direct' => 'Toʻgʻridan-toʻgʻri',
     'offers.referrer' => 'Yoʻnaltiruvchi sayt',
-    'sellers.certificate' => 'Roʻyxatdan oʻtganlik guvohnomasi',
-    'sellers.certificate_download' => 'Yuklab olish',
-    'sellers.certificate_missing' => 'Yuklanmagan',
-    'sellers.certificate_required_to_approve' => 'Roʻyxatdan oʻtganlik guvohnomasisiz sotuvchini tasdiqlab boʻlmaydi.',
 
     // Admin panel UI strings.
     'ui.actions' => 'Amallar',
@@ -615,11 +611,6 @@ return [
     'ui.no' => 'yoʻq',
     'ui.country' => 'Davlat',
     'ui.region' => 'Viloyat',
-    'sellers.certificate_needs_review' => 'Yangi guvohnomani koʻrib chiqing',
-    'sellers.certificate_mark_reviewed' => 'Koʻrib chiqildi deb belgilash',
-    'sellers.certificate_reviewed' => 'Guvohnoma koʻrib chiqildi deb belgilandi.',
-    'sellers.certificate_audit_replaced' => 'Almashtirdi: :name, :date',
-    'sellers.certificate_audit_reviewed' => 'Koʻrib chiqdi: :name, :date',
     'ui.try_a_different_search_term_or_status' => 'Boshqa soʻz yoki holat bilan urinib koʻring.',
     'ui.empty_seller_applications' => 'Ochiq roʻyxatdan oʻtish shakli orqali yuborilgan arizalar shu yerda chiqadi.',
     'ui.empty_categories' => 'Parametrlarni belgilashni boshlash uchun birinchi toifani yarating.',
@@ -630,4 +621,5 @@ return [
     'ui.already_last' => 'Allaqachon oxirgi',
     'ui.remove_filter' => 'Filtrni olib tashlash',
     'offers.no_seller_answer' => 'Hali javob yoʻq',
+    'sellers.approval_check' => 'Tasdiqlashdan oldin soliq raqamini soliq saytida tekshiring va kompaniyaga qoʻngʻiroq qiling.',
 ];

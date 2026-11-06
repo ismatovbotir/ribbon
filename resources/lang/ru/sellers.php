@@ -258,9 +258,6 @@ return [
     'products.create.price_label' => 'Цена за штуку (шт)',
     'products.create.price_caption' => 'Цены за упаковку и коробку можно добавить после сохранения.',
 
-    'certificate_label' => 'Свидетельство о регистрации',
-    'certificate_caption' => 'PDF, JPG или PNG, до 5 МБ. Видят только модераторы Ribbon.',
-    'validation.certificate_required' => 'Загрузите свидетельство о регистрации.',
     'products.moq_label' => 'Минимальный заказ',
     'products.moq_unit' => 'шт.',
     'products.moq_caption' => 'Наименьшее количество, которое может заказать покупатель, в штуках.',
@@ -276,12 +273,6 @@ return [
     'profile.save_business' => 'Сохранить',
     'profile.business_saved' => 'Информация сохранена.',
     'profile.business_owner_only' => 'Изменить эту информацию может только владелец компании.',
-    'profile.certificate_on_file' => 'Свидетельство загружено.',
-    'profile.certificate_missing' => 'Свидетельство не загружено. Без него компанию не одобрят.',
-    'profile.certificate_replace' => 'Загрузить новый файл',
-    'profile.save_certificate' => 'Сохранить свидетельство',
-    'profile.certificate_saved' => 'Свидетельство сохранено.',
-    'profile.certificate_review_note' => 'После загрузки модератор проверит новый файл. Ваши объявления останутся на витрине.',
     'nav.requests' => 'Запросы',
     'requests.subtitle' => 'Покупатели, запросившие предложение на ваши товары. Позвоните им и отметьте результат.',
     'requests.filter_label' => 'Фильтр запросов',
@@ -318,4 +309,5 @@ return [
     'telegram.outcome_refused' => 'Этот запрос недоступен.',
     'telegram.reminder_expiring' => "<b>Ваша подписка Ribbon скоро закончится</b>\nОплачено до: :date",
     'telegram.reminder_grace_started' => "<b>Ваша подписка Ribbon закончилась</b>\nОплачено до: :date. Продлите её в льготный период, чтобы платные объявления оставались на витрине.",
+    'validation.vat_number_invalid' => 'Введите налоговый номер: от 9 до 14 цифр.',
 ];

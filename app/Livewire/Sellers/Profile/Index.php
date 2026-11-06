@@ -33,8 +33,6 @@ class Index extends Component
 
     public ?string $existingLogoPath = null;
 
-    public $certificateUpload = null;
-
     /** Holds a secret token, so only ever set by connectTelegram(). */
     #[Locked]
     public ?string $telegramLinkUrl = null;
@@ -97,24 +95,6 @@ class Index extends Component
         ]);
 
         session()->flash('status', __('sellers.profile.business_saved'));
-    }
-
-    public function saveCertificate(): void
-    {
-        $this->authorizeOwner();
-
-        $this->validate([
-            'certificateUpload' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
-        ]);
-
-        $this->seller()->replaceCertificate(
-            $this->certificateUpload->store('seller-certificates', 'local'),
-            Auth::user(),
-        );
-
-        $this->certificateUpload = null;
-
-        session()->flash('status', __('sellers.profile.certificate_saved'));
     }
 
     public function seller(): Seller

@@ -138,10 +138,6 @@ return [
     'offers.source' => 'Источник',
     'offers.source_direct' => 'Прямой заход',
     'offers.referrer' => 'Сайт-источник',
-    'sellers.certificate' => 'Свидетельство о регистрации',
-    'sellers.certificate_download' => 'Скачать',
-    'sellers.certificate_missing' => 'Не загружено',
-    'sellers.certificate_required_to_approve' => 'Нельзя одобрить продавца без свидетельства о регистрации.',
 
     // Admin panel UI strings.
     'ui.actions' => 'Действия',
@@ -615,11 +611,6 @@ return [
     'ui.no' => 'нет',
     'ui.country' => 'Страна',
     'ui.region' => 'Регион',
-    'sellers.certificate_needs_review' => 'Новое свидетельство на проверке',
-    'sellers.certificate_mark_reviewed' => 'Отметить как проверенное',
-    'sellers.certificate_reviewed' => 'Свидетельство отмечено как проверенное.',
-    'sellers.certificate_audit_replaced' => 'Заменил(а): :name, :date',
-    'sellers.certificate_audit_reviewed' => 'Проверил(а): :name, :date',
     'ui.try_a_different_search_term_or_status' => 'Попробуйте другой запрос или статус.',
     'ui.empty_seller_applications' => 'Заявки из публичной формы регистрации появятся здесь.',
     'ui.empty_categories' => 'Создайте первую категорию, чтобы задать её параметры.',
@@ -630,4 +621,5 @@ return [
     'ui.already_last' => 'Уже последний',
     'ui.remove_filter' => 'Убрать фильтр',
     'offers.no_seller_answer' => 'Пока нет ответа',
+    'sellers.approval_check' => 'Перед одобрением проверьте налоговый номер на сайте налоговой и позвоните в компанию.',
 ];
