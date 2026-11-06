@@ -8,7 +8,7 @@
             <h1 tabindex="-1" x-init="$el.focus()" class="mt-4 text-xl font-semibold text-text-primary md:text-2xl">{{ __('storefront.offer_request.confirmation_title') }}</h1>
             <p class="mt-2 text-sm text-text-secondary">{{ __('storefront.offer_request.confirmation_body') }}
                 @if ($phone !== '')
-                    <span class="font-mono tabular-nums text-text-primary">{{ $phone }}</span>
+                    <span class="font-mono whitespace-nowrap tabular-nums text-text-primary">{{ $phone }}</span>
                 @endif
             </p>
             <ol class="mt-4 space-y-1 text-left text-sm text-text-secondary">
@@ -68,7 +68,7 @@
                                     <div class="col-start-2 flex items-center justify-between gap-2">
                                         <x-storefront.qty-stepper
                                             :value="$line['qty']"
-                                            :min="1"
+                                            :min="$line['minQty']"
                                             decrement="decrementLine({{ $group['seller']->id }}, '{{ $product->id }}', '{{ $line['unit'] }}')"
                                             increment="incrementLine({{ $group['seller']->id }}, '{{ $product->id }}', '{{ $line['unit'] }}')"
                                             :dec-label="__('storefront.offer_request.qty_decrease')"

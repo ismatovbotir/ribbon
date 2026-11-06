@@ -310,4 +310,5 @@ return [
     'telegram.reminder_expiring' => "<b>Ваша подписка Ribbon скоро закончится</b>\nОплачено до: :date",
     'telegram.reminder_grace_started' => "<b>Ваша подписка Ribbon закончилась</b>\nОплачено до: :date. Продлите её в льготный период, чтобы платные объявления оставались на витрине.",
     'validation.vat_number_invalid' => 'Введите налоговый номер: от 9 до 14 цифр.',
+    'profile.subtitle_owner' => 'Здесь вы управляете данными компании.',
 ];

@@ -95,9 +95,11 @@
                         </x-table.cell>
                         <x-table.cell role="status">
                             <x-badge :variant="$category->is_active ? 'success' : 'muted'">{{ $category->is_active ? __('admin.ui.active') : __('admin.ui.inactive') }}</x-badge>
-                            @unless ($category->requires_subscription)
-                                <x-badge variant="info">{{ __('admin.categories.free_badge') }}</x-badge>
-                            @endunless
+                            @can('super-admin')
+                                @unless ($category->requires_subscription)
+                                    <x-badge variant="info">{{ __('admin.categories.free_badge') }}</x-badge>
+                                @endunless
+                            @endcan
                         </x-table.cell>
                         <x-table.cell role="meta" :label="__('admin.ui.parameters')" :mono="true" align="right">{{ $category->parameters_count }}</x-table.cell>
                         <x-table.cell role="meta" :tier="3" class="font-mono text-xs">{{ $category->slug[$defaultLocale] ?? '—' }}</x-table.cell>

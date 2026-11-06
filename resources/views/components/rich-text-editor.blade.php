@@ -250,6 +250,16 @@
                 $wire.set('{{ $name }}', applyStylesToSerializedHtml(event.target.value), false);
             });
 
+            // Trix uploads bypass the file input, so the size check lives here too.
+            editor.addEventListener('trix-file-accept', (event) => {
+                const meta = document.querySelector('meta[name=upload-limit]');
+
+                if (meta && event.file.size > Number(meta.content)) {
+                    event.preventDefault();
+                    alert(meta.dataset.message);
+                }
+            });
+
             editor.addEventListener('trix-attachment-add', (event) => {
                 if (! event.attachment.file) {
                     return;

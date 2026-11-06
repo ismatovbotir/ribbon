@@ -10,10 +10,11 @@
     'logoutLabel' => 'Log out',
     'openLabel' => 'Open navigation',
     'closeLabel' => 'Close navigation',
-    'skipLabel' => 'Skip to content',
+    'skipLabel' => null,
 ])
 
 @php
+    $skipLabel ??= __('admin.ui.skip_to_content');
     $crumbs = array_values($breadcrumb);
     $lastCrumb = $crumbs ? end($crumbs) : null;
 @endphp
@@ -51,7 +52,7 @@
         id="mobile-nav"
         role="dialog"
         aria-modal="true"
-        aria-label="Navigation"
+        :aria-label="__('admin.ui.navigation')"
         class="fixed inset-y-0 left-0 z-(--z-nav) flex w-drawer flex-col border-r border-border-strong bg-surface-subtle pb-[env(safe-area-inset-bottom)] lg:hidden"
     >
         <div class="flex h-topbar shrink-0 items-center justify-between border-b border-border-strong pr-1 pl-4">
@@ -84,7 +85,7 @@
 
             <div class="min-w-0 flex-1">
                 <p class="truncate font-display text-base font-semibold md:hidden">{{ $lastCrumb['label'] ?? '' }}</p>
-                <nav class="hidden items-center gap-1.5 text-sm md:flex" aria-label="Breadcrumb">
+                <nav class="hidden min-w-0 items-center gap-1.5 text-sm whitespace-nowrap md:flex" aria-label="{{ __('admin.ui.breadcrumb') }}">
                     @foreach ($crumbs as $crumb)
                         @if (! $loop->last)
                             @if (! empty($crumb['url']))
@@ -94,7 +95,7 @@
                             @endif
                             <span class="text-text-muted">/</span>
                         @else
-                            <span class="font-semibold text-text-primary" aria-current="page">{{ $crumb['label'] }}</span>
+                            <span class="min-w-0 truncate font-semibold text-text-primary" aria-current="page" title="{{ $crumb['label'] }}">{{ $crumb['label'] }}</span>
                         @endif
                     @endforeach
                 </nav>

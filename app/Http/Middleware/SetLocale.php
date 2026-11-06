@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use Carbon\Carbon;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
@@ -34,6 +35,11 @@ class SetLocale
             App::setLocale($queryLocale);
         } elseif (in_array($sessionLocale = $request->session()->get('locale'), $locales, true)) {
             App::setLocale($sessionLocale);
+        }
+
+        // Carbon's plain `uz` is Cyrillic, while the whole interface is Latin.
+        if (App::getLocale() === 'uz') {
+            Carbon::setLocale('uz_Latn');
         }
 
         return $next($request);

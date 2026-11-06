@@ -9,6 +9,8 @@
 
         <title>{{ isset($title) ? $title.' · Ribbon Admin' : 'Ribbon Admin' }}</title>
 
+        <x-upload-limit />
+
         @fonts
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])

@@ -310,4 +310,5 @@ return [
     'telegram.reminder_expiring' => "<b>Ribbon obunangiz tez orada tugaydi</b>\nToʻlangan muddat: :date",
     'telegram.reminder_grace_started' => "<b>Ribbon obunangiz tugadi</b>\nToʻlangan muddat: :date. Pullik eʼlonlaringiz koʻrinib turishi uchun imtiyozli davrda yangilang.",
     'validation.vat_number_invalid' => 'Soliq raqamini 9 tadan 14 tagacha raqam bilan kiriting.',
+    'profile.subtitle_owner' => 'Kompaniya maʼlumotlarini shu yerda boshqaring.',
 ];

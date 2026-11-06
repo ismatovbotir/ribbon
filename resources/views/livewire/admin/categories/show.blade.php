@@ -106,7 +106,7 @@
             <div>
                 <h2 class="text-lg font-semibold text-text-primary">{{ __('admin.ui.parameters') }}</h2>
                 <p class="mt-0.5 text-xs text-text-muted">
-                    {{ $this->parameterStats['total'] }} {{ \Illuminate\Support\Str::plural('parameter', $this->parameterStats['total']) }}
+                    {{ trans_choice('admin.ui.parameters_count', $this->parameterStats['total']) }}
                     · {{ __('admin.ui.required_count', ['count' => $this->parameterStats['required']]) }}
                     · {{ __('admin.ui.filterable_count', ['count' => $this->parameterStats['filterable']]) }}
                 </p>

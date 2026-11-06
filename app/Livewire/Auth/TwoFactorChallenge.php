@@ -28,6 +28,8 @@ class TwoFactorChallenge extends Component
     {
         $user = $this->admin();
 
+        $this->resetErrorBag();
+
         // Per user, not per IP: a stolen password must not buy unlimited guesses.
         $key = 'two-factor:'.$user->id;
 

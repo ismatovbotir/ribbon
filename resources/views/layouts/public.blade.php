@@ -9,6 +9,8 @@
 
         <title>{{ isset($title) ? $title.' · Ribbon' : 'Ribbon' }}</title>
 
+        <x-upload-limit />
+
         @fonts
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -30,7 +32,7 @@
                     @foreach (['uz' => 'UZ', 'ru' => 'RU', 'en' => 'EN'] as $locale => $label)
                         <a
                             href="{{ request()->fullUrlWithQuery(['lang' => $locale]) }}"
-                            class="rounded-sm px-1.5 py-0.5 {{ app()->getLocale() === $locale ? 'font-semibold text-accent-600' : 'text-text-muted hover:text-text-secondary' }}"
+                            class="inline-flex min-h-11 items-center rounded-sm px-2 {{ app()->getLocale() === $locale ? 'font-semibold text-accent-600' : 'text-text-muted hover:text-text-secondary' }}"
                         >{{ $label }}</a>
                     @endforeach
                 </nav>

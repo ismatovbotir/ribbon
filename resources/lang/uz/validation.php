@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'upload_too_large' => 'Fayl juda katta. Eng koʻpi :size.',
     'required_mark' => '(majburiy)',
 
     'accepted' => ':Attribute maydoni qabul qilinishi kerak.',

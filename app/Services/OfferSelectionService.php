@@ -157,10 +157,19 @@ class OfferSelectionService
         return null;
     }
 
+    /** The smallest quantity of this unit that satisfies the product's MOQ. */
+    public static function minQtyFor(string $productId, string $unit): int
+    {
+        $product = Product::with('prices')->find($productId);
+        $price = $product?->prices->firstWhere('unit', $unit);
+
+        return $price ? $product->minQtyForPrice($price) : self::MIN_QTY;
+    }
+
     public static function updateQty(int $sellerId, string $productId, string $unit, int $qty): void
     {
         $selection = session(self::SESSION_KEY, []);
-        $qty = self::clampQty($qty);
+        $qty = max(self::clampQty($qty), self::minQtyFor($productId, $unit));
 
         foreach ($selection[$sellerId] ?? [] as $index => $line) {
             if (($line['product_id'] ?? null) === $productId && ($line['unit'] ?? null) === $unit) {
@@ -250,7 +259,10 @@ class OfferSelectionService
                     continue;
                 }
 
-                $qty = self::clampQty($line['qty'] ?? 1);
+                // Raised to the MOQ here too: the seller may have increased it
+                // after the buyer added this line.
+                $minQty = $product->minQtyForPrice($price);
+                $qty = max(self::clampQty($line['qty'] ?? 1), $minQty);
                 $unitPrice = (float) $price->price;
 
                 // localizedName() can legitimately return '' (no brand, no
@@ -261,6 +273,7 @@ class OfferSelectionService
 
                 $resolvedLines[] = [
                     'product' => $product,
+                    'minQty' => $minQty,
                     'displayName' => $displayName,
                     'unit' => $price->unit,
                     'qty' => $qty,

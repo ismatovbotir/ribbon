@@ -30,6 +30,8 @@ class TwoFactorSetup extends Component
     public function confirm(TwoFactorService $twoFactor): void
     {
         $user = $this->admin();
+        $this->resetErrorBag();
+
         $key = 'two-factor-setup:'.$user->id;
 
         if (RateLimiter::tooManyAttempts($key, 5)) {

@@ -12,7 +12,7 @@
 
     @if ($requests->isEmpty())
         <div class="border border-border-strong bg-surface">
-            @if ($filter !== '')
+            @if ($filter !== '' || $total > 0)
                 <x-empty-state variant="filtered" :title="__('sellers.requests.empty_filtered_title')">
                     <x-slot:actions>
                         <x-button variant="secondary" wire:click="setFilter('')">{{ __('sellers.requests.filter_all') }}</x-button>

@@ -196,10 +196,10 @@ class Form extends Component
     public function render()
     {
         return view('livewire.admin.pages.form')->layout('layouts.admin', [
-            'title' => $this->page ? 'Edit Page' : 'New Page',
+            'title' => $this->page ? __('admin.ui.edit_page') : __('admin.ui.new_page'),
             'breadcrumb' => [
                 ['label' => __('admin.ui.pages'), 'url' => route('admin.pages.index')],
-                ['label' => $this->page ? ($this->page->title[config('ribbon.locales')[0]] ?? 'Edit') : 'New'],
+                ['label' => $this->page ? ($this->page->title[app()->getLocale()] ?? __('admin.ui.edit')) : __('admin.ui.status_new')],
             ],
         ]);
     }

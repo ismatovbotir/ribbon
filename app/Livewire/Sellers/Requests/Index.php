@@ -72,6 +72,13 @@ class Index extends Component
             ->latest('id')
             ->paginate(20);
 
+        // An out-of-range ?page= shouldn't look like an empty inbox.
+        if ($requests->isEmpty() && $requests->currentPage() > 1) {
+            $this->resetPage();
+
+            return $this->render();
+        }
+
         return view('livewire.sellers.requests.index', [
             'requests' => $requests,
             'outcomeCounts' => $outcomeCounts,

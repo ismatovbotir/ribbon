@@ -1,5 +1,5 @@
 <div>
-    <x-page-header :title="__('sellers.nav.profile')" :subtitle="__('sellers.profile.subtitle')" />
+    <x-page-header :title="__('sellers.nav.profile')" :subtitle="$isOwner ? __('sellers.profile.subtitle_owner') : __('sellers.profile.subtitle')" />
 
     @if (session('status'))
         <div class="mb-6 rounded-md border border-success-200 bg-success-50 p-3 text-sm text-success-700">

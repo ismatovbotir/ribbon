@@ -310,4 +310,5 @@ return [
     'telegram.reminder_expiring' => "<b>Your Ribbon subscription expires soon</b>\nPaid until: :date",
     'telegram.reminder_grace_started' => "<b>Your Ribbon subscription has expired</b>\nPaid until: :date. Renew during the grace period to keep your paid listings visible.",
     'validation.vat_number_invalid' => 'Enter the tax number as 9 to 14 digits.',
+    'profile.subtitle_owner' => "Manage your company's information here.",
 ];

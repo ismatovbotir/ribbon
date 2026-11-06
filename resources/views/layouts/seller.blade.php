@@ -9,6 +9,8 @@
 
         <title>{{ isset($title) ? $title.' · Ribbon Seller' : 'Ribbon Seller' }}</title>
 
+        <x-upload-limit />
+
         @fonts
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -40,7 +42,7 @@
             </x-slot:sidebarFooter>
             {{-- The seller's own moderation status stays persistently visible (design doc 02). --}}
             <x-slot:topbarExtra>
-                <x-status-badge :status="$sellerCompany->status" class="hidden sm:inline-flex">{{ __('sellers.status.'.$sellerCompany->status) }}</x-status-badge>
+                <span class="hidden sm:inline-flex"><x-status-badge :status="$sellerCompany->status">{{ __('sellers.status.'.$sellerCompany->status) }}</x-status-badge></span>
             </x-slot:topbarExtra>
             {{ $slot }}
         </x-panel.shell>

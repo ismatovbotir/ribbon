@@ -143,3 +143,36 @@ document.addEventListener('livewire:init', () => {
         });
     });
 });
+
+// PHP silently discards a file above its upload limit, and Livewire then never
+// reports finish or error, leaving "Uploading..." on forever (QA N5-02). Refuse
+// such a file before it is sent. The limit comes from <x-upload-limit>.
+const uploadLimit = () => {
+    const meta = document.querySelector('meta[name="upload-limit"]');
+    return meta ? { bytes: Number(meta.content), message: meta.dataset.message } : null;
+};
+
+document.addEventListener(
+    'change',
+    (e) => {
+        const input = e.target;
+        if (!(input instanceof HTMLInputElement) || input.type !== 'file') return;
+
+        input.parentElement?.querySelector('[data-upload-limit-error]')?.remove();
+
+        const limit = uploadLimit();
+        if (!limit || ![...(input.files ?? [])].some((file) => file.size > limit.bytes)) return;
+
+        // Capture phase: Livewire's own listener on the input never sees this.
+        e.stopImmediatePropagation();
+        input.value = '';
+
+        const error = document.createElement('p');
+        error.dataset.uploadLimitError = '';
+        error.setAttribute('role', 'alert');
+        error.className = 'mt-1 text-xs text-danger-600';
+        error.textContent = limit.message;
+        input.after(error);
+    },
+    true,
+);

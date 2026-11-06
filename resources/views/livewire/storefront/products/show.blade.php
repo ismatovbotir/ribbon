@@ -216,7 +216,7 @@
 
                 {{-- Quantity --}}
                 <p class="mt-4 mb-1.5 text-sm font-medium text-text-primary"><label for="product-qty">{{ __('storefront.product_detail.qty_label') }}</label></p>
-                <x-storefront.qty-stepper :value="$qty" :min="1">
+                <x-storefront.qty-stepper :value="$qty" :min="$minQty">
                     <input id="product-qty" type="text" inputmode="numeric" wire:model.live="qty" class="h-11 w-16 rounded-none border-0 bg-surface text-center font-mono text-field text-text-primary tabular-nums">
                 </x-storefront.qty-stepper>
                 <p class="mt-1.5 font-mono text-xs text-text-muted tabular-nums">{{ __('storefront.product_detail.min_order', ['qty' => $minQty, 'unit' => __('storefront.unit.'.($selectedPrice->unit ?? 'pcs')), 'pcs' => $moq]) }}</p>

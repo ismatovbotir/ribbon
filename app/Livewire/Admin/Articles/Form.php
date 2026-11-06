@@ -229,10 +229,10 @@ class Form extends Component
     public function render()
     {
         return view('livewire.admin.articles.form')->layout('layouts.admin', [
-            'title' => $this->article ? 'Edit Article' : 'New Article',
+            'title' => $this->article ? __('admin.ui.edit_article') : __('admin.ui.new_article'),
             'breadcrumb' => [
                 ['label' => __('admin.ui.articles'), 'url' => route('admin.articles.index')],
-                ['label' => $this->article ? ($this->article->title[config('ribbon.locales')[0]] ?? 'Edit') : 'New'],
+                ['label' => $this->article ? ($this->article->title[app()->getLocale()] ?? __('admin.ui.edit')) : __('admin.ui.status_new')],
             ],
         ]);
     }

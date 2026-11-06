@@ -94,7 +94,7 @@ return [
     'cms.pages.field_lead_hint' => 'Sarlavha ostidagi ixtiyoriy qisqa matn (300 gacha).',
     'cms.pages.field_body' => 'Matn',
     'cms.pages.field_body_hint' => 'Faqat H2 va H3 sarlavhalaridan foydalaning; sahifa sarlavhasi H1 hisoblanadi.',
-    'cms.pages.field_meta' => 'Meta description',
+    'cms.pages.field_meta' => 'Meta tavsif',
     'cms.pages.field_meta_hint' => 'Ixtiyoriy, 160 belgigacha. Aks holda kirish matni olinadi.',
     'cms.pages.field_published' => 'Chop etilgan',
     'cms.pages.field_published_caption' => 'Chop etilmagan sahifalar 404 beradi va menyu hamda sitemapdan chiqadi.',
@@ -622,4 +622,8 @@ return [
     'ui.remove_filter' => 'Filtrni olib tashlash',
     'offers.no_seller_answer' => 'Hali javob yoʻq',
     'sellers.approval_check' => 'Tasdiqlashdan oldin soliq raqamini soliq saytida tekshiring va kompaniyaga qoʻngʻiroq qiling.',
+    'ui.parameters_count' => ':count ta parametr',
+    'ui.edit_page' => 'Sahifani tahrirlash',
+    'ui.new_page' => 'Yangi sahifa',
+    'ui.skip_to_content' => 'Asosiy qismga oʻtish',
 ];

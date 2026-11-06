@@ -111,7 +111,8 @@ class Show extends Component
     {
         $this->catName = $this->category->name;
         $this->catIsActive = $this->category->is_active;
-        $this->catIsFree = ! $this->category->requires_subscription;
+        // Never sent to a Moderator's browser, not even in the Livewire snapshot.
+        $this->catIsFree = Gate::allows('super-admin') && ! $this->category->requires_subscription;
         $this->catImageUpload = null;
         $this->catExistingImagePath = $this->category->image_path;
         $this->catIcon = (string) $this->category->icon;
@@ -171,7 +172,8 @@ class Show extends Component
             $this->category->setRequiresSubscription(! $this->catIsFree, Auth::user());
         }
 
-        $this->catIsFree = ! $this->category->requires_subscription;
+        // Never sent to a Moderator's browser, not even in the Livewire snapshot.
+        $this->catIsFree = Gate::allows('super-admin') && ! $this->category->requires_subscription;
 
         $this->catImageUpload = null;
         $this->catExistingImagePath = $this->category->image_path;

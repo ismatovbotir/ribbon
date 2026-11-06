@@ -17,7 +17,9 @@ use DOMXPath;
  */
 class HtmlSanitizer
 {
-    private const DANGEROUS_TAGS = ['script', 'style', 'iframe', 'object', 'embed', 'form', 'link', 'meta'];
+    private const DANGEROUS_TAGS = ['script', 'style', 'iframe', 'object', 'embed', 'form', 'link', 'meta', 'base', 'svg', 'math'];
+
+    private const IMAGE_ALIGN_STYLE = '/^(float:\s*(left|right);\s*)?(margin:\s*[0-9.]+(rem|px)?(\s+[0-9.]+(rem|px)?){0,3};?)?$/i';
 
     private const URL_ATTRIBUTES = ['href', 'xlink:href', 'src', 'action', 'formaction', 'poster', 'background'];
 
@@ -77,7 +79,12 @@ class HtmlSanitizer
                 $isUnsafeUrl = in_array($name, self::URL_ATTRIBUTES, true)
                     && ! self::isSafeUrl($name, $value);
 
-                if ($isEventHandler || $isUnsafeUrl) {
+                // Inline styles could cover the page. Only the editor's own image
+                // alignment survives.
+                $isUnsafeStyle = $name === 'style'
+                    && ! ($element->nodeName === 'img' && preg_match(self::IMAGE_ALIGN_STYLE, $value) === 1);
+
+                if ($isEventHandler || $isUnsafeUrl || $isUnsafeStyle) {
                     $element->removeAttribute($attribute->nodeName);
                 }
             }

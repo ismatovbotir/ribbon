@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'upload_too_large' => 'Файл слишком большой. Максимум :size.',
     'required_mark' => '(обязательно)',
 
     'accepted' => 'Необходимо принять поле «:attribute».',

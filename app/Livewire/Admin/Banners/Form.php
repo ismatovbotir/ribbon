@@ -228,10 +228,10 @@ class Form extends Component
     public function render()
     {
         return view('livewire.admin.banners.form')->layout('layouts.admin', [
-            'title' => $this->banner ? 'Edit Banner' : 'New Banner',
+            'title' => $this->banner ? __('admin.ui.edit_banner') : __('admin.ui.new_banner'),
             'breadcrumb' => [
                 ['label' => __('admin.ui.banners'), 'url' => route('admin.banners.index')],
-                ['label' => $this->banner ? ($this->banner->title[config('ribbon.locales')[0]] ?? 'Edit') : 'New'],
+                ['label' => $this->banner ? ($this->banner->title[app()->getLocale()] ?? __('admin.ui.edit')) : __('admin.ui.status_new')],
             ],
         ]);
     }

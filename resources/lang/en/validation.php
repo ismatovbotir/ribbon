@@ -2,6 +2,7 @@
 
 // Rule messages come from the framework's English file; this adds only what it lacks.
 return [
+    'upload_too_large' => 'This file is too large. The maximum is :size.',
     'required_mark' => '(required)',
 
     'attributes' => [

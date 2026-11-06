@@ -120,6 +120,7 @@ class Show extends Component
         // (ProductPrice::bootProductPrice()), so $vitrinPrice is never
         // actually null in practice.
         $this->selectedUnit = $vitrinPrice->unit ?? 'pcs';
+        $this->qty = $this->minQty();
 
         // mount() only ever runs once per page load (unlike render(), which
         // re-fires on every Livewire update) — the correct place to record
@@ -138,6 +139,7 @@ class Show extends Component
     {
         if ($this->product->prices->contains('unit', $unit)) {
             $this->selectedUnit = $unit;
+            $this->qty = $this->safeQty();
         }
     }
 
@@ -148,7 +150,7 @@ class Show extends Component
 
     public function decrementQty(): void
     {
-        $this->qty = OfferSelectionService::clampQty($this->safeQty() - 1);
+        $this->qty = max($this->minQty(), OfferSelectionService::clampQty($this->safeQty() - 1));
     }
 
     /**
@@ -163,7 +165,12 @@ class Show extends Component
 
     protected function safeQty(): int
     {
-        return OfferSelectionService::clampQty(is_numeric($this->qty) ? $this->qty : 1);
+        return max($this->minQty(), OfferSelectionService::clampQty(is_numeric($this->qty) ? $this->qty : 1));
+    }
+
+    private function minQty(): int
+    {
+        return OfferSelectionService::minQtyFor($this->product->id, $this->selectedUnit);
     }
 
     /**

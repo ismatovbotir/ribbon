@@ -622,4 +622,8 @@ return [
     'ui.remove_filter' => 'Remove filter',
     'offers.no_seller_answer' => 'No answer yet',
     'sellers.approval_check' => 'Check the tax number on the tax site and call the company before approving.',
+    'ui.parameters_count' => ':count parameter|:count parameters',
+    'ui.edit_page' => 'Edit Page',
+    'ui.new_page' => 'New Page',
+    'ui.skip_to_content' => 'Skip to content',
 ];

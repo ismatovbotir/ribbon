@@ -1,4 +1,4 @@
-<div class="max-w-4xl">
+<div class="mx-auto w-full max-w-4xl">
     <x-page-header :title="__('admin.ui.commercial_offer_n', ['id' => $offerRequest->id])" :subtitle="__('admin.ui.multi_seller_price_quote_request_submitted_by_a_buyer')" :back-url="route('admin.offers.index')" :back-label="__('admin.ui.all_requests')">
         <x-slot:meta>
             <x-status-badge type="offer" :status="$offerRequest->status" />
@@ -49,7 +49,7 @@
                         @foreach ($sellerItems as $item)
                             <li class="grid grid-cols-2 gap-x-4 gap-y-1 px-4 py-3 text-sm md:grid-cols-[minmax(0,1fr)_5rem_6rem_7rem_8rem] md:items-center md:px-5">
                                 <span class="col-span-2 font-medium text-text-primary md:col-span-1">{{ $item->product?->name ?: __('admin.ui.deleted_product') }}</span>
-                                <span class="text-xs text-text-secondary md:text-sm"><span class="md:hidden">{{ __('admin.ui.unit_2') }} </span>{{ $item->unit }}</span>
+                                <span class="text-xs text-text-secondary md:text-sm"><span class="md:hidden">{{ __('admin.ui.unit_2') }} </span>{{ __('sellers.products.unit.'.$item->unit) }}</span>
                                 <span class="font-mono text-xs text-text-secondary tabular-nums md:text-right md:text-sm"><span class="font-sans md:hidden">{{ __('admin.ui.qty') }} </span>{{ $item->quantity }}</span>
                                 <span class="font-mono text-xs text-text-secondary tabular-nums md:text-right md:text-sm"><span class="font-sans md:hidden">{{ __('admin.ui.price') }} </span>{{ number_format((float) $item->price_at_request, 2) }}</span>
                                 <span class="font-mono text-xs font-medium text-text-primary tabular-nums md:text-right md:text-sm"><span class="font-sans font-normal md:hidden">{{ __('admin.ui.total') }} </span>{{ number_format($item->lineTotal(), 2) }}</span>
