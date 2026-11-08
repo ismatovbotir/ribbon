@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 320" role="img" aria-label="Намотка риббона: краска внутрь (Ink In) и краска наружу (Ink Out)" font-family="Inter, Arial, sans-serif">
+  <rect width="720" height="320" fill="#FFFFFF"/>
+  <text x="185" y="34" fill="#18181B" font-size="19" font-weight="700" text-anchor="middle">Ink In (CSI)</text>
+  <text x="535" y="34" fill="#18181B" font-size="19" font-weight="700" text-anchor="middle">Ink Out (CSO)</text>
+  <g>
+    <circle cx="185" cy="145" r="92" fill="#BFDBFE"/>
+    <circle cx="185" cy="145" r="84" fill="#18181B"/>
+    <circle cx="185" cy="145" r="70" fill="#BFDBFE"/>
+    <circle cx="185" cy="145" r="62" fill="#18181B"/>
+    <circle cx="185" cy="145" r="48" fill="#BFDBFE"/>
+    <circle cx="185" cy="145" r="24" fill="#FFFFFF" stroke="#71717A" stroke-width="3"/>
+  </g>
+  <g>
+    <circle cx="535" cy="145" r="92" fill="#18181B"/>
+    <circle cx="535" cy="145" r="84" fill="#BFDBFE"/>
+    <circle cx="535" cy="145" r="70" fill="#18181B"/>
+    <circle cx="535" cy="145" r="62" fill="#BFDBFE"/>
+    <circle cx="535" cy="145" r="48" fill="#18181B"/>
+    <circle cx="535" cy="145" r="24" fill="#FFFFFF" stroke="#71717A" stroke-width="3"/>
+  </g>
+  <text x="185" y="263" fill="#3F3F46" font-size="15" text-anchor="middle">Краска смотрит к центру рулона.</text>
+  <text x="185" y="285" fill="#3F3F46" font-size="15" text-anchor="middle">Снаружи видна плёнка.</text>
+  <text x="535" y="263" fill="#3F3F46" font-size="15" text-anchor="middle">Краска снаружи рулона.</text>
+  <text x="535" y="285" fill="#3F3F46" font-size="15" text-anchor="middle">Наклейка, прижатая к рулону, её снимет.</text>
+  <rect x="210" y="303" width="14" height="10" fill="#18181B"/><text x="230" y="313" fill="#3F3F46" font-size="13">краска</text>
+  <rect x="300" y="303" width="14" height="10" fill="#BFDBFE"/><text x="320" y="313" fill="#3F3F46" font-size="13">плёнка (схема, масштаб условный)</text>
+</svg>

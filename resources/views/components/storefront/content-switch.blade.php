@@ -7,7 +7,7 @@
         'news' => ['label' => __('storefront.articles.type.news'), 'url' => route('storefront.news.index')],
     ];
 @endphp
-<nav aria-label="{{ __('storefront.articles.type_label') }}" {{ $attributes->class(['no-scrollbar -mx-4 flex overflow-x-auto border-b border-border-strong px-4 md:mx-0 md:px-0']) }}>
+<nav aria-label="{{ __('storefront.articles.type_label') }}" {{ $attributes->class(['no-scrollbar -mx-4 flex justify-center overflow-x-auto border-b border-border-strong px-4 md:mx-0 md:px-0']) }}>
     @foreach ($items as $key => $item)
         <a
             href="{{ $item['url'] }}"

@@ -38,6 +38,8 @@ class ArticleSeeder extends Seeder
             );
         }
 
+        $this->call(RibbonGuideSeeder::class);
+
         $this->command?->info('Articles seeded: '.count($this->articles()).' published articles.');
     }
 

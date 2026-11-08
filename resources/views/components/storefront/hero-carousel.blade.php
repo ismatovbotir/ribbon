@@ -1,4 +1,4 @@
-@props(['banners', 'locale', 'defaultLocale', 'aspect' => 'aspect-[16/9] md:aspect-[21/8]'])
+@props(['banners', 'locale', 'defaultLocale', 'aspect' => 'aspect-[16/9] md:aspect-[4/1]'])
 
 {{-- Banner block (spec 18 section 4): hairline frame, caption in a solid band BELOW the image (no gradient, no text over image). --}}
 @php $disk = \Illuminate\Support\Facades\Storage::disk('public'); @endphp

@@ -160,9 +160,27 @@ class Show extends Component
             $articleNode,
         ];
 
+        $faq = $this->article->faq[$locale] ?? [];
+
+        // Only what the page visibly shows, as search engines require.
+        if ($faq !== []) {
+            $structuredData[] = [
+                '@context' => 'https://schema.org',
+                '@type' => 'FAQPage',
+                'mainEntity' => array_map(fn (array $item) => [
+                    '@type' => 'Question',
+                    'name' => $item['q'],
+                    'acceptedAnswer' => ['@type' => 'Answer', 'text' => $item['a']],
+                ], $faq),
+            ];
+        }
+
         return view('livewire.storefront.articles.show', [
             'title' => $title,
             'body' => $body,
+            'shortAnswer' => $this->article->short_answer[$locale] ?? null,
+            'faq' => $faq,
+            'relatedCategories' => $this->article->categories()->where('is_active', true)->get(),
             'locale' => $locale,
             'defaultLocale' => $defaultLocale,
             // For the breadcrumb / "back to list" links in the shared view.

@@ -112,6 +112,9 @@ final class Icon
         'wristband' => 'custom/wristband',
         'software' => 'carbon/application',
         'accessories' => 'carbon/tool-kit',
+        'catalog-grid' => 'custom/catalog-grid',
+        'globe' => 'custom/globe',
+        'paper-plane' => 'custom/paper-plane',
     ];
 
     /** @var array<string, string> Legacy names => semantic names. */

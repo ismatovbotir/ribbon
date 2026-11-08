@@ -165,6 +165,17 @@
                             </div>
 
                             <div>
+                                <label for="field-short-{{ $locale }}" class="mb-1 block text-sm font-medium text-text-primary">
+                                    {{ __('admin.articles.short_answer') }} @if ($type === 'article')<span class="text-danger-600">*</span>@endif
+                                </label>
+                                <x-textarea id="field-short-{{ $locale }}" rows="3" maxlength="600" wire:model.blur="shortAnswer.{{ $locale }}" :error="$errors->has('shortAnswer.'.$locale)" />
+                                @error('shortAnswer.'.$locale)
+                                    <p class="mt-1 text-xs text-danger-600">{{ $message }}</p>
+                                @enderror
+                                <p class="mt-1 text-xs text-text-muted">{{ __('admin.articles.short_answer_hint') }}</p>
+                            </div>
+
+                            <div>
                                 <label id="field-body-{{ $locale }}" class="mb-1 block text-sm font-medium text-text-primary">
                                     {{ __('admin.ui.body') }} <span class="text-danger-600">*</span>
                                 </label>
@@ -174,6 +185,24 @@
                                 @enderror
                                 <p class="mt-1 text-xs text-text-muted">{{ __('admin.ui.use_the_toolbar_to_format_text_and_drag_or_paste_images_dire') }}</p>
                             </div>
+
+                            <fieldset>
+                                <legend class="mb-1 text-sm font-medium text-text-primary">{{ __('admin.articles.faq') }}</legend>
+                                <p class="mb-2 text-xs text-text-muted">{{ __('admin.articles.faq_hint') }}</p>
+                                <div class="space-y-3">
+                                    @foreach ($faq[$locale] ?? [] as $index => $item)
+                                        <div wire:key="faq-{{ $locale }}-{{ $index }}" class="space-y-2 border border-border p-3">
+                                            <x-input aria-label="{{ __('admin.articles.faq_question') }}" placeholder="{{ __('admin.articles.faq_question') }}" maxlength="200" wire:model.blur="faq.{{ $locale }}.{{ $index }}.q" :error="$errors->has('faq.'.$locale.'.'.$index.'.q')" />
+                                            <x-textarea aria-label="{{ __('admin.articles.faq_answer') }}" placeholder="{{ __('admin.articles.faq_answer') }}" rows="2" maxlength="800" wire:model.blur="faq.{{ $locale }}.{{ $index }}.a" :error="$errors->has('faq.'.$locale.'.'.$index.'.a')" />
+                                            @if ($errors->has('faq.'.$locale.'.'.$index.'.q') || $errors->has('faq.'.$locale.'.'.$index.'.a'))
+                                                <p class="text-xs text-danger-600">{{ $errors->first('faq.'.$locale.'.'.$index.'.q') ?: $errors->first('faq.'.$locale.'.'.$index.'.a') }}</p>
+                                            @endif
+                                            <x-button type="button" variant="ghost" size="sm" wire:click="removeFaq('{{ $locale }}', {{ $index }})">{{ __('admin.ui.remove') }}</x-button>
+                                        </div>
+                                    @endforeach
+                                </div>
+                                <x-button type="button" variant="secondary" size="sm" class="mt-2" wire:click="addFaq('{{ $locale }}')">{{ __('admin.articles.faq_add') }}</x-button>
+                            </fieldset>
                         </div>
                     @endforeach
                 </x-locale-tabs>

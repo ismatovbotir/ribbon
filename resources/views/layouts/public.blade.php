@@ -43,6 +43,8 @@
             </div>
         </div>
 
+        <livewire:storefront.chat-widget />
+
         @livewireScripts
     </body>
 </html>

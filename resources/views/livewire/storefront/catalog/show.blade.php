@@ -39,7 +39,7 @@
         unfiltered; the spec list is the category's fixed parameter set.
         Generated from already-true page data, not static marketing copy.
     --}}
-    <div class="mt-3 max-w-3xl space-y-1 text-sm text-text-secondary {{ $categoryTopBanner ? '' : 'rounded-md border border-border bg-surface-band px-4 py-3' }}">
+    <div class="mt-3 space-y-1 text-sm text-text-secondary {{ $categoryTopBanner ? '' : 'rounded-md border border-border bg-surface-band px-4 py-3' }}">
         <p>
             @if (! $hasActiveFilters)
                 {{ trans_choice('storefront.catalog.intro_with_count', $products->total(), ['category' => $categoryName]) }}
@@ -227,7 +227,7 @@
         Lists each filterable parameter with its unit or its option values so an
         answer engine can see which specs/values exist in this category.
     --}}
-    <section aria-labelledby="category-about-heading" class="mt-12 max-w-3xl">
+    <section aria-labelledby="category-about-heading" class="mx-auto mt-12 max-w-3xl">
         <h2 id="category-about-heading" class="text-lg font-semibold text-text-primary md:text-xl">{{ __('storefront.catalog.about_heading', ['category' => $categoryName]) }}</h2>
         <p class="mt-2 text-base text-text-secondary">{{ __('storefront.catalog.about_lead', ['category' => $categoryName]) }}</p>
         @if ($filterableParameters->isNotEmpty())

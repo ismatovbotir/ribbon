@@ -627,4 +627,11 @@ return [
     'ui.new_page' => 'New Page',
     'ui.skip_to_content' => 'Skip to content',
     'cms.contact.source_chat' => 'Chat button',
+    'articles.short_answer' => 'Short answer',
+    'articles.short_answer_hint' => 'Answer the reader\'s question directly in 2 to 4 sentences. It appears first, and AI tools often quote it.',
+    'articles.faq' => 'FAQ (optional)',
+    'articles.faq_hint' => 'Real questions buyers ask, up to 8.',
+    'articles.faq_question' => 'Question',
+    'articles.faq_answer' => 'Answer',
+    'articles.faq_add' => 'Add question',
 ];

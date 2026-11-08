@@ -156,7 +156,6 @@ class Home extends Component
             'structuredData' => $structuredData,
             'navCategories' => $navCategories,
             'bottomBar' => 'selection',
-            'hideHeaderSearch' => true,
             'hideCategoryNav' => true,
         ]);
     }

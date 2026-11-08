@@ -8,26 +8,26 @@
 <div>
     @if ($zero)
         {{-- Zero results: still the page's only H1, with a way forward (spec 18 7.2). --}}
-        <section aria-labelledby="zero-title">
+        <section aria-labelledby="zero-title" class="text-center">
             <h1 id="zero-title" class="text-xl font-semibold text-text-primary md:text-2xl">{{ __('storefront.search.empty_title', ['query' => $query]) }}</h1>
-            <p class="mt-2 max-w-xl text-base text-text-secondary">{{ __('storefront.search.zero_searched') }}</p>
-            <ul class="mt-4 max-w-xl list-disc space-y-1 pl-5 text-sm text-text-secondary">
+            <p class="mx-auto mt-2 max-w-xl text-base text-text-secondary">{{ __('storefront.search.zero_searched') }}</p>
+            <ul class="mx-auto mt-4 w-fit max-w-xl list-disc space-y-1 pl-5 text-left text-sm text-text-secondary">
                 <li>{{ __('storefront.search.zero_tip_1') }}</li>
                 <li>{{ __('storefront.search.zero_tip_2') }}</li>
                 <li>{{ __('storefront.search.zero_tip_3') }}</li>
             </ul>
 
             <h2 class="mt-8 text-lg font-semibold text-text-primary">{{ __('storefront.search.zero_browse') }}</h2>
-            <div class="mt-3 grid grid-cols-2 gap-2 {{ $navCategories->count() % 3 === 0 && $navCategories->count() % 4 !== 0 ? 'md:grid-cols-3' : 'md:grid-cols-4' }}">
+            <div class="mt-3 grid-balanced [--cols:2] {{ $navCategories->count() % 4 === 0 ? 'md:[--cols:4]' : 'md:[--cols:3]' }}">
                 @foreach ($navCategories as $navCategory)
-                    <x-storefront.tile :href="route('storefront.catalog.show', ['categorySlug' => $navCategory->slug[$locale] ?? ''])" :name="$navCategory->name[$locale] ?? ''" :count="$navCategory->approved_products_count ?? 0" />
+                    <x-storefront.tile :href="route('storefront.catalog.show', ['categorySlug' => $navCategory->slug[$locale] ?? ''])" :name="$navCategory->name[$locale] ?? ''" :icon="$navCategory->icon" :count="$navCategory->approved_products_count ?? 0" />
                 @endforeach
             </div>
 
             <aside class="mt-8 rounded-md border border-border-strong bg-surface-band p-4 md:p-6">
                 <h2 class="text-lg font-semibold text-text-primary">{{ __('storefront.search.cant_find_title') }}</h2>
                 <p class="mt-1 text-sm text-text-secondary">{{ __('storefront.search.cant_find_body') }}</p>
-                <div class="mt-3 flex flex-wrap gap-2">
+                <div class="mt-3 flex flex-wrap justify-center gap-2">
                     @if ($settings->admin_phone)
                         <x-button tag="a" variant="secondary" href="tel:{{ $settings->admin_phone }}" class="font-mono tabular-nums">{{ __('storefront.product_detail.call') }} {{ $settings->admin_phone }}</x-button>
                     @endif
@@ -90,9 +90,9 @@
                     <div class="rounded-md border border-border-strong">
                         <x-empty-state variant="empty" :title="__('storefront.search.no_query_title')" :description="__('storefront.search.no_query_body')" />
                     </div>
-                    <div class="mt-4 grid grid-cols-2 gap-2 {{ $navCategories->count() % 3 === 0 && $navCategories->count() % 4 !== 0 ? 'md:grid-cols-3' : 'md:grid-cols-4' }}">
+                    <div class="mt-4 grid-balanced [--cols:2] {{ $navCategories->count() % 4 === 0 ? 'md:[--cols:4]' : 'md:[--cols:3]' }}">
                         @foreach ($navCategories as $navCategory)
-                            <x-storefront.tile :href="route('storefront.catalog.show', ['categorySlug' => $navCategory->slug[$locale] ?? ''])" :name="$navCategory->name[$locale] ?? ''" :count="$navCategory->approved_products_count ?? 0" />
+                            <x-storefront.tile :href="route('storefront.catalog.show', ['categorySlug' => $navCategory->slug[$locale] ?? ''])" :name="$navCategory->name[$locale] ?? ''" :icon="$navCategory->icon" :count="$navCategory->approved_products_count ?? 0" />
                         @endforeach
                     </div>
                 @elseif ($products->isEmpty())

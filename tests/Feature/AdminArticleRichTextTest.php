@@ -66,6 +66,7 @@ class AdminArticleRichTextTest extends TestCase
 
         foreach ($locales as $locale) {
             $component->set("title.{$locale}", "Test title {$locale}")
+                ->set("shortAnswer.{$locale}", 'Answer')
                 ->set("body.{$locale}", $malicious);
         }
 
@@ -92,6 +93,7 @@ class AdminArticleRichTextTest extends TestCase
 
         foreach ($locales as $locale) {
             $component->set("title.{$locale}", "Test title {$locale}")
+                ->set("shortAnswer.{$locale}", 'Answer')
                 ->set("body.{$locale}", '<p>Body</p>');
         }
 

@@ -23,6 +23,8 @@ use Livewire\WithFileUploads;
  */
 class Form extends Component
 {
+    private const MAX_FAQ = 8;
+
     use AuthorizesAdmin;
 
     protected function adminAccess(): ?string
@@ -44,6 +46,12 @@ class Form extends Component
 
     /** @var array<string, string> */
     public array $body = [];
+
+    /** @var array<string, string> */
+    public array $shortAnswer = [];
+
+    /** @var array<string, array<int, array{q: string, a: string}>> Keyed by locale. */
+    public array $faq = [];
 
     public $coverImageUpload = null;
 
@@ -79,6 +87,8 @@ class Form extends Component
             $this->title = $this->fillLocales($this->article->title);
             $this->excerpt = $this->fillLocales($this->article->excerpt ?? []);
             $this->body = $this->fillLocales($this->article->body);
+            $this->shortAnswer = $this->fillLocales($this->article->short_answer ?? []);
+            $this->faq = array_replace(array_fill_keys(config('ribbon.locales'), []), $this->article->faq ?? []);
             $this->existingCoverImagePath = $this->article->cover_image_path;
             $this->categoryIds = $this->article->categories()->pluck('categories.id')->map(fn ($id) => (string) $id)->all();
             $this->publishedAt = $this->article->published_at?->format('Y-m-d\TH:i');
@@ -89,6 +99,8 @@ class Form extends Component
         $this->title = array_fill_keys(config('ribbon.locales'), '');
         $this->excerpt = array_fill_keys(config('ribbon.locales'), '');
         $this->body = array_fill_keys(config('ribbon.locales'), '');
+        $this->shortAnswer = array_fill_keys(config('ribbon.locales'), '');
+        $this->faq = array_fill_keys(config('ribbon.locales'), []);
     }
 
     /**
@@ -164,6 +176,23 @@ class Form extends Component
         return Storage::disk('public')->url($path);
     }
 
+    public function addFaq(string $locale): void
+    {
+        $this->authorizeAdmin('content.manage');
+
+        if (in_array($locale, config('ribbon.locales'), true) && count($this->faq[$locale] ?? []) < self::MAX_FAQ) {
+            $this->faq[$locale][] = ['q' => '', 'a' => ''];
+        }
+    }
+
+    public function removeFaq(string $locale, int $index): void
+    {
+        $this->authorizeAdmin('content.manage');
+
+        unset($this->faq[$locale][$index]);
+        $this->faq[$locale] = array_values($this->faq[$locale] ?? []);
+    }
+
     public function save(): void
     {
         $this->authorizeAdmin('content.manage');
@@ -182,6 +211,11 @@ class Form extends Component
             $rules["title.{$locale}"] = ['required', 'string', 'max:160'];
             $rules["excerpt.{$locale}"] = ['nullable', 'string', 'max:300'];
             $rules["body.{$locale}"] = ['required', 'string'];
+            // News is short and time-sensitive, so only guides need the direct answer.
+            $rules["shortAnswer.{$locale}"] = [Rule::requiredIf($this->type === 'article'), 'nullable', 'string', 'max:600'];
+            $rules["faq.{$locale}"] = ['array', 'max:'.self::MAX_FAQ];
+            $rules["faq.{$locale}.*.q"] = ['required', 'string', 'max:200'];
+            $rules["faq.{$locale}.*.a"] = ['required', 'string', 'max:800'];
         }
 
         $this->validate($rules);
@@ -199,6 +233,8 @@ class Form extends Component
             'title' => $this->title,
             'excerpt' => $this->excerpt,
             'body' => $sanitizedBody,
+            'short_answer' => $this->shortAnswer,
+            'faq' => array_map(array_values(...), $this->faq),
             'cover_image_path' => $coverImagePath,
             'published_at' => $this->publishedAt ? Carbon::parse($this->publishedAt) : null,
         ];

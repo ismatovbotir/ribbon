@@ -34,6 +34,10 @@ return new class extends Migration
             // admin form (App\Support\HtmlSanitizer strips dangerous
             // elements/attributes before save) and rendered raw on the
             // storefront.
+            // A direct answer shown first, for readers and AI agents, plus an
+            // optional FAQ: each keyed by locale.
+            $table->json('short_answer')->nullable();
+            $table->json('faq')->nullable();
             $table->json('body');
             $table->string('cover_image_path')->nullable();
             // Optional tags to catalog categories live in the

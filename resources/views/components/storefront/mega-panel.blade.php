@@ -31,8 +31,8 @@
         x-bind:class="open ? 'border-accent-700! bg-accent-50! text-accent-800!' : ''"
         class="hit inline-flex h-control items-center gap-2 rounded-sm border px-3 text-sm font-semibold whitespace-nowrap {{ $catalogActive ? 'border-accent-700' : 'border-border-input' }} bg-surface text-text-primary hover:bg-surface-hover"
     >
+        <x-storefront.icon name="catalog-grid" class="size-5" />
         {{ __('storefront.nav.catalog') }}
-        <x-storefront.icon name="chevron-down" class="size-4 transition-transform motion-reduce:transition-none" x-bind:class="open && 'rotate-180'" />
     </button>
 
     {{-- scrim: only catches clicks once pinned; never blocks hover-leave --}}

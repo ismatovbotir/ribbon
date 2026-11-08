@@ -627,4 +627,11 @@ return [
     'ui.new_page' => 'Новая страница',
     'ui.skip_to_content' => 'Перейти к содержимому',
     'cms.contact.source_chat' => 'Кнопка чата',
+    'articles.short_answer' => 'Короткий ответ',
+    'articles.short_answer_hint' => 'Прямо ответьте на вопрос читателя в 2–4 предложениях. Ответ показывается первым, и ИИ-сервисы часто цитируют его.',
+    'articles.faq' => 'Вопросы и ответы (необязательно)',
+    'articles.faq_hint' => 'Реальные вопросы покупателей, до 8.',
+    'articles.faq_question' => 'Вопрос',
+    'articles.faq_answer' => 'Ответ',
+    'articles.faq_add' => 'Добавить вопрос',
 ];

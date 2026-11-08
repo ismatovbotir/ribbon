@@ -597,6 +597,19 @@
 /* 20: explicit shadows (Tailwind inlines shadow-*, so these are real utilities with literal values).
    Allowed uses are listed in spec 20 section 4; panels never use them. The names deliberately do not
    contain `shadow-`, so the neutralising guards do not match them. */
+/* Equal columns whose shorter last row stays on the page's central axis. Set --cols and optionally --gap. */
+@utility grid-balanced {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--gap, 1rem);
+
+    & > * {
+        flex: 0 0 calc((100% - (var(--cols, 1) - 1) * var(--gap, 1rem)) / var(--cols, 1));
+        min-width: 0;
+    }
+}
+
 @utility elev-1 {
     box-shadow: 0 1px 2px 0 rgb(24 24 27 / 0.06), 0 1px 3px 0 rgb(24 24 27 / 0.05); /* sticky header after scroll */
 }

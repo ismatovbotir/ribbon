@@ -12,13 +12,11 @@
 <section aria-label="{{ __('storefront.trust.label') }}" {{ $attributes->class(['rounded-md border border-border bg-surface-band']) }}>
     <ul class="grid grid-cols-2 lg:grid-cols-4">
         @foreach ($items as $i)
-            <li class="flex items-start gap-3 border-border p-3 max-lg:odd:border-r max-lg:nth-[-n+2]:border-b md:p-4 lg:border-r lg:last:border-r-0">
-                <span class="hidden size-9 shrink-0 items-center justify-center rounded-sm border border-border bg-surface text-accent-700 sm:flex">
+            <li class="flex flex-col items-center gap-3 border-border p-4 text-center max-lg:odd:border-r max-lg:nth-[-n+2]:border-b md:p-6 lg:border-r lg:last:border-r-0">
+                <span class="flex size-10 shrink-0 items-center justify-center rounded-sm border border-border bg-surface text-accent-700">
                     <x-storefront.icon :name="$i['icon']" class="size-5" />
                 </span>
-                <div class="min-w-0">
-                    <p class="text-sm font-semibold text-text-primary">{{ __('storefront.trust.'.$i['key']) }}</p>
-                </div>
+                <p class="text-sm font-semibold text-balance text-text-primary">{{ __('storefront.trust.'.$i['key']) }}</p>
             </li>
         @endforeach
     </ul>

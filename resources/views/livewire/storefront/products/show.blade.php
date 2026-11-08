@@ -96,11 +96,11 @@
             <x-storefront.seller-line :seller="$product->seller" :labelled="true" />
         </div>
         @if ($summaryParts !== [])
-            <p class="mt-3 max-w-3xl text-base text-text-secondary">{{ implode(' ', $summaryParts) }}</p>
+            <p class="mt-3 rounded-md border border-border bg-surface-band px-4 py-3 text-sm text-text-secondary">{{ implode(' ', $summaryParts) }}</p>
         @endif
     </header>
 
-    <div class="mt-4 lg:mt-6 lg:grid lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-x-10">
+    <div class="mt-4 lg:mt-6 lg:grid lg:grid-cols-2 lg:gap-x-8">
         {{-- Gallery: every image is in the DOM (no JS-only reveal) --}}
         <div class="lg:col-start-1 lg:row-start-1">
             <div class="relative overflow-hidden rounded-lg border border-border bg-surface-subtle">

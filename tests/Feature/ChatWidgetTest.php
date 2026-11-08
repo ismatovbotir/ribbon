@@ -115,15 +115,19 @@ class ChatWidgetTest extends TestCase
 
     // ---- Where it shows
 
-    public function test_button_shows_on_storefront_pages(): void
+    public function test_the_consultant_is_on_every_public_page(): void
     {
-        $this->get('/')->assertOk()->assertSee(__('storefront.chat.open'));
+        foreach (['/', '/articles', route('storefront.contact'), route('storefront.offer-request.show'), '/sellers/register', '/login'] as $url) {
+            $this->get($url)->assertOk()->assertSee(__('storefront.chat.open'));
+        }
     }
 
-    public function test_button_is_hidden_on_the_request_and_contact_pages(): void
+    public function test_the_consultant_is_not_in_the_admin_panel(): void
     {
-        $this->get(route('storefront.offer-request.show'))->assertOk()->assertDontSee(__('storefront.chat.open'));
-        $this->get(route('storefront.contact'))->assertOk()->assertDontSee(__('storefront.chat.open'));
+        $admin = User::factory()->create();
+        $admin->roles()->attach(Role::where('slug', 'super-admin')->firstOrFail());
+
+        $this->actingAs($admin)->get('/admin/brands')->assertOk()->assertDontSee(__('storefront.chat.open'));
     }
 
     // ---- Sending on a schedule

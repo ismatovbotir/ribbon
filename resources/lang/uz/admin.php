@@ -627,4 +627,11 @@ return [
     'ui.new_page' => 'Yangi sahifa',
     'ui.skip_to_content' => 'Asosiy qismga oʻtish',
     'cms.contact.source_chat' => 'Chat tugmasi',
+    'articles.short_answer' => 'Qisqa javob',
+    'articles.short_answer_hint' => 'Oʻquvchi savoliga 2–4 gapda toʻgʻridan-toʻgʻri javob bering. U birinchi koʻrsatiladi va AI vositalari koʻpincha undan iqtibos oladi.',
+    'articles.faq' => 'Savol-javob (ixtiyoriy)',
+    'articles.faq_hint' => 'Xaridorlar beradigan haqiqiy savollar, 8 tagacha.',
+    'articles.faq_question' => 'Savol',
+    'articles.faq_answer' => 'Javob',
+    'articles.faq_add' => 'Savol qoʻshish',
 ];

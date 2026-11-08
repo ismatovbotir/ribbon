@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 340" role="img" aria-label="Слои риббона и перенос краски на этикетку" font-family="Inter, Arial, sans-serif">
+  <rect width="720" height="340" fill="#FFFFFF"/>
+  <rect x="210" y="20" width="300" height="46" fill="#27272A"/>
+  <text x="360" y="49" fill="#FFFFFF" font-size="16" font-weight="600" text-anchor="middle">Термоголовка: нагретые точки</text>
+  <path d="M330 66 l10 18 l10 -18 z" fill="#2563EB"/><path d="M370 66 l10 18 l10 -18 z" fill="#2563EB"/>
+  <rect x="60" y="92" width="600" height="20" fill="#D4D4D8"/>
+  <rect x="60" y="112" width="600" height="34" fill="#BFDBFE"/>
+  <rect x="60" y="146" width="600" height="10" fill="#F4F4F5" stroke="#D4D4D8"/>
+  <rect x="60" y="156" width="210" height="22" fill="#18181B"/><rect x="430" y="156" width="230" height="22" fill="#18181B"/>
+  <rect x="325" y="178" width="70" height="26" fill="#18181B"/>
+  <rect x="60" y="204" width="600" height="46" fill="#FEF9C3" stroke="#A1A1AA"/>
+  <text x="360" y="233" fill="#27272A" font-size="16" font-weight="600" text-anchor="middle">Этикетка</text>
+  <text x="360" y="107" fill="#27272A" font-size="13" text-anchor="middle">Защитный задний слой</text>
+  <text x="360" y="134" fill="#1E3A8A" font-size="14" font-weight="600" text-anchor="middle">Полиэстеровая (PET) плёнка-основа</text>
+  <text x="165" y="172" fill="#FFFFFF" font-size="13" text-anchor="middle">Слой краски</text>
+  <text x="545" y="172" fill="#FFFFFF" font-size="13" text-anchor="middle">Слой краски</text>
+  <text x="360" y="285" fill="#3F3F46" font-size="15" text-anchor="middle">Тепло расплавляет краску только под нагретыми точками,</text>
+  <text x="360" y="307" fill="#3F3F46" font-size="15" text-anchor="middle">и она переходит на этикетку. Остальная краска остаётся на плёнке.</text>
+</svg>

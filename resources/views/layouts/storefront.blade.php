@@ -145,11 +145,10 @@
         header-after-scroll / mega panel / drawer / bottom bars). 56/64px sticky header with the lg+ Catalog mega
         trigger, non-sticky content strip (lg+), search row + category chips below lg, left drawer below lg,
         exactly one fixed bottom bar per page chosen by $bottomBar ('selection' | 'product' | 'none').
-        Layout variables: $hideCategoryNav (chip row), $hideContentNav (lg+ strip; request page), $hideHeaderSearch.
+        Layout variables: $hideCategoryNav (chip row), $hideContentNav (lg+ strip; request page).
     --}}
     @php
         $bottomBar = $bottomBar ?? 'selection';
-        $hideHeaderSearch = $hideHeaderSearch ?? false;
         $hideCategoryNav = $hideCategoryNav ?? false;
         $hideContentNav = $hideContentNav ?? false;
         $selectionCount = \App\Services\OfferSelectionService::count();
@@ -177,8 +176,8 @@
                 'icon' => 'document',
             ];
         }
-        $contentLinks[] = ['label' => __('storefront.nav.contact'), 'url' => route('storefront.contact'), 'active' => request()->routeIs('storefront.contact'), 'icon' => 'email'];
-        $stripLinks = [['label' => __('storefront.nav.home'), 'url' => route('storefront.home'), 'active' => request()->routeIs('storefront.home')], ...$contentLinks];
+        $contentLinks[] = ['label' => __('storefront.nav.contact'), 'url' => route('storefront.contact'), 'active' => request()->routeIs('storefront.contact'), 'icon' => 'email', 'iconOnly' => true];
+        $stripLinks = [['label' => __('storefront.nav.home'), 'url' => route('storefront.home'), 'active' => request()->routeIs('storefront.home'), 'icon' => 'home', 'iconOnly' => true], ...$contentLinks];
 
         $forSellersPublished = \App\Models\Page::query()->isPublished()->where('key', 'for-sellers')->exists();
         $forSellersUrl = $forSellersPublished ? route('storefront.pages.for-sellers') : route('sellers.register');
@@ -217,35 +216,36 @@
                     <x-storefront.icon name="menu" class="size-6" />
                 </button>
 
-                <a href="{{ route('storefront.home') }}" wire:navigate class="flex h-11 shrink-0 items-center px-2 md:px-0">
-                    <x-logo size="md" />
-                </a>
+                {{-- Logo and Catalog sit together. No `relative` here: the sticky header positions the mega panel. --}}
+                <div class="flex shrink-0 items-center gap-3">
+                    <a href="{{ route('storefront.home') }}" wire:navigate class="flex h-11 shrink-0 items-center px-2 md:px-0">
+                        <x-logo size="md" />
+                    </a>
 
-                <x-storefront.mega-panel :mega="$mega" :catalog-active="$catalogActive" />
+                    <x-storefront.mega-panel :mega="$mega" :catalog-active="$catalogActive" />
+                </div>
 
-                @unless ($hideHeaderSearch)
-                    <x-storefront.search-form id="sf-search-d" :value="$searchQuery" class="hidden min-w-0 flex-1 md:block md:max-w-2xl" />
-                @endunless
+                <x-storefront.search-form id="sf-search-d" :value="$searchQuery" class="hidden min-w-0 flex-1 md:block" />
 
-                <div class="flex-1 {{ $hideHeaderSearch ? '' : 'md:hidden' }}"></div>
+                <div class="flex-1 md:hidden"></div>
 
                 <nav aria-label="{{ __('storefront.nav.language') }}" class="hidden lg:block">
-                    <x-storefront.locale-switch />
+                    <x-storefront.locale-switch compact />
                 </nav>
 
                 <a
                     href="{{ route('storefront.offer-request.show') }}"
                     wire:navigate
-                    class="relative flex size-11 shrink-0 items-center justify-center rounded-sm text-text-primary hover:bg-surface-hover md:w-auto md:gap-2 md:border md:border-border-input md:px-3"
+                    class="relative flex size-11 shrink-0 items-center justify-center rounded-sm text-text-primary hover:bg-surface-hover"
                     aria-label="{{ trans_choice('storefront.nav.selection_aria', $selectionCount) }}"
+                    title="{{ __('storefront.nav.selection_label') }}"
                 >
                     <x-storefront.icon name="list-checked" class="size-6" />
-                    <span class="hidden text-sm font-medium md:inline">{{ __('storefront.nav.selection_label') }}</span>
                     <span
                         x-show="selectionCount > 0"
                         x-text="selectionCount"
                         @if ($selectionCount < 1) x-cloak @endif
-                        class="absolute top-0.5 right-0.5 flex h-5 min-w-5 items-center justify-center rounded-xs bg-accent-700 px-1 text-xs font-medium text-white tabular-nums md:static"
+                        class="absolute top-0.5 right-0.5 flex h-5 min-w-5 items-center justify-center rounded-xs bg-accent-700 px-1 text-xs font-medium text-white tabular-nums"
                     >{{ $selectionCount }}</span>
                 </a>
             </div>
@@ -255,11 +255,9 @@
             <x-storefront.content-strip :links="$stripLinks" :for-sellers-url="$forSellersUrl" :for-sellers-active="$forSellersActive" />
         @endunless
 
-        @unless ($hideHeaderSearch)
             <div class="border-b border-border bg-surface px-4 py-2 md:hidden">
                 <x-storefront.search-form id="sf-search-m" :value="$searchQuery" compact />
             </div>
-        @endunless
 
         {{-- Category chip row: phones and tablets only (below lg); the mega panel carries categories at lg+. --}}
         @if (! $hideCategoryNav && $navCategories->isNotEmpty())
@@ -366,8 +364,9 @@
         {{-- Footer (spec 19 section 6 + spec 20 8.4) - no account/order links (buyers never register). --}}
         <footer class="mt-16 border-t border-border bg-surface-band">
             <div class="mx-auto max-w-7xl px-4 py-10 md:px-6 md:py-12">
-                <div class="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-3 lg:grid-cols-[1.3fr_1.4fr_1fr_1fr_1.2fr]">
-                    <div class="col-span-2 sm:col-span-3 lg:col-span-1">
+                {{-- lg+: columns spread edge to edge, however many of the optional ones exist. --}}
+                <div class="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-3 lg:flex lg:justify-between lg:gap-x-8">
+                    <div class="col-span-2 sm:col-span-3 lg:max-w-xs">
                         <a href="{{ route('storefront.home') }}" wire:navigate class="inline-flex min-h-11 items-center">
                             <x-logo size="md" />
                         </a>
@@ -444,8 +443,8 @@
 
             {{-- Legal identity + marketplace disclaimer (spec 20 8.4). Never prints empty labels. --}}
             <div class="border-t border-border bg-surface">
-                <div class="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-4 md:px-6">
-                    <p class="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-xs text-text-secondary">
+                <div class="mx-auto flex max-w-7xl flex-col items-center gap-2 px-4 py-4 text-center md:px-6">
+                    <p class="flex flex-wrap items-baseline justify-center gap-x-3 gap-y-1 text-xs text-text-secondary">
                         @if ($settings->legal_name)
                             <span class="font-medium text-text-primary">© {{ now()->year }} {{ $settings->legal_name }}</span>
                         @else
@@ -468,10 +467,8 @@
             <x-storefront.selection-bar :count="$selectionCount" />
         @endif
 
-        {{-- Hidden where it would compete with the offer request or repeat the contact form. --}}
-        @unless (request()->routeIs('storefront.products.show', 'storefront.offer-request.show', 'storefront.contact'))
-            <livewire:storefront.chat-widget />
-        @endunless
+        {{-- The Ribbon consultant: on every public page. --}}
+        <livewire:storefront.chat-widget />
 
         @livewireScripts
     </body>

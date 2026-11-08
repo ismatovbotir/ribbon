@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
-#[Fillable(['type', 'title', 'slug', 'excerpt', 'body', 'cover_image_path', 'published_at', 'created_by'])]
+#[Fillable(['type', 'title', 'slug', 'excerpt', 'short_answer', 'faq', 'body', 'cover_image_path', 'published_at', 'created_by'])]
 class Article extends Model
 {
     use FlushesNavMenu;
@@ -53,6 +53,8 @@ class Article extends Model
             'slug' => 'array',
             'excerpt' => 'array',
             'body' => 'array',
+            'short_answer' => 'array',
+            'faq' => 'array',
             'published_at' => 'datetime',
         ];
     }
