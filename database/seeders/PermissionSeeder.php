@@ -21,6 +21,7 @@ class PermissionSeeder extends Seeder
         'catalog.manage' => 'Manage categories, brands and geography',
         'content.manage' => 'Manage banners and articles',
         'pages.manage' => 'Manage CMS pages (legal pages stay Super Admin only)',
+        'bot.manage' => 'Teach and switch on the rule-based chat bot',
     ];
 
     /**
@@ -31,7 +32,7 @@ class PermissionSeeder extends Seeder
      * than a permission. Legal CMS pages also stay Super Admin only.
      */
     private const MODERATOR_PERMISSIONS = [
-        'sellers.moderate', 'products.moderate', 'catalog.manage', 'content.manage', 'pages.manage',
+        'sellers.moderate', 'products.moderate', 'catalog.manage', 'content.manage', 'pages.manage', 'bot.manage',
     ];
 
     public function run(): void

@@ -27,6 +27,8 @@
                 <li>
                     <a
                         href="{{ request()->fullUrlWithQuery(['lang' => $locale]) }}"
+                        lang="{{ $locale }}"
+                        hreflang="{{ $locale }}"
                         @if (app()->getLocale() === $locale) aria-current="true" @endif
                         class="flex h-11 items-center px-3 text-sm {{ app()->getLocale() === $locale ? 'bg-accent-50 font-semibold text-accent-800' : 'text-text-primary hover:bg-surface-hover' }}"
                     >{{ $label }}</a>
@@ -39,6 +41,7 @@
         @foreach (['uz' => 'UZ', 'ru' => 'RU', 'en' => 'EN'] as $locale => $label)
             <a
                 href="{{ request()->fullUrlWithQuery(['lang' => $locale]) }}"
+                hreflang="{{ $locale }}"
                 @if (app()->getLocale() === $locale) aria-current="true" @endif
                 class="flex min-w-11 items-center justify-center px-3 font-sans text-sm font-medium {{ $full ? 'h-11 w-full' : 'h-9 lg:h-10' }} {{ app()->getLocale() === $locale ? 'bg-accent-700 text-white' : 'text-text-secondary hover:bg-surface-hover' }}"
             >{{ $label }}</a>

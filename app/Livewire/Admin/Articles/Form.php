@@ -234,7 +234,7 @@ class Form extends Component
             'excerpt' => $this->excerpt,
             'body' => $sanitizedBody,
             'short_answer' => $this->shortAnswer,
-            'faq' => array_map(array_values(...), $this->faq),
+            'faq' => array_map(array_values(...), array_intersect_key($this->faq, array_flip(config('ribbon.locales')))),
             'cover_image_path' => $coverImagePath,
             'published_at' => $this->publishedAt ? Carbon::parse($this->publishedAt) : null,
         ];

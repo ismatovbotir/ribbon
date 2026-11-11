@@ -237,9 +237,10 @@
                     href="{{ route('storefront.offer-request.show') }}"
                     wire:navigate
                     class="relative flex size-11 shrink-0 items-center justify-center rounded-sm text-text-primary hover:bg-surface-hover"
-                    aria-label="{{ trans_choice('storefront.nav.selection_aria', $selectionCount) }}"
                     title="{{ __('storefront.nav.selection_label') }}"
                 >
+                    {{-- Accessible name = label + the live badge count (an aria-label would freeze the count at page load). --}}
+                    <span class="sr-only">{{ __('storefront.nav.selection_label') }}</span>
                     <x-storefront.icon name="list-checked" class="size-6" />
                     <span
                         x-show="selectionCount > 0"

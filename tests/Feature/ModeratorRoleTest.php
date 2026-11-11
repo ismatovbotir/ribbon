@@ -42,7 +42,7 @@ class ModeratorRoleTest extends TestCase
         $this->assertCount(1, $roles);
         $this->assertFalse((bool) $roles->first()->is_super_admin);
         $this->assertEqualsCanonicalizing(
-            ['sellers.moderate', 'products.moderate', 'catalog.manage', 'content.manage', 'pages.manage'],
+            ['sellers.moderate', 'products.moderate', 'catalog.manage', 'content.manage', 'pages.manage', 'bot.manage'],
             $roles->first()->permissions()->pluck('slug')->all(),
         );
     }

@@ -44,7 +44,7 @@
 
     {{-- Help card: after the text on phones, the right column on xl+. --}}
     <div class="mt-8 xl:col-start-3 xl:row-span-2 xl:row-start-1 xl:mt-0">
-        <aside aria-labelledby="page-help-title" class="rounded-md border border-border bg-surface-band p-4 xl:sticky xl:top-24">
+        <aside aria-labelledby="page-help-title" class="rounded-md border border-border bg-surface-band p-4 xl:sticky xl:top-24 xl:max-h-[calc(100dvh-12rem)] xl:overflow-y-auto xl:overscroll-contain">
             <h2 id="page-help-title" class="font-display text-base font-semibold text-text-primary">{{ __('storefront.contact.form_title') }}</h2>
             <p class="mt-1 text-sm text-text-secondary">{{ __('storefront.contact.lead') }}</p>
             <x-button tag="a" variant="secondary" href="{{ route('storefront.contact') }}" wire:navigate class="mt-3 w-full">{{ __('storefront.nav.contact') }}</x-button>

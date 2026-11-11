@@ -166,7 +166,7 @@
 
                 <div class="p-4 md:p-5">
                 {{-- Price comparison: every enabled unit, real <table> (data-table recipe, spec 20 section 9) --}}
-                <div class="overflow-hidden rounded-md border border-border-strong bg-surface">
+                <div class="overflow-x-auto rounded-md border border-border-strong bg-surface">
                     <table class="w-full border-collapse text-sm">
                         <caption class="sr-only">{{ __('storefront.product_detail.price_table_caption') }}</caption>
                         <thead>
@@ -183,7 +183,7 @@
                                     <th scope="row" class="h-12 px-3 text-left font-sans font-medium text-text-primary md:px-4 {{ $price->is_vitrin ? 'border-l-2 border-l-accent-700' : '' }}">
                                         {{ __('storefront.unit.'.$price->unit) }}
                                         @if ($price->is_vitrin)
-                                            <span class="ml-2 inline-flex h-5 items-center rounded-xs border border-accent-200 bg-surface px-1.5 text-xs font-medium text-accent-800">{{ __('storefront.product_detail.default_unit_tag') }}</span>
+                                            <span class="mt-1 flex h-5 w-fit items-center rounded-xs border border-accent-200 bg-surface px-1.5 text-xs font-medium text-accent-800 sm:mt-0 sm:ml-2 sm:inline-flex">{{ __('storefront.product_detail.default_unit_tag') }}</span>
                                         @endif
                                     </th>
                                     <td class="h-12 px-3 text-right font-mono text-text-secondary tabular-nums md:px-4">{{ number_format($price->qty_in_pcs) }}</td>

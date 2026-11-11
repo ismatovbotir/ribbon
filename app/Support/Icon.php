@@ -93,6 +93,7 @@ final class Icon
         'arrow-down' => 'carbon/arrow--down',
         'arrow-left' => 'carbon/arrow--left',
         'arrow-right' => 'carbon/arrow--right',
+        'external-link' => 'carbon/launch',
         'chevron-up' => 'carbon/chevron--up',
         'chevron-down' => 'carbon/chevron--down',
         'chevron-left' => 'carbon/chevron--left',

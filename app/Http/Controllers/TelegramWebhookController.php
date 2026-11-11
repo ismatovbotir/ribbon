@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Setting;
 use App\Models\TelegramContact;
 use App\Models\TelegramMessage;
+use App\Services\Bot\TelegramBotChat;
 use App\Services\SellerTelegramService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -19,15 +20,17 @@ use Illuminate\Http\Request;
  * set together with the webhook URL in Admin\Settings\Show::
  * connectTelegramBot()).
  *
- * Only plain text messages are handled — anything else Telegram might
- * send (photos, stickers, edited_message, callback_query, ...) is
+ * Only plain text messages and inline-button presses are handled (bot
+ * buttons via App\Services\Bot\TelegramBotChat, seller outcome buttons via
+ * SellerTelegramService) — anything else Telegram might send (photos,
+ * stickers, edited_message, ...) is
  * silently ignored (still a 200, since Telegram will keep retrying a
  * non-2xx response) rather than erroring, since this app only supports
  * a plain text conversation.
  */
 class TelegramWebhookController extends Controller
 {
-    public function __invoke(Request $request, SellerTelegramService $sellerTelegram): JsonResponse
+    public function __invoke(Request $request, SellerTelegramService $sellerTelegram, TelegramBotChat $botChat): JsonResponse
     {
         $setting = Setting::current();
         $expectedSecret = $setting->telegram_webhook_secret;
@@ -37,7 +40,10 @@ class TelegramWebhookController extends Controller
         }
 
         if (is_array($callback = $request->input('callback_query'))) {
-            $sellerTelegram->handleCallback($callback);
+            // Bot buttons ("b|...") first; anything else is a seller outcome button.
+            if (! $botChat->handleCallback($callback)) {
+                $sellerTelegram->handleCallback($callback);
+            }
 
             return response()->json(['ok' => true]);
         }
@@ -58,6 +64,12 @@ class TelegramWebhookController extends Controller
                 $sellerTelegram->handleStart($match[1], $chatId, $from['username'] ?? null);
             }
 
+            return response()->json(['ok' => true]);
+        }
+
+        // The rule-based bot (when switched on) answers buyers in private chats;
+        // everything else, and hand-off messages, go to the Admin inbox below.
+        if (is_array($message) && $botChat->handleMessage($message)) {
             return response()->json(['ok' => true]);
         }
 

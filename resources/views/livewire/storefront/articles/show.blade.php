@@ -42,7 +42,7 @@
 
     @if ($hasAside)
         <div class="mt-6 xl:col-start-3 xl:row-span-2 xl:row-start-1 xl:mt-0">
-            <div class="space-y-4 xl:sticky xl:top-24">
+            <div class="space-y-4 xl:sticky xl:top-24 xl:max-h-[calc(100dvh-12rem)] xl:overflow-y-auto xl:overscroll-contain">
                 @if (filled($shortAnswer))
                     <aside aria-labelledby="short-answer-title" class="border-l-[3px] border-accent-700 bg-surface-subtle p-4">
                         <h2 id="short-answer-title" class="text-sm font-semibold text-text-primary">{{ __('storefront.articles.short_answer') }}</h2>

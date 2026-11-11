@@ -69,6 +69,10 @@ return new class extends Migration
             $table->string('legal_name')->nullable();
             $table->string('legal_inn')->nullable();
             $table->string('telegram_channel_url')->nullable();
+
+            // Rule-based chat bot (no AI) switches: off until staff have taught and tested it.
+            $table->boolean('bot_web_enabled')->default(false);
+            $table->boolean('bot_telegram_enabled')->default(false);
             $table->timestamps();
         });
     }

@@ -3,12 +3,26 @@
 namespace Tests\Feature;
 
 use App\Models\Category;
+use App\Models\Setting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class StorefrontBalanceTest extends TestCase
 {
     use RefreshDatabase;
+
+    public function test_the_contact_page_has_no_empty_details_heading_when_nothing_is_set(): void
+    {
+        Setting::current()->update(['admin_phone' => '', 'admin_email' => '']);
+
+        $this->get('/contact')->assertOk()
+            ->assertDontSee('id="contact-details"', false)
+            ->assertSee('aria-labelledby="contact-next"', false);
+
+        Setting::current()->update(['admin_phone' => '+998901234567']);
+
+        $this->get('/contact')->assertOk()->assertSee('id="contact-details"', false);
+    }
 
     public function test_the_contact_page_has_two_equal_columns_and_a_real_breadcrumb(): void
     {

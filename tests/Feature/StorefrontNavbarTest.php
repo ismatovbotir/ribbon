@@ -14,7 +14,7 @@ class StorefrontNavbarTest extends TestCase
         $this->get('/')->assertOk()
             ->assertSee('<span class="sr-only">'.__('storefront.nav.home').'</span>', false)
             ->assertSee('<span class="sr-only">'.__('storefront.nav.contact').'</span>', false)
-            ->assertSee('aria-label="'.trans_choice('storefront.nav.selection_aria', 0).'"', false)
+            ->assertSee('<span class="sr-only">'.e(__('storefront.nav.selection_label')).'</span>', false)
             ->assertSee('title="'.__('storefront.nav.selection_label').'"', false);
     }
 

@@ -18,6 +18,9 @@
 <x-panel.nav-item :href="route('admin.banners.index')" :active="request()->routeIs('admin.banners.*')" :label="__('admin.ui.banners')" icon="photo" />
 <x-panel.nav-item :href="route('admin.articles.index')" :active="request()->routeIs('admin.articles.*')" :label="__('admin.ui.articles')" icon="article" />
 <x-panel.nav-item :href="route('admin.pages.index')" :active="request()->routeIs('admin.pages.*')" :label="__('admin.ui.pages')" icon="page" />
+@can('admin-permission', 'bot.manage')
+    <x-panel.nav-item :href="route('admin.bot.index')" :active="request()->routeIs('admin.bot.*')" :label="__('admin.bot.nav')" icon="chat" />
+@endcan
 
 @if ($super)
     <x-panel.nav-group :label="__('admin.ui.platform')" />

@@ -32,6 +32,8 @@ use Illuminate\Database\Eloquent\Model;
     'legal_name',
     'legal_inn',
     'telegram_channel_url',
+    'bot_web_enabled',
+    'bot_telegram_enabled',
 ])]
 class Setting extends Model
 {
@@ -50,6 +52,8 @@ class Setting extends Model
             // JSON keyed by locale, multiline strings.
             'working_hours' => 'array',
             'office_address' => 'array',
+            'bot_web_enabled' => 'boolean',
+            'bot_telegram_enabled' => 'boolean',
         ];
     }
 

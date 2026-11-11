@@ -25,8 +25,11 @@
     @endif
 
     <div class="mt-8 grid gap-8 lg:grid-cols-2 lg:items-start">
-        <section aria-labelledby="contact-details" class="space-y-6">
-            <h2 id="contact-details" class="text-lg font-semibold text-text-primary md:text-xl">{{ __('storefront.contact.details') }}</h2>
+        <section @if ($channels->isNotEmpty() || $otherRows->isNotEmpty()) aria-labelledby="contact-details" @else aria-labelledby="contact-next" @endif class="space-y-6">
+            {{-- No phone, email or other details set yet: no empty heading, the steps stand alone. --}}
+            @if ($channels->isNotEmpty() || $otherRows->isNotEmpty())
+                <h2 id="contact-details" class="text-lg font-semibold text-text-primary md:text-xl">{{ __('storefront.contact.details') }}</h2>
+            @endif
 
             @if ($channels->isNotEmpty())
                 <ul class="space-y-3">
@@ -69,7 +72,7 @@
             @endif
 
             <div class="rounded-md border border-border bg-surface-band p-4 md:p-6">
-                <h3 class="font-display text-base font-semibold text-text-primary">{{ __('storefront.contact.next_heading') }}</h3>
+                <h3 id="contact-next" class="font-display text-base font-semibold text-text-primary">{{ __('storefront.contact.next_heading') }}</h3>
                 <ol class="mt-3 space-y-3">
                     @foreach ([1, 2, 3] as $step)
                         <li class="flex items-start gap-3">

@@ -60,12 +60,15 @@ class ArticleStructureTest extends TestCase
         $text = array_fill_keys(config('ribbon.locales'), 'Direct answer');
 
         $component = $this->form()->set('shortAnswer', $text)->call('addFaq', 'ru');
-        $component->set('faq.ru.0.q', 'Вопрос?')->set('faq.ru.0.a', 'Ответ.')->call('save')->assertHasNoErrors();
+        $component->set('faq.ru.0.q', 'Вопрос?')->set('faq.ru.0.a', 'Ответ.')
+            ->set('faq.xx', [['q' => 'injected', 'a' => 'injected']])
+            ->call('save')->assertHasNoErrors();
 
         $article = Article::sole();
         $this->assertSame('Direct answer', $article->short_answer['ru']);
         $this->assertSame([['q' => 'Вопрос?', 'a' => 'Ответ.']], $article->faq['ru']);
         $this->assertSame([], $article->faq['en']);
+        $this->assertArrayNotHasKey('xx', $article->faq);
     }
 
     public function test_an_unfinished_faq_item_is_rejected_and_can_be_removed(): void

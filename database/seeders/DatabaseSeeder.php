@@ -28,6 +28,7 @@ class DatabaseSeeder extends Seeder
                 CatalogSeeder::class,
                 PageSeeder::class,
                 ArticleSeeder::class,
+                BotAnswerSeeder::class,  // after articles: links the guide; bot stays off until staff switch it on
             ]);
 
             // Fake data — local development only, never a real deploy.

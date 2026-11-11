@@ -6,6 +6,11 @@ use App\Livewire\Admin\Articles\Form as AdminArticlesForm;
 use App\Livewire\Admin\Articles\Index as AdminArticlesIndex;
 use App\Livewire\Admin\Banners\Form as AdminBannersForm;
 use App\Livewire\Admin\Banners\Index as AdminBannersIndex;
+use App\Livewire\Admin\Bot\Form as AdminBotForm;
+use App\Livewire\Admin\Bot\Guide as AdminBotGuide;
+use App\Livewire\Admin\Bot\Index as AdminBotIndex;
+use App\Livewire\Admin\Bot\TestChat as AdminBotTestChat;
+use App\Livewire\Admin\Bot\Unanswered as AdminBotUnanswered;
 use App\Livewire\Admin\Brands\Index as AdminBrandsIndex;
 use App\Livewire\Admin\Categories\Index as CategoriesIndex;
 use App\Livewire\Admin\Categories\Show as CategoriesShow;
@@ -300,6 +305,19 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
         // /create before /{page}/edit, same reasoning as admin/banners.
         Route::get('/create', AdminPagesForm::class)->name('create');
         Route::get('/{page}/edit', AdminPagesForm::class)->name('edit');
+    });
+
+    // Rule-based chat bot training (no AI). `bot.manage` (Super Admin +
+    // Moderator) is re-checked inside every component. Unanswered questions
+    // are masked (phones/emails) before they are stored, so no buyer PII here.
+    Route::prefix('bot')->name('bot.')->group(function () {
+        Route::get('/', AdminBotIndex::class)->name('index');
+        Route::get('/unanswered', AdminBotUnanswered::class)->name('unanswered');
+        Route::get('/test', AdminBotTestChat::class)->name('test');
+        Route::get('/guide', AdminBotGuide::class)->name('guide');
+        // /create before /{answer}/edit, same reasoning as admin/banners.
+        Route::get('/create', AdminBotForm::class)->name('create');
+        Route::get('/{answer}/edit', AdminBotForm::class)->name('edit');
     });
 
     // Buyer /contact messages (phone + free text) are buyer PII — Super

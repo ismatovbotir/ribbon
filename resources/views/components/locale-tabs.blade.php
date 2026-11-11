@@ -5,11 +5,11 @@
     `x-show="locale === 'uz'" role="tabpanel"` (etc.).
     $incomplete: locale codes that are missing a value (square marker + text line).
 --}}
-@props(['locales' => null, 'incomplete' => []])
+@props(['locales' => null, 'incomplete' => [], 'initial' => null])
 
 @php($locales = $locales ?? config('ribbon.locales'))
 
-<div x-data="{ locale: '{{ $locales[0] }}', order: @js(array_values($locales)) }">
+<div x-data="{ locale: '{{ in_array($initial, $locales, true) ? $initial : $locales[0] }}', order: @js(array_values($locales)) }">
     <div role="tablist" aria-label="{{ __('admin.ui.language') }}"
          x-on:keydown.arrow-right.prevent="locale = order[(order.indexOf(locale) + 1) % order.length]; $nextTick(() => $refs['tab-' + locale].focus())"
          x-on:keydown.arrow-left.prevent="locale = order[(order.indexOf(locale) + order.length - 1) % order.length]; $nextTick(() => $refs['tab-' + locale].focus())"

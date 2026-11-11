@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\BotUnanswered;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -15,3 +16,6 @@ Schedule::command('subscriptions:remind')->dailyAt('09:00');
 
 // Chat button messages: needs cron to run `schedule:run` every minute.
 Schedule::command('chat-messages:send')->everyMinute()->withoutOverlapping();
+
+// Clears old bot Unanswered questions (see BotUnanswered::prunable).
+Schedule::command('model:prune', ['--model' => [BotUnanswered::class]])->dailyAt('03:30');

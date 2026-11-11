@@ -27,9 +27,13 @@ final class TableOfContents
                 return $m[0];
             }
 
-            if (preg_match('/\sid\s*=\s*"([^"]+)"/i', $attributes, $existing)) {
-                $id = $existing[1];
+            // Keep a saved id only when it is a clean, unused anchor; otherwise replace it.
+            $existing = preg_match('/\sid\s*=\s*(["\'])(.*?)\1/is', $attributes, $found) ? $found[2] : null;
+
+            if ($existing !== null && preg_match('/^[A-Za-z][\w:.-]*$/', $existing) && ! isset($used[$existing])) {
+                $id = $existing;
             } else {
+                $attributes = preg_replace('/\sid\s*=\s*(["\']).*?\1/is', '', $attributes) ?? $attributes;
                 $base = Str::slug($label) ?: 'section';
                 $id = $base;
                 for ($i = 2; isset($used[$id]); $i++) {
