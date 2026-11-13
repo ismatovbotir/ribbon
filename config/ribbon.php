@@ -34,6 +34,11 @@ return [
     // Admin staff must pass TOTP. Only ever turn this off on a local machine.
     'admin_2fa_required' => (bool) env('ADMIN_2FA_REQUIRED', true),
 
+    // One-click demo logins on /login (Auth\Login::devLogin). Works only when
+    // APP_ENV=local AND this is true, so one wrong APP_ENV on the shared
+    // host can't open a passwordless login. Never set it on production.
+    'dev_login' => (bool) env('DEV_LOGIN', false),
+
     // Claude Desktop MCP (routes/ai.php, local/SSH only): the Super Admin
     // user every MCP action is done as. Empty = every MCP tool refuses.
     'mcp_admin_email' => env('MCP_ADMIN_EMAIL'),

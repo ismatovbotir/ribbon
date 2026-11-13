@@ -32,6 +32,19 @@
         </div>
     </form>
 
+    @if ($devAccounts)
+        <div class="mt-6 rounded-md border border-dashed border-border-strong p-3">
+            <p class="mb-2 text-xs font-medium text-text-secondary">{{ __('auth.login.dev_heading') }}</p>
+            <div class="grid grid-cols-2 gap-2">
+                @foreach ($devAccounts as $devEmail => $devLabel)
+                    <x-button type="button" variant="secondary" size="sm" wire:click="devLogin('{{ $devEmail }}')" wire:loading.attr="disabled" wire:target="devLogin">
+                        {{ __($devLabel) }}
+                    </x-button>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
     <p class="mt-6 text-center text-xs text-text-secondary">
         {{ __('auth.login.register_prompt') }}
         <a href="{{ route('sellers.register') }}" class="font-medium text-accent-600 hover:underline">{{ __('auth.login.register_link') }}</a>

@@ -4,6 +4,7 @@ namespace App\Livewire\Auth;
 
 use App\Exceptions\AdminAccessDeniedException;
 use App\Exceptions\SellerAccessDeniedException;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
@@ -85,6 +86,54 @@ class Login extends Component
 
         RateLimiter::clear($throttleKey);
 
+        $this->redirectAuthenticatedUser();
+    }
+
+    /**
+     * Demo accounts offered as one-click logins in local development.
+     * A fixed allowlist of seeded @demo.ribbon.uz users (DemoCatalogSeeder,
+     * DemoStaffSeeder), never "any user", so a local DB copied from
+     * production can't be entered as a real customer.
+     *
+     * @var array<string, string> email => lang key
+     */
+    public const DEV_ACCOUNTS = [
+        'admin@demo.ribbon.uz' => 'auth.login.dev_super_admin',
+        'moderator@demo.ribbon.uz' => 'auth.login.dev_moderator',
+        'seller1@demo.ribbon.uz' => 'auth.login.dev_seller_owner',
+        'employee@demo.ribbon.uz' => 'auth.login.dev_seller_employee',
+    ];
+
+    public static function devLoginEnabled(): bool
+    {
+        return app()->isLocal() && config('ribbon.dev_login') === true;
+    }
+
+    /**
+     * Passwordless login as a demo account. The guard lives here, not only
+     * in the view, because Livewire actions are callable by any client.
+     * Admin accounts still meet the 2FA challenge (admin.auth middleware).
+     */
+    public function devLogin(string $email): void
+    {
+        abort_unless(self::devLoginEnabled(), 404);
+        abort_unless(array_key_exists($email, self::DEV_ACCOUNTS), 404);
+
+        $user = User::where('email', $email)->first();
+
+        if (! $user) {
+            $this->addError('email', __('auth.login.dev_missing', ['email' => $email]));
+
+            return;
+        }
+
+        Auth::login($user);
+
+        $this->redirectAuthenticatedUser();
+    }
+
+    private function redirectAuthenticatedUser(): void
+    {
         $user = Auth::user();
 
         try {
@@ -124,7 +173,9 @@ class Login extends Component
 
     public function render()
     {
-        return view('livewire.auth.login')->layout('layouts.public', [
+        return view('livewire.auth.login', [
+            'devAccounts' => self::devLoginEnabled() ? self::DEV_ACCOUNTS : [],
+        ])->layout('layouts.public', [
             'title' => __('auth.login.title'),
         ]);
     }
