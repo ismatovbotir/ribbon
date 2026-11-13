@@ -95,7 +95,7 @@ return [
     'products.unit.box' => 'quti',
 
     'products.images.section_title' => 'Rasmlar',
-    'products.images.caption' => "Kamida 4 tagacha rasm qo'shing. Eng birinchi rasm asosiy (vitrina) rasm sifatida ko'rsatiladi.",
+    'products.images.caption' => "Ko'pi bilan 4 ta rasm qo'shing. Eng birinchi rasm asosiy (vitrina) rasm sifatida ko'rsatiladi.",
     'products.images.add' => "Qo'shish",
     'products.images.remove' => "O'chirish",
     'products.images.remove_confirm' => 'Ushbu rasmni oʻchirasizmi?',
