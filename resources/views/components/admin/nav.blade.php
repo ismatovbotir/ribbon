@@ -3,6 +3,9 @@
 
 <x-panel.nav-group :label="__('admin.ui.catalog')" :first="true" />
 <x-panel.nav-item :href="route('admin.categories.index')" :active="request()->routeIs('admin.categories.*')" :label="__('admin.ui.categories')" icon="grid" />
+@if ($super)
+    <x-panel.nav-item :href="route('admin.compatibility.show')" :active="request()->routeIs('admin.compatibility.*')" :label="__('admin.compatibility.nav')" icon="label-roll" />
+@endif
 <x-panel.nav-item :href="route('admin.brands.index')" :active="request()->routeIs('admin.brands.*')" :label="__('admin.ui.brands')" icon="shield" />
 <x-panel.nav-item :href="route('admin.geography.countries.index')" :active="request()->routeIs('admin.geography.*')" :label="__('admin.ui.geography')" icon="map-pin" />
 

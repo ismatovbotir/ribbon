@@ -37,14 +37,6 @@ class CatalogSeeder extends Seeder
 
     private const PRINTHEAD = [['Flat head', 'Плоская головка', 'Yassi kallak'], ['Near-edge', 'Near-edge', 'Near-edge']];
 
-    private const LABEL_MATERIALS = [
-        ['Paper', 'Бумага', 'Qog\'oz'],
-        ['Coated paper', 'Мелованная бумага', 'Qoplamali qog\'oz'],
-        'Synthetic (PP)',
-        'Synthetic (PET)',
-        ['Textile', 'Текстиль', 'Tekstil'],
-    ];
-
     public function run(): void
     {
         foreach ($this->catalog() as $sortOrder => $category) {
@@ -90,7 +82,7 @@ class CatalogSeeder extends Seeder
                 'icon' => 'ribbon-roll',
                 'free' => true,
                 'parameters' => [
-                    [['Type', 'Тип', 'Turi'], 'select_single', true, true, ['Wax', 'Wax-resin', 'Resin']],
+                    [['Type', 'Тип', 'Turi'], 'select_single', true, true, ['Wax', 'Wax-resin', 'Resin'], CategoryParameter::CODE_RIBBON_TYPE],
                     [['Width', 'Ширина', 'Kengligi'], 'number', true, true, 'mm', CategoryParameter::CODE_RIBBON_WIDTH],
                     [['Length', 'Длина', 'Uzunligi'], 'number', true, true, 'm'],
                     [['Ink side', 'Сторона краски', "Bo'yoq tomoni"], 'select_single', true, true, ['IN', 'OUT']],
@@ -104,7 +96,6 @@ class CatalogSeeder extends Seeder
                         ['Silver', 'Серебряный', 'Kumush'], ['Gold', 'Золотой', 'Oltin'], ['Other', 'Другой', 'Boshqa'],
                     ]],
                     [['Printhead type', 'Тип печатающей головки', 'Bosma kallak turi'], 'select_single', false, true, self::PRINTHEAD],
-                    [['Compatible label material', 'Совместимый материал этикеток', 'Mos yorliq materiali'], 'select_multiple', false, true, self::LABEL_MATERIALS],
                     [['Application / industry', 'Применение / отрасль', 'Qo\'llanilishi / soha'], 'select_multiple', false, true, [
                         ['Logistics', 'Логистика', 'Logistika'], ['Retail', 'Розница', 'Chakana savdo'],
                         ['Apparel care labels', 'Ярлыки для одежды', 'Kiyim yorliqlari'], ['Chemical / GHS', 'Химия / GHS', 'Kimyo / GHS'],
@@ -116,7 +107,7 @@ class CatalogSeeder extends Seeder
                 'name' => ['TT labels', 'Термотрансферные этикетки', 'Termotransfer yorliqlar'],
                 'icon' => 'label-roll',
                 'parameters' => [
-                    [['Width', 'Ширина', 'Kengligi'], 'number', true, true, 'mm'],
+                    [['Width', 'Ширина', 'Kengligi'], 'number', true, true, 'mm', CategoryParameter::CODE_LABEL_WIDTH],
                     [['Height', 'Высота', 'Balandligi'], 'number', true, true, 'mm'],
                     [['Labels per roll', 'Этикеток в рулоне', 'Rulondagi yorliqlar'], 'number', true, true, 'pcs'],
                     [['Gap', 'Зазор', 'Oraliq'], 'number', true, false, 'mm'],
@@ -124,7 +115,7 @@ class CatalogSeeder extends Seeder
                     [['Material', 'Материал', 'Material'], 'select_single', true, true, [
                         ['Coated paper (semi-gloss)', 'Полуглянцевая бумага', 'Yarim yaltiroq qog\'oz'], 'Vellum', 'PP', 'PET',
                         ['Textile / satin', 'Текстиль / сатин', 'Tekstil / atlas'], ['Polyimide', 'Полиимид', 'Poliimid'],
-                    ]],
+                    ], CategoryParameter::CODE_LABEL_MATERIAL],
                     [['Adhesive', 'Клей', 'Yelim'], 'select_single', true, true, [
                         ['Permanent', 'Постоянный', 'Doimiy'], ['Removable', 'Съёмный', 'Olinadigan'],
                         ['Freezer', 'Морозостойкий', 'Muzlatkich uchun'], ['High-tack', 'Сильный', 'Kuchli'],

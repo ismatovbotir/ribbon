@@ -1,6 +1,16 @@
 <?php
 
 return [
+    'compatibility.nav' => 'Lenta ↔ yorliq mosligi',
+    'compatibility.title' => 'Lenta va yorliq mosligi',
+    'compatibility.subtitle' => 'Har bir lenta turi qaysi yorliq materiallariga yaxshi bosishini belgilang. Mahsulot sahifalari mos yorliq va lentalarni shu jadval bo‘yicha ko‘rsatadi; sotuvchilar uni o‘zgartira olmaydi.',
+    'compatibility.matrix_heading' => 'Lenta turi × yorliq materiali',
+    'compatibility.ribbon_type' => 'Lenta turi',
+    'compatibility.save' => 'Saqlash',
+    'compatibility.saved' => 'Moslik saqlandi.',
+    'compatibility.width_note' => 'Yorliq faqat lentadan keng bo‘lmasa ko‘rsatiladi.',
+    'compatibility.missing_title' => 'Parametrlar topilmadi',
+    'compatibility.missing_body' => 'Lenta «Turi» yoki yorliq «Material» parametrida hali kod yo‘q. Oxirgi migratsiyalarni ishga tushiring.',
     'subscription.title' => 'Obuna',
     'subscription.status.none' => 'Obuna yo\'q',
     'subscription.status.active' => 'Faol',

@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\SellerContactEvent;
 use App\Services\OfferSelectionService;
 use App\Services\ProductAnalyticsService;
+use App\Services\RibbonLabelCompatibilityService;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Locked;
@@ -474,10 +475,20 @@ class Show extends Component
             $productNode,
         ];
 
+        // Ribbon page lists fitting labels, label page lists fitting ribbons;
+        // any other category gets neither (both calls return empty).
+        $fitLabels = RibbonLabelCompatibilityService::labelsFor($this->product);
+        $fitProducts = $fitLabels->isNotEmpty() ? $fitLabels : RibbonLabelCompatibilityService::ribbonsFor($this->product);
+        $fitHeading = $fitLabels->isNotEmpty()
+            ? __('storefront.product_detail.fits_labels_heading')
+            : __('storefront.product_detail.fits_ribbons_heading');
+
         return view('livewire.storefront.products.show', [
             'orderedPrices' => $orderedPrices,
             'specRows' => $specRows,
             'displayName' => $displayName,
+            'fitProducts' => $fitProducts,
+            'fitHeading' => $fitHeading,
         ])->layout('layouts.storefront', [
             'title' => $pageTitle,
             'metaDescription' => $metaDescription,

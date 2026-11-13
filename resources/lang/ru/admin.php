@@ -1,6 +1,16 @@
 <?php
 
 return [
+    'compatibility.nav' => 'Риббон ↔ этикетка',
+    'compatibility.title' => 'Совместимость риббонов и этикеток',
+    'compatibility.subtitle' => 'Отметьте, на каких материалах этикеток хорошо печатает каждый тип риббона. Страницы товаров показывают подходящие этикетки и риббоны по этой таблице; продавцы её не меняют.',
+    'compatibility.matrix_heading' => 'Тип риббона × материал этикетки',
+    'compatibility.ribbon_type' => 'Тип риббона',
+    'compatibility.save' => 'Сохранить',
+    'compatibility.saved' => 'Совместимость сохранена.',
+    'compatibility.width_note' => 'Этикетка показывается, только если она не шире риббона.',
+    'compatibility.missing_title' => 'Параметры не найдены',
+    'compatibility.missing_body' => 'У параметра «Тип» риббона или «Материал» этикетки ещё нет кода. Выполните последние миграции.',
     'subscription.title' => 'Подписка',
     'subscription.status.none' => 'Нет подписки',
     'subscription.status.active' => 'Активна',

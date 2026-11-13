@@ -1,6 +1,9 @@
 <?php
 
 return [
+    'product_detail.fits_labels_heading' => 'Ushbu lentaga mos yorliqlar',
+    'product_detail.fits_ribbons_heading' => 'Ushbu yorliqqa mos lentalar',
+    'product_detail.fits_note' => 'Lenta turi, yorliq materiali va kengligi bo‘yicha, Ribbon mutaxassislari qoidalari asosida tanlangan.',
 
     // ---- Header / shell ----
     'nav.brand' => 'Ribbon',

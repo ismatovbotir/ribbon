@@ -1,6 +1,9 @@
 <?php
 
 return [
+    'product_detail.fits_labels_heading' => 'Этикетки, подходящие к этому риббону',
+    'product_detail.fits_ribbons_heading' => 'Риббоны, подходящие к этой этикетке',
+    'product_detail.fits_note' => 'Подобрано по типу риббона, материалу и ширине этикетки — по правилам экспертов Ribbon.',
 
     // ---- Header / shell ----
     'nav.brand' => 'Ribbon',

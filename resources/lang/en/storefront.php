@@ -1,6 +1,9 @@
 <?php
 
 return [
+    'product_detail.fits_labels_heading' => 'Labels that fit this ribbon',
+    'product_detail.fits_ribbons_heading' => 'Ribbons that fit this label',
+    'product_detail.fits_note' => 'Matched by ribbon type, label material and width, as set by Ribbon\'s experts.',
 
     // ---- Header / shell ----
     'nav.brand' => 'Ribbon',

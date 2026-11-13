@@ -367,6 +367,22 @@
                 </dl>
             </div>
         </section>
+
+        {{-- Ribbon ↔ label fit, from the Super Admin's compatibility matrix (RibbonLabelCompatibilityService). Full width under both columns. --}}
+        @if ($fitProducts->isNotEmpty())
+            <section class="mt-8 lg:col-span-2 lg:row-start-4" aria-labelledby="product-fits-heading">
+                <x-storefront.section-heading id="product-fits-heading" :title="$fitHeading" />
+                <p class="mt-1 text-sm text-text-secondary">{{ __('storefront.product_detail.fits_note') }}</p>
+                <div class="mt-4 overflow-hidden rounded-md border border-border-strong bg-surface">
+                    <x-storefront.product-list-header />
+                    <ul aria-label="{{ $fitHeading }}">
+                        @foreach ($fitProducts as $fitProduct)
+                            <x-storefront.product-row :product="$fitProduct" wire:key="fit-product-{{ $fitProduct->id }}" />
+                        @endforeach
+                    </ul>
+                </div>
+            </section>
+        @endif
     </div>
 
     {{-- Bottom bar, product mode (below lg). The only fixed element on this page; yellow CTA = "Request offer". --}}

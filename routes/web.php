@@ -14,6 +14,7 @@ use App\Livewire\Admin\Bot\Unanswered as AdminBotUnanswered;
 use App\Livewire\Admin\Brands\Index as AdminBrandsIndex;
 use App\Livewire\Admin\Categories\Index as CategoriesIndex;
 use App\Livewire\Admin\Categories\Show as CategoriesShow;
+use App\Livewire\Admin\Compatibility\Show as AdminCompatibilityShow;
 use App\Livewire\Admin\ContactMessages\Index as AdminContactMessagesIndex;
 use App\Livewire\Admin\Geography\Cities\Index as AdminGeographyCitiesIndex;
 use App\Livewire\Admin\Geography\Countries\Index as AdminGeographyCountriesIndex;
@@ -245,6 +246,11 @@ Route::prefix('admin')->name('admin.')->middleware('admin.auth')->group(function
         Route::get('/', CategoriesIndex::class)->name('index');
         Route::get('/{category}', CategoriesShow::class)->name('show');
     });
+
+    // Ribbon type × label material matrix behind the storefront's
+    // "fits these labels / ribbons" blocks. Super Admin only (owner
+    // decision 2026-11-13): sellers and Moderators can't change it.
+    Route::get('/compatibility', AdminCompatibilityShow::class)->name('compatibility.show')->middleware('super_admin');
 
     Route::prefix('brands')->name('brands.')->group(function () {
         Route::get('/', AdminBrandsIndex::class)->name('index');

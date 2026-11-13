@@ -15,6 +15,15 @@ class CategoryParameter extends Model
 
     public const CODE_RIBBON_CORE_WIDTH = 'ribbon_core_width';
 
+    /** Ribbon Type (Wax / Wax-resin / Resin): rows of the compatibility matrix. */
+    public const CODE_RIBBON_TYPE = 'ribbon_type';
+
+    /** TT label Material: columns of the compatibility matrix. */
+    public const CODE_LABEL_MATERIAL = 'label_material';
+
+    /** TT label Width: must not exceed the ribbon width to be compatible. */
+    public const CODE_LABEL_WIDTH = 'label_width';
+
     use FlushesNavMenu;
 
     /**

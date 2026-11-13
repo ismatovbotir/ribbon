@@ -1,6 +1,16 @@
 <?php
 
 return [
+    'compatibility.nav' => 'Ribbon ↔ label fit',
+    'compatibility.title' => 'Ribbon and label compatibility',
+    'compatibility.subtitle' => 'Tick which TT label materials each ribbon type prints well on. Product pages show matching labels and ribbons from this table; sellers can\'t change it.',
+    'compatibility.matrix_heading' => 'Ribbon type × label material',
+    'compatibility.ribbon_type' => 'Ribbon type',
+    'compatibility.save' => 'Save',
+    'compatibility.saved' => 'Compatibility saved.',
+    'compatibility.width_note' => 'A label is also shown only when it is not wider than the ribbon.',
+    'compatibility.missing_title' => 'Parameters not found',
+    'compatibility.missing_body' => 'The ribbon Type or label Material parameter has no code yet. Run the latest migrations.',
     'subscription.title' => 'Subscription',
     'subscription.status.none' => 'No subscription',
     'subscription.status.active' => 'Active',
