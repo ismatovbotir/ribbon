@@ -9,6 +9,11 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Support\Facades\Log;
 
 /**
+ * Tells the Super Admin (only) on Telegram that a company applied as a
+ * seller: contact details to check, plus a link to the admin seller page
+ * where it is approved (approval stays on the website, after the INN and
+ * phone are checked).
+ *
  * Deliberately NOT ShouldQueue — runs synchronously in-request when
  * dispatched. This app has no persistent queue worker guaranteed to be
  * running in every environment (no Supervisor/systemd/Horizon setup), so
@@ -21,16 +26,10 @@ class NotifyTelegramOfNewSeller
 {
     use Dispatchable;
 
-    /**
-     * Create a new job instance.
-     */
     public function __construct(
         public Seller $seller,
     ) {}
 
-    /**
-     * Execute the job.
-     */
     public function handle(TelegramBotService $telegram): void
     {
         $botToken = Setting::current()->effectiveTelegramBotToken();
@@ -42,21 +41,42 @@ class NotifyTelegramOfNewSeller
             return;
         }
 
-        $owner = $this->seller->users()->first();
+        $seller = $this->seller->loadMissing('city');
+        $owner = $seller->users()->first();
+        $city = $seller->city?->name;
+        $city = is_array($city) ? ($city['ru'] ?? $city[config('ribbon.locales')[0]] ?? reset($city)) : $city;
+        $url = route('admin.sellers.show', $seller);
+
+        // Seller-entered text is escaped: a "<" or "&" in a name would make Telegram reject the whole message.
+        $e = fn (?string $value): string => htmlspecialchars((string) $value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
 
         $lines = [
             '<b>New seller application</b>',
-            "Company: {$this->seller->name}",
-            "Phone: {$this->seller->phone}",
-            "VAT number: {$this->seller->vat_number}",
+            'Company: '.$e($seller->name),
+            'INN: <code>'.$e($seller->vat_number).'</code>',
+            'Phone: '.$e($seller->phone),
+            'Address: '.$e(trim(($city ? $city.', ' : '').$seller->address)),
         ];
 
         if ($owner) {
-            $lines[] = "Owner: {$owner->name} ({$owner->email})";
+            $lines[] = 'Owner: '.$e($owner->name).' ('.$e($owner->email).')';
         }
 
         $lines[] = 'Status: pending review';
 
-        $telegram->sendMessage($botToken, $chatId, implode("\n", $lines), 'HTML');
+        // Telegram only accepts https link buttons; elsewhere (local) the link goes in the text.
+        $https = str_starts_with($url, 'https://');
+
+        if (! $https) {
+            $lines[] = $e($url);
+        }
+
+        $telegram->sendMessage(
+            $botToken,
+            $chatId,
+            implode("\n", $lines),
+            'HTML',
+            $https ? ['inline_keyboard' => [[['text' => 'Open and approve', 'url' => $url]]]] : null,
+        );
     }
 }

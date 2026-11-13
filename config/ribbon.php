@@ -33,4 +33,8 @@ return [
 
     // Admin staff must pass TOTP. Only ever turn this off on a local machine.
     'admin_2fa_required' => (bool) env('ADMIN_2FA_REQUIRED', true),
+
+    // Claude Desktop MCP (routes/ai.php, local/SSH only): the Super Admin
+    // user every MCP action is done as. Empty = every MCP tool refuses.
+    'mcp_admin_email' => env('MCP_ADMIN_EMAIL'),
 ];

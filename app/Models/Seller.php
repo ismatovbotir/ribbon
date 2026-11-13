@@ -34,13 +34,15 @@ class Seller extends Model
     /**
      * Every Seller row is created `pending` by construction (see
      * register()) — notify staff on Telegram unconditionally whenever a new
-     * one shows up, no extra status check needed.
+     * one shows up, no extra status check needed. Sent after the
+     * registration transaction commits, so the owner account is already
+     * attached (and a rolled-back sign-up sends nothing).
      */
     #[Boot]
     protected static function bootSeller(): void
     {
         static::created(function (Seller $seller) {
-            NotifyTelegramOfNewSeller::dispatch($seller);
+            DB::afterCommit(fn () => NotifyTelegramOfNewSeller::dispatch($seller));
         });
     }
 
